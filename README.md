@@ -1,115 +1,137 @@
-Panggilan Antrian Realtime
-==========================
+# CodeIgniter Composer Installer
 
-Codeigniter, Node.js, Socket.IO & Redis
-----------------------------------------
+[![Latest Stable Version](https://poser.pugx.org/kenjis/codeigniter-composer-installer/v/stable)](https://packagist.org/packages/kenjis/codeigniter-composer-installer) [![Total Downloads](https://poser.pugx.org/kenjis/codeigniter-composer-installer/downloads)](https://packagist.org/packages/kenjis/codeigniter-composer-installer) [![Latest Unstable Version](https://poser.pugx.org/kenjis/codeigniter-composer-installer/v/unstable)](https://packagist.org/packages/kenjis/codeigniter-composer-installer) [![License](https://poser.pugx.org/kenjis/codeigniter-composer-installer/license)](https://packagist.org/packages/kenjis/codeigniter-composer-installer)
 
-Sistem antrian realtime menggunakan CodeIgniter (PHP) sebagai backend, Node.js + Socket.IO untuk komunikasi realtime, dan Redis sebagai message broker (Pub/Sub).
+This package installs the offical [CodeIgniter](https://github.com/bcit-ci/CodeIgniter) (version `3.1.*`) with secure folder structure via Composer.
 
-Kebutuhan:
-----------
-- Docker & Docker Compose **atau**
-- PHP 5.6+ / 7.x, Node.js, Redis server (instalasi manual)
+You can update CodeIgniter system folder to latest version with one command.
 
-Mulai dengan Docker (Rekomendasi):
------------------------------------
-
-1. Clone repo dan masuk ke folder project
-
-2. Salin file environment
-
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Sesuaikan konfigurasi di `.env` jika diperlukan (default sudah bisa langsung jalan)
-
-4. Jalankan semua service
-
-   ```bash
-   docker-compose up -d
-   ```
-
-5. Akses aplikasi
-
-   | Service         | URL                        |
-   |-----------------|----------------------------|
-   | PHP (Panggilan) | http://localhost:8080       |
-   | Client Display  | http://localhost:8085       |
-   | Redis           | localhost:6379              |
-   | MySQL           | localhost:3306              |
-
-6. Untuk menghentikan semua service
-
-   ```bash
-   docker-compose down
-   ```
-
-Konfigurasi Environment (`.env`):
-----------------------------------
-
-| Variabel            | Default       | Keterangan                  |
-|---------------------|---------------|-----------------------------|
-| `REDIS_HOST`        | redis         | Hostname Redis              |
-| `REDIS_PORT`        | 6379          | Port Redis                  |
-| `REDIS_PASSWORD`    |               | Password Redis (opsional)   |
-| `DB_HOST`           | mysql         | Hostname MySQL              |
-| `DB_USER`           | antrian       | Username MySQL              |
-| `DB_PASS`           | antrian123    | Password MySQL              |
-| `DB_NAME`           | antrian_db    | Nama database               |
-| `MYSQL_ROOT_PASSWORD` | root123     | Password root MySQL         |
-| `PHP_PORT`          | 8080          | Port akses PHP dari host    |
-| `NODEJS_PORT`       | 8085          | Port akses Node.js dari host|
-| `MYSQL_PORT`        | 3306          | Port akses MySQL dari host  |
-| `REDIS_EXT_PORT`    | 6379          | Port akses Redis dari host  |
-
-Mulai tanpa Docker (Manual):
------------------------------
-
-1. Pastikan Redis server sudah berjalan (default port 6379)
-
-2. Clone repo ke folder root http
-
-3. Masuk ke folder `node.js/`, lalu install dependensi dan jalankan server
-
-   ```bash
-   cd node.js
-   npm install
-   node server.js
-   ```
-
-4. Buka browser ke root folder project (PHP app)
-
-5. Buka tab baru ke `node.js/client.html` untuk tampilan client
-
-`Start server.js`
-
-![start server](https://raw.githubusercontent.com/siagung/CI_Redis_Realtime_Antrian_Bank/master/assets/image/start-server.png)
-
-`Panggilan`
-
-![start server](https://raw.githubusercontent.com/siagung/CI_Redis_Realtime_Antrian_Bank/master/assets/image/panggil.png)
-
-`Client`
-
-![start server](https://raw.githubusercontent.com/siagung/CI_Redis_Realtime_Antrian_Bank/master/assets/image/client.png)
-
-Arsitektur:
------------
+## Folder Structure
 
 ```
-Browser (Client Display)
-    |
-    | Socket.IO (ws://localhost:8085)
-    v
-Node.js Server --- subscribe ---> Redis <--- publish --- PHP (CodeIgniter)
-                                                            |
-                                                            v
-                                                          MySQL
+codeigniter/
+├── application/
+├── composer.json
+├── composer.lock
+├── public/
+│   ├── .htaccess
+│   └── index.php
+└── vendor/
+    └── codeigniter/
+        └── framework/
+            └── system/
 ```
 
-Informasi Tambahan:
--------------------
+## Requirements
 
-- [Realtime Node.js, Socket.io & Redis](http://github.com/vanuganti/realtime)
-- [CodeIgniter Redis Library](https://github.com/joelcox/codeigniter-redis)
+* PHP 5.3.7 or later
+* `composer` command (See [Composer Installation](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-osx))
+* Git
+
+## How to Use
+
+### Install CodeIgniter
+
+```
+$ composer create-project kenjis/codeigniter-composer-installer codeigniter
+```
+
+Above command installs `public/.htaccess` to remove `index.php` in your URL. If you don't need it, please remove it.
+
+And it changes `application/config/config.php`:
+
+~~~
+$config['composer_autoload'] = FALSE;
+↓
+$config['composer_autoload'] = realpath(APPPATH . '../vendor/autoload.php');
+~~~
+
+~~~
+$config['index_page'] = 'index.php';
+↓
+$config['index_page'] = '';
+~~~
+
+#### Install Translations for System Messages
+
+If you want to install translations for system messages:
+
+```
+$ cd /path/to/codeigniter
+$ php bin/install.php translations 3.1.0
+```
+
+#### Install Third Party Libraries
+
+[Codeigniter Matches CLI](https://github.com/avenirer/codeigniter-matches-cli):
+
+```
+$ php bin/install.php matches-cli master
+```
+
+[CodeIgniter HMVC Modules](https://github.com/jenssegers/codeigniter-hmvc-modules):
+
+```
+$ php bin/install.php hmvc-modules master
+```
+
+[Modular Extensions - HMVC](https://bitbucket.org/wiredesignz/codeigniter-modular-extensions-hmvc):
+
+```
+$ php bin/install.php modular-extensions-hmvc codeigniter-3.x
+```
+
+[Ion Auth](https://github.com/benedmunds/CodeIgniter-Ion-Auth):
+
+```
+$ php bin/install.php ion-auth 2
+```
+
+[CodeIgniter3 Filename Checker](https://github.com/kenjis/codeigniter3-filename-checker):
+
+```
+$ php bin/install.php filename-checker master
+```
+
+[CodeIgniter Rest Server](https://github.com/chriskacerguis/codeigniter-restserver):
+
+```
+$ php bin/install.php restserver 2.7.2
+```
+[CodeIgniter Developer Toolbar](https://github.com/JCSama/CodeIgniter-develbar):
+
+```
+$ php bin/install.php codeigniter-develbar master
+```
+
+### Run PHP built-in server (PHP 5.4 or later)
+
+```
+$ cd /path/to/codeigniter
+$ bin/server.sh
+```
+
+### Update CodeIgniter
+
+```
+$ cd /path/to/codeigniter
+$ composer update
+```
+
+You must update files manually if files in `application` folder or `index.php` change. Check [CodeIgniter User Guide](http://www.codeigniter.com/user_guide/installation/upgrading.html).
+
+## Reference
+
+* [Composer Installation](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-osx)
+* [CodeIgniter](https://github.com/bcit-ci/CodeIgniter)
+* [Translations for CodeIgniter System](https://github.com/bcit-ci/codeigniter3-translations)
+
+## Related Projects for CodeIgniter 3.x
+
+* [Cli for CodeIgniter 3.0](https://github.com/kenjis/codeigniter-cli)
+* [ci-phpunit-test](https://github.com/kenjis/ci-phpunit-test)
+* [CodeIgniter Simple and Secure Twig](https://github.com/kenjis/codeigniter-ss-twig)
+* [CodeIgniter Doctrine](https://github.com/kenjis/codeigniter-doctrine)
+* [CodeIgniter Deployer](https://github.com/kenjis/codeigniter-deployer)
+* [CodeIgniter3 Filename Checker](https://github.com/kenjis/codeigniter3-filename-checker)
+* [CodeIgniter Widget (View Partial) Sample](https://github.com/kenjis/codeigniter-widgets)
