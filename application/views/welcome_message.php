@@ -80,6 +80,7 @@
             var tmb = document.getElementById('tes1');
             var tmb2 = document.getElementById('tes2');
             var tmb3 = document.getElementById('tes3');
+
             tmb.onclick = function(){
                 descp=1;
                 vint++;
@@ -91,7 +92,8 @@
                 nilaiString=nilaiString.replace(/(\s+)/g,"-");
                 daftarSuara = nilaiString.split("-");
                 obj = buatSuara(daftarSuara);
-                obj[0].play()};
+                obj[0].play()
+            };
 
             tmb2.onclick = function(){
                 descp=2;
@@ -104,7 +106,8 @@
                 nilaiString=nilaiString.replace(/(\s+)/g,"-");
                 daftarSuara = nilaiString.split("-");
                 obj = buatSuara(daftarSuara);
-                obj[0].play()};
+                obj[0].play()
+            };
 
             tmb3.onclick = function(){
                 descp=3;
@@ -121,6 +124,7 @@
 
             //alert(nilaiString);
         });
+
         function buatSuara(daftarSuara){
             i = 0;	j = 0;
             while( i < daftarSuara.length ){
@@ -129,7 +133,7 @@
                     obj[i]=soundManager.createSound({
                         id:j,
                         volume:100,
-                        url:'<?php echo base_url();?>assets/audio/'+daftarSuara[i]+'.mp3',
+                        url:'<?php echo base_url();?>assets/audio/'+daftarSuara[i]+'.wav',
                         onfinish:function(){
                             //alert(this.sID);
                             var next = parseInt(this.sID) + 1;
@@ -143,7 +147,7 @@
                     obj[i]=soundManager.createSound({
                         id:i.toString(),
                         volume:100,
-                        url:'<?php echo base_url();?>assets/audio/'+daftarSuara[i]+'.mp3',
+                        url:'<?php echo base_url();?>assets/audio/'+daftarSuara[i]+'.wav',
                         onfinish: function(){this.destruct();}
                     })
                 }
@@ -213,7 +217,7 @@
         <table>
             <tr style="width:100%; height: 200px;">
                 <td align="center" style="width: 30%; height: 100%; border: 1px solid #000;" >
-                    <p id="online" style="font-size: 100px;">100</p>
+                    <p id="online" style="font-size: 100px;">A10</p>
                 </td>
             </tr>
         </table>
