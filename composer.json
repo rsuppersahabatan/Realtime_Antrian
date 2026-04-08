@@ -1,5 +1,5 @@
 {
-	"description" : "The CodeIgniter Application with Composer",
+	"description" : "The CodeIgniter 3 with Composer with PHP 8.5 Supports",
 	"require": {
 		"php": ">=5.3.2",
 		"pocketarc/codeigniter": "^3.4"
