@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>Welcome to Antrian BAnk</title>
+	<title>Welcome to Antrian</title>
 
 	<style type="text/css">
 
@@ -167,7 +167,9 @@
         var socketPort = 8085;
         var socketUrl = window.location.protocol + '//' + window.location.hostname + ':' + socketPort;
     </script>
-    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+        document.write('<script type="text/javascript" src="' + socketUrl + '/socket.io/socket.io.js"><\/script>');
+    </script>
     <script type="text/javascript">
 
         var socket = null;
