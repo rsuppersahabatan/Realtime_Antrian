@@ -2,6 +2,19 @@
     Node.js server script
     Required node packages: express, redis, socket.io
 */
+const fs = require('fs');
+const path = require('path');
+const envPath = path.resolve(__dirname, '../.env');
+if (fs.existsSync(envPath)) {
+    const envConfig = fs.readFileSync(envPath, 'utf8');
+    envConfig.split('\n').forEach(line => {
+        const match = line.match(/^([^#\s][^\s=]+)\s*=\s*(.*)$/);
+        if (match) {
+            process.env[match[1]] = match[2];
+        }
+    });
+}
+
 const PORT = 8085;
 const HOST = '0.0.0.0';
 const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
@@ -15,7 +28,13 @@ var server = http.createServer(app);
 
 const redis = require('redis');
 
-const REDIS_URL = `redis://${REDIS_HOST}:${REDIS_PORT}`;
+const REDIS_PASSWORD = process.env.REDIS_PASSWORD || '';
+
+let REDIS_URL = `redis://`;
+if (REDIS_PASSWORD) {
+    REDIS_URL += `:${REDIS_PASSWORD}@`;
+}
+REDIS_URL += `${REDIS_HOST}:${REDIS_PORT}`;
 
 // Main redis client (for general use)
 const client = redis.createClient({ url: REDIS_URL });
