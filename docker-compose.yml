@@ -1,0 +1,70 @@
+version: "3.8"
+
+services:
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: antrian_php
+    ports:
+      - "${PHP_PORT:-8080}:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - redis
+      - mysql
+    environment:
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - DB_HOST=${DB_HOST:-mysql}
+      - DB_USER=${DB_USER:-antrian}
+      - DB_PASS=${DB_PASS:-antrian123}
+      - DB_NAME=${DB_NAME:-antrian_db}
+    networks:
+      - antrian_net
+
+  nodejs:
+    build:
+      context: ./node.js
+      dockerfile: Dockerfile
+    container_name: antrian_nodejs
+    ports:
+      - "${NODEJS_PORT:-8085}:8085"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+    networks:
+      - antrian_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: antrian_redis
+    ports:
+      - "${REDIS_EXT_PORT:-6379}:6379"
+    networks:
+      - antrian_net
+
+  mysql:
+    image: mysql:5.7
+    container_name: antrian_mysql
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_DATABASE: ${DB_NAME:-antrian_db}
+      MYSQL_USER: ${DB_USER:-antrian}
+      MYSQL_PASSWORD: ${DB_PASS:-antrian123}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - antrian_net
+
+volumes:
+  mysql_data:
+
+networks:
+  antrian_net:
+    driver: bridge

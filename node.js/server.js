@@ -3,17 +3,19 @@
     Required node packages: express, redis, socket.io
 */
 const PORT = 8085;
-const HOST = 'localhost';
+const HOST = '0.0.0.0';
+const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
+const REDIS_PORT = process.env.REDIS_PORT || 6379;
 
 var express = require('express'),
-    http = require('http'), 
-    server = http.createServer(app);
+    http = require('http');
 
 var app = express();
+var server = http.createServer(app);
 
 const redis = require('redis');
-const client = redis.createClient();
-log('info', 'connected to redis server');
+const client = redis.createClient({ host: REDIS_HOST, port: REDIS_PORT });
+log('info', 'connected to redis server at ' + REDIS_HOST + ':' + REDIS_PORT);
 
 const io = require('socket.io');
 
@@ -22,8 +24,8 @@ if (!module.parent) {
     const socket  = io.listen(server);
 
     socket.on('connection', function(client) {
-        const subscribe = redis.createClient();
-        const subscribe2 = redis.createClient();
+        const subscribe = redis.createClient({ host: REDIS_HOST, port: REDIS_PORT });
+        const subscribe2 = redis.createClient({ host: REDIS_HOST, port: REDIS_PORT });
         subscribe.subscribe('realtime');
 
         subscribe.on("message", function(channel, message) {
