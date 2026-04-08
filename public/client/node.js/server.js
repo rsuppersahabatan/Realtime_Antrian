@@ -46,36 +46,66 @@ client.connect().then(() => {
 const { Server } = require('socket.io');
 
 if (!module.parent) {
-    server.listen(PORT, HOST);
-    const socket = new Server(server, { cors: { origin: '*' } });
+    server.listen(PORT, HOST, () => {
+        log('info', `Socket.IO server listening on ${HOST}:${PORT}`);
+    });
 
-    socket.on('connection', async function(socketClient) {
-        // Redis v4: subscriber harus client terpisah yang di-duplicate
+    const socket = new Server(server, {
+        cors: { origin: '*' },
+        transports: ['websocket', 'polling'],
+        pingTimeout: 60000,
+        pingInterval: 25000,
+    });
+
+    socket.on('connection', function(socketClient) {
+        log('info', 'Client connected: ' + socketClient.id);
+
+        // Create subscriber clients but DO NOT await in connection handler
+        // to avoid blocking the WebSocket handshake
         const subscribe = client.duplicate();
         const subscribe2 = client.duplicate();
 
-        await subscribe.connect();
-        await subscribe2.connect();
+        let isConnected = false;
 
-        // Redis v4: subscribe menggunakan callback dalam fungsi subscribe()
-        await subscribe.subscribe('realtime', (message, channel) => {
-            socketClient.send(message);
-            log('msg', "received from channel #" + channel + " : " + message);
-        });
+        // Connect asynchronously without blocking the connection handler
+        Promise.all([subscribe.connect(), subscribe2.connect()])
+            .then(() => {
+                isConnected = true;
+                log('info', 'Redis subscribers connected for client: ' + socketClient.id);
 
-        await subscribe2.subscribe('loop', (message, channel) => {
-            socketClient.send(message);
-            log('msg', "received from channel #" + channel + " : " + message);
-        });
+                return Promise.all([
+                    subscribe.subscribe('realtime', (message, channel) => {
+                        if (socketClient.connected) {
+                            socketClient.send(message);
+                            log('msg', "received from channel #" + channel + " : " + message);
+                        }
+                    }),
+                    subscribe2.subscribe('loop', (message, channel) => {
+                        if (socketClient.connected) {
+                            socketClient.send(message);
+                            log('msg', "received from channel #" + channel + " : " + message);
+                        }
+                    }),
+                ]);
+            })
+            .catch((err) => {
+                log('error', 'Redis subscriber connect failed: ' + err.message);
+            });
 
         socketClient.on('message', function(msg) {
             log('debug', msg);
         });
 
         socketClient.on('disconnect', async function() {
-            log('log', 'disconnecting from redis');
-            await subscribe.quit();
-            await subscribe2.quit();
+            log('log', 'Client disconnected: ' + socketClient.id);
+            if (isConnected) {
+                try { await subscribe.quit(); } catch(e) { /* ignore */ }
+                try { await subscribe2.quit(); } catch(e) { /* ignore */ }
+            } else {
+                // If not yet connected, just disconnect without quit
+                try { subscribe.disconnect(); } catch(e) { /* ignore */ }
+                try { subscribe2.disconnect(); } catch(e) { /* ignore */ }
+            }
         });
     });
 }
