@@ -73,7 +73,7 @@ if (!module.parent) {
         });
 
         socketClient.on('disconnect', async function() {
-            log('warn', 'disconnecting from redis');
+            log('log', 'disconnecting from redis');
             await subscribe.quit();
             await subscribe2.quit();
         });
