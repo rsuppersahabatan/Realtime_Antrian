@@ -7,9 +7,9 @@
     "email": "venu@venublog.com"
   },
   "dependencies" : {
-    "redis": "",
-    "socket.io": "",
-    "express": ""
+    "redis": "^3.1.2",
+    "socket.io": "^4.7.4",
+    "express": "^4.18.2"
   },
   "repository" : {
     "type": "git",

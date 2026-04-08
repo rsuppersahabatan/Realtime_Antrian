@@ -17,11 +17,11 @@ const redis = require('redis');
 const client = redis.createClient({ host: REDIS_HOST, port: REDIS_PORT });
 log('info', 'connected to redis server at ' + REDIS_HOST + ':' + REDIS_PORT);
 
-const io = require('socket.io');
+const { Server } = require('socket.io');
 
 if (!module.parent) {
     server.listen(PORT, HOST);
-    const socket  = io.listen(server);
+    const socket  = new Server(server, { cors: { origin: '*' } });
 
     socket.on('connection', function(client) {
         const subscribe = redis.createClient({ host: REDIS_HOST, port: REDIS_PORT });
