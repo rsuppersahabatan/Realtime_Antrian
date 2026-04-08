@@ -58,7 +58,7 @@ $autoload['packages'] = array();
 |
 |	$autoload['libraries'] = array('user_agent' => 'ua');
 */
-$autoload['libraries'] = array('redis');
+$autoload['libraries'] = array('app_redis' => 'redis');
 
 /*
 | -------------------------------------------------------------------

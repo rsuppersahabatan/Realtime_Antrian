@@ -12,7 +12,7 @@
  * @link			http://joelcox.nl
  * @license			http://www.opensource.org/licenses/mit-license.html
  */
-class CI_Redis {
+class App_redis {
 
 	/**
 	 * CI
