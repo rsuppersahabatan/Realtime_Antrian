@@ -14,40 +14,49 @@ var app = express();
 var server = http.createServer(app);
 
 const redis = require('redis');
-const client = redis.createClient({ host: REDIS_HOST, port: REDIS_PORT });
-log('info', 'connected to redis server at ' + REDIS_HOST + ':' + REDIS_PORT);
+
+const REDIS_URL = `redis://${REDIS_HOST}:${REDIS_PORT}`;
+
+// Main redis client (for general use)
+const client = redis.createClient({ url: REDIS_URL });
+client.on('error', (err) => log('error', 'Redis client error: ' + err.message));
+client.connect().then(() => {
+    log('info', 'connected to redis server at ' + REDIS_HOST + ':' + REDIS_PORT);
+}).catch((err) => log('error', 'Redis connect failed: ' + err.message));
 
 const { Server } = require('socket.io');
 
 if (!module.parent) {
     server.listen(PORT, HOST);
-    const socket  = new Server(server, { cors: { origin: '*' } });
+    const socket = new Server(server, { cors: { origin: '*' } });
 
-    socket.on('connection', function(client) {
-        const subscribe = redis.createClient({ host: REDIS_HOST, port: REDIS_PORT });
-        const subscribe2 = redis.createClient({ host: REDIS_HOST, port: REDIS_PORT });
-        subscribe.subscribe('realtime');
+    socket.on('connection', async function(socketClient) {
+        // Redis v4: subscriber harus client terpisah yang di-duplicate
+        const subscribe = client.duplicate();
+        const subscribe2 = client.duplicate();
 
-        subscribe.on("message", function(channel, message) {
-            client.send(message);
+        await subscribe.connect();
+        await subscribe2.connect();
+
+        // Redis v4: subscribe menggunakan callback dalam fungsi subscribe()
+        await subscribe.subscribe('realtime', (message, channel) => {
+            socketClient.send(message);
             log('msg', "received from channel #" + channel + " : " + message);
         });
 
-         subscribe2.subscribe('loop');
-
-        subscribe2.on("message", function(channel, message) {
-            client.send(message);
+        await subscribe2.subscribe('loop', (message, channel) => {
+            socketClient.send(message);
             log('msg', "received from channel #" + channel + " : " + message);
         });
 
-
-        client.on('message', function(msg) {
+        socketClient.on('message', function(msg) {
             log('debug', msg);
         });
 
-        client.on('disconnect', function() {
+        socketClient.on('disconnect', async function() {
             log('warn', 'disconnecting from redis');
-            subscribe.quit();
+            await subscribe.quit();
+            await subscribe2.quit();
         });
     });
 }
