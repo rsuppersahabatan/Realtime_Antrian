@@ -161,12 +161,16 @@
             return obj;
         }
     </script>
-    <script type="text/javascript" src="http://localhost:8085/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+        var socketPort = 8085;
+        var socketUrl = window.location.protocol + '//' + window.location.hostname + ':' + socketPort;
+    </script>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
     <script type="text/javascript">
 
         var socket = null;
 
-            socket = io.connect('http://localhost:8085/');
+            socket = io.connect(socketUrl);
 
             socket.on('connect', function(data){
                 setStatus('connected');
