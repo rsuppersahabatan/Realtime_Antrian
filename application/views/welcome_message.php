@@ -68,12 +68,25 @@
     <script type="text/javascript" src="<?php echo base_url();?>assets/script/terbilang.js"></script>
     <script type="text/javascript">
 
-        var vint=100;
+        var vint='A10';
         var vint2=200;
         var descp=1;
         soundManager.url='<?php echo base_url();?>assets/swf/'; //harus ada
         soundManager.preferFlash = false;
         soundManager.useHTML5Audio = true;
+
+        function incrementAntrian(nomor) {
+            var str = nomor.toString();
+            var matchAlfa = str.match(/^([a-zA-Z]+)(\d+)$/);
+            if (matchAlfa) {
+                var prefix = matchAlfa[1];
+                var angka = parseInt(matchAlfa[2], 10) + 1;
+                return prefix + angka;
+            } else if (!isNaN(str)) {
+                return parseInt(str, 10) + 1;
+            }
+            return str;
+        }
 
         soundManager.onready(function(){
 
@@ -83,63 +96,85 @@
 
             tmb.onclick = function(){
                 descp=1;
-                vint++;
+                vint = incrementAntrian(vint);
                 nilai= (vint).toString();
-                    //document.getElementById('nilai').value;
                 obj = new Array();
-                nilaiString = terbilang(nilai).trim();
-                // hapus spasi
-                nilaiString=nilaiString.replace(/(\s+)/g,"-");
-                daftarSuara = nilaiString.split("-");
+                daftarSuara = buatDaftarSuara(nilai);
                 obj = buatSuara(daftarSuara);
-                obj[0].play()
+                if(obj && obj.length > 0) obj[0].play()
             };
 
             tmb2.onclick = function(){
                 descp=2;
-                vint++;
+                vint = incrementAntrian(vint);
                 nilai= (vint).toString();
-                //document.getElementById('nilai').value;
                 obj = new Array();
-                nilaiString = terbilang(nilai).trim();
-                // hapus spasi
-                nilaiString=nilaiString.replace(/(\s+)/g,"-");
-                daftarSuara = nilaiString.split("-");
+                daftarSuara = buatDaftarSuara(nilai);
                 obj = buatSuara(daftarSuara);
-                obj[0].play()
+                if(obj && obj.length > 0) obj[0].play()
             };
 
             tmb3.onclick = function(){
                 descp=3;
-                vint2++;
+                vint2 = incrementAntrian(vint2);
                 nilai= (vint2).toString();
-                //document.getElementById('nilai').value;
                 obj = new Array();
-                nilaiString = terbilang(nilai).trim();
-                // hapus spasi
-                nilaiString=nilaiString.replace(/(\s+)/g,"-");
-                daftarSuara = nilaiString.split("-");
+                daftarSuara = buatDaftarSuara(nilai);
                 obj = buatSuara(daftarSuara);
-                obj[0].play()};
+                if(obj && obj.length > 0) obj[0].play()
+            };
 
             //alert(nilaiString);
         });
 
+        /**
+         * Membuat daftar nama file audio dari nomor antrian.
+         * Mendukung nomor alfanumerik, misal: A10, B5, C100
+         * Jika ada prefix huruf, audio huruf (huruf_a, huruf_b, dst)
+         * akan ditambahkan di awal daftar suara.
+         */
+        function buatDaftarSuara(nomorAntrian) {
+            var daftar = [];
+            // Cek apakah nomor antrian diawali huruf (A-Z / a-z)
+            var matchAlfa = nomorAntrian.match(/^([a-zA-Z]+)(\d+)$/);
+            if (matchAlfa) {
+                var prefixHuruf = matchAlfa[1].toUpperCase(); // misal: "A", "AB"
+                var angka       = matchAlfa[2];               // misal: "10"
+                // Tambahkan audio untuk setiap huruf prefix
+                for (var h = 0; h < prefixHuruf.length; h++) {
+                    daftar.push('huruf/' + prefixHuruf[h].toLowerCase()); // misal: huruf/a.wav
+                }
+                // Tambahkan audio angka (terbilang)
+                if (parseInt(angka) > 0) {
+                    var nilaiString = terbilang(angka).trim();
+                    nilaiString = nilaiString.replace(/(\s+)/g, "-");
+                    var bagianAngka = nilaiString.split("-");
+                    for (var k = 0; k < bagianAngka.length; k++) {
+                        daftar.push(bagianAngka[k]);
+                    }
+                }
+            } else {
+                // Angka murni
+                var nilaiString = terbilang(nomorAntrian).trim();
+                nilaiString = nilaiString.replace(/(\s+)/g, "-");
+                daftar = nilaiString.split("-");
+            }
+            return daftar;
+        }
+
         function buatSuara(daftarSuara){
             i = 0;	j = 0;
             while( i < daftarSuara.length ){
-                j =i.toString();
+                j = i.toString();
                 if( i != daftarSuara.length - 1) {
                     obj[i]=soundManager.createSound({
                         id:j,
                         volume:100,
                         url:'<?php echo base_url();?>assets/audio/'+daftarSuara[i]+'.wav',
                         onfinish:function(){
-                            //alert(this.sID);
                             var next = parseInt(this.sID) + 1;
                             obj[next].play();
                             this.destruct();
-
                         }
                     })
                 }
@@ -159,11 +194,9 @@
                 data: {
                     nilai : vint,
                     nilai2 : vint2,
-                        //$("input[name='loket01']").val(),
                     desc :descp
                 }
-            })
-            ;
+            });
             return obj;
         }
     </script>
