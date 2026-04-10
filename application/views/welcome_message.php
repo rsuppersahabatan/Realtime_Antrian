@@ -71,6 +71,7 @@
         var vint='A10';
         var vint2=200;
         var descp=1;
+        
         soundManager.url='<?php echo base_url();?>assets/swf/'; //harus ada
         soundManager.preferFlash = false;
         soundManager.useHTML5Audio = true;
