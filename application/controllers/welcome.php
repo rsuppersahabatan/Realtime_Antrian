@@ -59,7 +59,8 @@ class Welcome extends CI_Controller {
 
     public function terbilang()
     {
-
+        error_log("terbilang called with desc: " . $this->input->post('desc') . " nilai: " . $this->input->post('nilai'));
+        
         if ($this->input->post('desc') == 1) {
             $this->data['message'] = $this->redis->command("publish realtime loket01-" . $this->input->post('nilai'));
         } else if ($this->input->post('desc') == 2)  {
@@ -67,6 +68,9 @@ class Welcome extends CI_Controller {
         } else if ($this->input->post('desc') == 3){
             $this->data['message'] = $this->redis->command("publish realtime kasir01-" . $this->input->post('nilai2'));
         }
+        
+        error_log("redis output: " . json_encode($this->data['message']));
+        
         //$this->redis->set('realtime', $this->input->post('cmd'));
         $this->load->view('welcome_message',$this->data);
     }
