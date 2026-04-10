@@ -1,35 +1,101 @@
-<html>
-  <head>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Display Antrian - UPDRS RS PERSAHABATAN</title>
+    <!-- jQuery harus diload sebelum script lokal jika ingin menggunakan global $ -->
+    <script src="/client/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    
+    <style>
+        body {
+            background-color: #ecf0f1;
+            overflow: hidden; /* Menghilangkan scrollbar pada display TV */
+        }
+        
+        .header-blue {
+            background-color: #2980b9;
+            color: white;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-bottom: 5px solid #2c3e50;
+        }
 
-    <title>Node.js, Redis and Socket.IO</title>
-   
-    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+        /* Styling Nomor Utama */
+        .main-queue {
+            background: #fff;
+            border: 4px solid #27ae60;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
 
-    <!--Load the AJAX API-->
-    <script type="text/javascript" src="/client/jquery.min.js"></script>
+        .main-queue h2 {
+            font-size: 30px;
+            color: #7f8c8d;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .main-number {
+            font-size: 160px;
+            font-weight: 900;
+            color: #27ae60;
+            line-height: 1;
+            margin: 20px 0;
+        }
+
+        .main-counter {
+            background-color: #27ae60;
+            color: white;
+            font-size: 40px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        /* Sidebar Styling */
+        .side-queue .panel {
+            margin-bottom: 10px;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .side-number {
+            font-size: 45px;
+            font-weight: bold;
+            color: #2980b9;
+        }
+
+        .side-label {
+            font-size: 18px;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+
+        /* Running Text */
+        .footer-news {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px 0;
+            font-size: 20px;
+        }
+    </style>
+
     <script type="text/javascript">
       var socketPort = 8085;
       var socketUrl = window.location.protocol + '//' + window.location.hostname + ':' + socketPort;
-      
-      // Load Socket.IO dynamic so we don't use document.write
+
       var script = document.createElement('script');
       script.src = socketUrl + "/socket.io/socket.io.js";
       script.onload = function() {
           var socket = io.connect(socketUrl);
-
-          socket.on('connect', function(){
-            setStatus('connected');
-            socket.emit('subscribe', {channel:'realtime'});
+          socket.on('connect', function(data){
+              console.log('Socket connected');
           });
-
-          socket.on('reconnecting', function(){
-            setStatus('reconnecting');
-          });
-
-          socket.on('connect_error', function(err){
-            setStatus('error: ' + err.message);
-          });
-
           socket.on('message', function (data) {
             console.log('received a message: ', data);
             addMessage(data);
@@ -37,49 +103,102 @@
       };
       
       script.onerror = function() {
-          setStatus('Failed to load socket.io.js from ' + socketUrl);
+          console.error("Gagal memuat socket.io.js. Pastikan Node.js berjalan di port " + socketPort);
       };
-      
       document.head.appendChild(script);
 
       function addMessage(data) {
           if (!data) return;
           var vdt = data.toString().split("-");
+          
           if (vdt.length > 1) {
-              $('#online').html(vdt[1]);
+              var loket_raw = vdt[0].toLowerCase();
+              var nomor_antrian = vdt[1];
+              
+              $('#online').html(nomor_antrian);
+              
+              var loket_name = "LOKET X";
+              if (loket_raw.startsWith('loket')) {
+                  loket_name = "LOKET " + loket_raw.replace('loket', '').replace(/^0+/, '');
+              } else if (loket_raw.startsWith('kasir')) {
+                  loket_name = "KASIR " + loket_raw.replace('kasir', '').replace(/^0+/, '');
+              } else {
+                  loket_name = loket_raw.toUpperCase();
+              }
+              
+              $('#loket_display').html("SILAHKAN KE " + loket_name);
+              
           } else {
               $('#online').html(data);
           }
       }
-
-      function setStatus(msg) {
-          console.log('Connection Status : ' + msg);
-          // show on screen temporarily for debugging 
-          var debugDiv = document.getElementById('debug_status');
-          if (!debugDiv) {
-              debugDiv = document.createElement('div');
-              debugDiv.id = 'debug_status';
-              debugDiv.style.position = 'fixed';
-              debugDiv.style.top = '10px';
-              debugDiv.style.left = '10px';
-              debugDiv.style.background = 'yellow';
-              debugDiv.style.padding = '5px';
-              document.body.appendChild(debugDiv);
-          }
-          debugDiv.innerHTML = msg;
-      }
-
     </script>
-  </head>
+</head>
+<body>
 
-  <body>
-    <table>
-      <tr style="width:100%; height: 200px;"> 
-        <td align="center" style="width: 30%; height: 100%; border: 1px solid #000;" >
-            <p id="online" style="font-size: 100px;">0</p>
-        </td>
-     </tr>
-  </table>
-  </body>
+<div class="header-blue text-center">
+    <div class="container-fluid">
+        <h1 style="margin:0; font-weight: bold;">ANTRIAN UPDRS RS PERSAHABATAN</h1>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        
+        <div class="col-md-8">
+            <div class="main-queue">
+                <h2>NOMOR ANTRIAN</h2>
+                <div class="main-number" id="online">A-000</div>
+                <div class="main-counter" id="loket_display">MENUNGGU PANGGILAN</div>
+            </div>
+        </div>
+
+        <div class="col-md-4 side-queue">
+            
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-6 side-label">LOKET 2</div>
+                        <div class="col-xs-6 text-right side-number">A-123</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-6 side-label">LOKET 3</div>
+                        <div class="col-xs-6 text-right side-number">B-010</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-6 side-label">LOKET 4</div>
+                        <div class="col-xs-6 text-right side-number">C-005</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="embed-responsive embed-responsive-16by9" style="margin-top: 20px; border-radius: 10px; overflow: hidden;">
+                <!-- Kotak video / banner -->
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="footer-news">
+    <marquee behavior="scroll" direction="left">
+        <strong>PENGUMUMAN:</strong> Jam operasional : 12:00 - 19:00 WIB. | Gunakan selalu masker di lingkungan rumah sakit.
+    </marquee>
+</div>
+
+<!-- Fallback jQuery if not loaded from relative path, keep Bootstrap js functioning -->
+<script>window.jQuery || document.write('<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"><\\/script>')</script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+</body>
 </html>
-
