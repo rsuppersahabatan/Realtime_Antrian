@@ -99,17 +99,8 @@ if (!module.parent) {
         socketClient.on('message', function(msg) {
             log('debug', msg);
         });
-        
-        // TEST PING EVERY 5 SECONDS
-        const testPing = setInterval(() => {
-            if (socketClient.connected) {
-                socketClient.send("test-A99");
-                log('info', 'Sent test-A99 to client ' + socketClient.id);
-            }
-        }, 5000);
 
         socketClient.on('disconnect', async function() {
-            clearInterval(testPing);
             log('log', 'Client disconnected: ' + socketClient.id);
             if (isConnected) {
                 try { await subscribe.quit(); } catch(e) { /* ignore */ }
