@@ -63,7 +63,11 @@ if (!module.parent) {
         // Create subscriber clients but DO NOT await in connection handler
         // to avoid blocking the WebSocket handshake
         const subscribe = client.duplicate();
+        subscribe.on('error', (err) => log('error', 'Redis subscriber error: ' + err.message));
+        
         const subscribe2 = client.duplicate();
+        subscribe2.on('error', (err) => log('error', 'Redis subscriber2 error: ' + err.message));
+
 
         let isConnected = false;
 

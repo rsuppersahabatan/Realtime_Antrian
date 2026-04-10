@@ -6,38 +6,68 @@
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
 
     <!--Load the AJAX API-->
-    <script type="text/javascript" src="./client/jquery.min.js"></script>
+    <script type="text/javascript" src="/client/jquery.min.js"></script>
     <script type="text/javascript">
       var socketPort = 8085;
       var socketUrl = window.location.protocol + '//' + window.location.hostname + ':' + socketPort;
-    </script>
-    <script type="text/javascript" src="./client/node.js/node_modules/socket.io/client-dist/socket.io.min.js"></script>
-    <script type="text/javascript">
+      
+      // Load Socket.IO dynamic so we don't use document.write
+      var script = document.createElement('script');
+      script.src = socketUrl + "/socket.io/socket.io.js";
+      script.onload = function() {
+          var socket = io.connect(socketUrl);
 
-      var socket = io.connect(socketUrl);
+          socket.on('connect', function(){
+            setStatus('connected');
+            socket.emit('subscribe', {channel:'realtime'});
+          });
 
-      socket.on('connect', function(data){
-        setStatus('connected');
-        socket.emit('subscribe', {channel:'realtime'});
-      });
+          socket.on('reconnecting', function(){
+            setStatus('reconnecting');
+          });
 
-      socket.on('reconnecting', function(data){
-        setStatus('reconnecting');
-      });
+          socket.on('connect_error', function(err){
+            setStatus('error: ' + err.message);
+          });
 
-      socket.on('message', function (data) {
-        console.log('received a message: ', data);
-        addMessage(data);
-      });
+          socket.on('message', function (data) {
+            console.log('received a message: ', data);
+            addMessage(data);
+          });
+      };
+      
+      script.onerror = function() {
+          setStatus('Failed to load socket.io.js from ' + socketUrl);
+      };
+      
+      document.head.appendChild(script);
 
       function addMessage(data) {
-          $('#online').html(data);
+          if (!data) return;
+          var vdt = data.toString().split("-");
+          if (vdt.length > 1) {
+              $('#online').html(vdt[1]);
+          } else {
+              $('#online').html(data);
+          }
       }
 
       function setStatus(msg) {
           console.log('Connection Status : ' + msg);
+          // show on screen temporarily for debugging 
+          var debugDiv = document.getElementById('debug_status');
+          if (!debugDiv) {
+              debugDiv = document.createElement('div');
+              debugDiv.id = 'debug_status';
+              debugDiv.style.position = 'fixed';
+              debugDiv.style.top = '10px';
+              debugDiv.style.left = '10px';
+              debugDiv.style.background = 'yellow';
+              debugDiv.style.padding = '5px';
+              document.body.appendChild(debugDiv);
+          }
+          debugDiv.innerHTML = msg;
       }
-
 
     </script>
   </head>
