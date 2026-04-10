@@ -188,15 +188,22 @@
                 }
                 i++;
             }
+            var ajaxUrl = "<?php echo site_url('welcome/terbilang');?>";
+            console.log("Preparing to send AJAX to: " + ajaxUrl);
             $.ajax({
-                url: "<?php echo site_url();?>/welcome/terbilang",
+                url: ajaxUrl,
                 type: "POST",
                 data: {
                     nilai : vint,
                     nilai2 : vint2,
                     desc :descp
                 }
+            }).done(function(response) {
+                console.log("AJAX Success:", response.substring(0, 50));
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.error("AJAX Error:", textStatus, errorThrown);
             });
+            console.log("AJAX request initiated.");
             return obj;
         }
     </script>
