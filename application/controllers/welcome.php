@@ -23,11 +23,13 @@ class Welcome extends CI_Controller {
     {
         parent::__construct();
          $this->load->library('form_validation');
+		 $this->load->model(['Layanan_model', 'Loket_model', 'Antrian_model']);
     }
 
 	public function index()
 	{
 		$this->data['message'] = $this->redis->command('PING');
+		$this->data['loket'] = $this->Loket_model->get_loket_buka();
 		$this->load->view('welcome_message',$this->data);
 	}
 
@@ -35,7 +37,6 @@ class Welcome extends CI_Controller {
 	{		
 		//$this->data['message'] = $this->redis->command('publish realtime '.$this->input->post('cmd'));
 		//$this->redis->set('realtime', $this->input->post('cmd'));
-
         $this->data['message']= $this->redis->command('publish realtime loket02-102');
 		$this->load->view('welcome_message',$this->data);
 	}

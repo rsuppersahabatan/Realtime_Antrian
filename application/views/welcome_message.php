@@ -271,14 +271,13 @@
         <input type="text" name="publish" value="" placeholder="command"/>
         <input type="submit" value="command"/>
     </form>
-
-    Masukkan bilangan saja : <br />
-  <!--<form action="<?php echo site_url();?>/welcome/terbilang" method="post">-->
-   <!-- <input type=text id='nilai' name="loket01"> -->
-    <button  type="submit" id="tes1"> Panggil - Loket 1</button>
-    <button  type="submit" id="tes2"> Panggil - Loket 2</button>
-    <button  type="submit" id="tes3"> Panggil - Kasir </button>
-    <!--  </form> -->
+    -->
+    
+    <?php 
+        foreach($loket as $key => $value){
+            echo '<button  type="submit" id="tes'.$value['id'].'">'.$value['nama_loket'].'</button>';
+        }
+    ?>
 	<p class="footer">Page rendered in <strong>{elapsed_time}</strong> seconds</p>
 
 </div>
