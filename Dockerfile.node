@@ -1,0 +1,11 @@
+FROM node:18-alpine
+WORKDIR /app
+
+# Copy package.json dari subfolder ke dalam container
+COPY public/client/node.js/package*.json ./
+RUN npm install
+
+# Copy seluruh source code dari subfolder ke dalam container
+COPY public/client/node.js/ .
+
+CMD ["node", "index.js"]

@@ -1,5 +1,4 @@
 version: "3.8"
-
 services:
   php:
     build:
@@ -7,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: antrian_php
     ports:
-      - "${PHP_PORT:-8080}:80"
+      - ${PHP_PORT:-8080}:80
     volumes:
       - .:/var/www/html
     depends_on:
@@ -23,14 +22,13 @@ services:
       - DB_NAME=${DB_NAME:-antrian_db}
     networks:
       - antrian_net
-
   nodejs:
     build:
-      context: ./node.js
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile.node # Pastikan nama filenya sesuai di root
     container_name: antrian_nodejs
     ports:
-      - "${NODEJS_PORT:-8085}:8085"
+      - ${NODEJS_PORT:-8085}:8085
     depends_on:
       - redis
     environment:
@@ -38,21 +36,22 @@ services:
       - REDIS_PORT=${REDIS_PORT:-6379}
     networks:
       - antrian_net
-
   redis:
     image: redis:7-alpine
     container_name: antrian_redis
-    command: redis-server --port ${REDIS_PORT:-6379}
+    # Menambahkan password jika ada di .env agar sinkron
+    command: >
+      sh -c "redis-server --port
+      ${REDIS_PORT:-6379}  ${REDIS_PASSWORD:+--requirepass $REDIS_PASSWORD}"
     ports:
-      - "${REDIS_EXT_PORT:-6380}:${REDIS_PORT:-6379}"
+      - ${REDIS_EXT_PORT:-6380}:${REDIS_PORT:-6379}
     networks:
       - antrian_net
-
   mysql:
     image: mysql:5.7
     container_name: antrian_mysql
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - ${MYSQL_PORT:-3306}:3306
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
       MYSQL_DATABASE: ${DB_NAME:-antrian_db}
@@ -62,10 +61,8 @@ services:
       - mysql_data:/var/lib/mysql
     networks:
       - antrian_net
-
 volumes:
-  mysql_data:
-
+  mysql_data: null
 networks:
   antrian_net:
     driver: bridge
