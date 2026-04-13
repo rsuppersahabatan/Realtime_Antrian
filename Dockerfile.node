@@ -1,11 +1,21 @@
 FROM node:18-alpine
+
 WORKDIR /app
 
-# Copy package.json dari subfolder ke dalam container
+# Salin package.json langsung dari folder project nodejs
 COPY public/client/node.js/package*.json ./
-RUN npm install
 
-# Copy seluruh source code dari subfolder ke dalam container
+# Install dependencies (termasuk socket.io dan redis)
+RUN npm install --production
+
+# Salin isi folder node.js ke direktori kerja (/app)
+# Pastikan ada spasi antara '.' dan '.'
 COPY public/client/node.js/ .
 
-CMD ["node", "index.js"]
+# Cek isi folder untuk memastikan index.js ada di /app/index.js
+RUN ls -la
+
+EXPOSE 8085
+
+# Jika nama filenya bukan index.js (misal server.js), ganti bagian ini
+CMD ["node", "server.js"]
