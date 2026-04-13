@@ -113,6 +113,15 @@ $ cd /path/to/codeigniter
 $ bin/server.sh
 ```
 
+### Docker
+```
+# Hapus kontainer yang gagal
+docker-compose down
+
+# Build ulang tanpa cache supaya file server.js benar-benar tersalin
+docker-compose up --build -d
+```
+
 ### Update CodeIgniter
 
 ```
