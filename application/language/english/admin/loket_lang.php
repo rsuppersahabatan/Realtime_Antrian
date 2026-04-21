@@ -16,6 +16,9 @@ $lang['loket_nama_loket']  = 'Counter Name';
 $lang['loket_status_buka'] = 'Status';
 $lang['loket_created_at']  = 'Created';
 $lang['loket_action']      = 'Action';
+$lang['loket_users']       = 'Operators';
+$lang['loket_users_help']  = 'Check one or more users who are allowed to operate this counter.';
+$lang['loket_users_empty'] = 'No users registered yet.';
 
 /* Status */
 $lang['loket_buka']  = 'Open';

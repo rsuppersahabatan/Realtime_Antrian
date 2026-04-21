@@ -16,6 +16,9 @@ $lang['loket_nama_loket']  = 'Nama Loket';
 $lang['loket_status_buka'] = 'Status';
 $lang['loket_created_at']  = 'Dibuat';
 $lang['loket_action']      = 'Aksi';
+$lang['loket_users']       = 'Petugas';
+$lang['loket_users_help']  = 'Centang satu atau lebih user yang boleh mengoperasikan loket ini.';
+$lang['loket_users_empty'] = 'Belum ada user terdaftar.';
 
 /* Status */
 $lang['loket_buka']  = 'Buka';

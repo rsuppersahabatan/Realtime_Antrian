@@ -29,6 +29,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 												<th width="60">#</th>
 												<th><?php echo lang('loket_nama_loket'); ?></th>
 												<th><?php echo lang('loket_layanan'); ?></th>
+												<th><?php echo lang('loket_users'); ?></th>
 												<th><?php echo lang('loket_status_buka'); ?></th>
 												<th><?php echo lang('loket_created_at'); ?></th>
 												<th><?php echo lang('loket_action'); ?></th>
@@ -42,6 +43,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 												<td>
 													<span class="label label-primary"><?php echo htmlspecialchars($row['kode_huruf'], ENT_QUOTES, 'UTF-8'); ?></span>
 													<?php echo htmlspecialchars($row['nama_layanan'], ENT_QUOTES, 'UTF-8'); ?>
+												</td>
+												<td>
+<?php if (empty($row['users'])): ?>
+													<span class="text-muted">&mdash;</span>
+<?php else: ?>
+<?php foreach ($row['users'] as $u): ?>
+													<span class="label label-info" style="margin-right:2px;display:inline-block;margin-bottom:2px;"><?php echo htmlspecialchars($u['username'], ENT_QUOTES, 'UTF-8'); ?></span>
+<?php endforeach; ?>
+<?php endif; ?>
 												</td>
 												<td>
 													<?php if ($row['status_buka'] == 'buka'): ?>
@@ -63,7 +73,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 <?php endforeach; ?>
 <?php if (empty($loket)): ?>
 											<tr>
-												<td colspan="6" class="text-center text-muted"><?php echo lang('loket_not_found'); ?></td>
+												<td colspan="7" class="text-center text-muted"><?php echo lang('loket_not_found'); ?></td>
 											</tr>
 <?php endif; ?>
 										</tbody>

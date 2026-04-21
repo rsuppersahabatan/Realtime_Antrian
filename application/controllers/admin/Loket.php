@@ -67,6 +67,10 @@ class Loket extends Admin_Controller {
 
 			if ($this->Loket_model->insert($data))
 			{
+				$new_id = $this->db->insert_id();
+				$selected_users = (array) $this->input->post('id_users');
+				$this->Loket_model->sync_users($new_id, $selected_users);
+
 				$this->session->set_flashdata('message', '<div class="alert alert-success">'.lang('loket_created_success').'</div>');
 				redirect('admin/loket', 'refresh');
 			}
@@ -101,6 +105,11 @@ class Loket extends Admin_Controller {
 				'value'     => $this->form_validation->set_value('nama_loket'),
 			);
 			$this->data['selected_status'] = $this->form_validation->set_value('status_buka', 'buka');
+
+			/* Users list + pre-selected pada re-submit gagal */
+			$this->data['users_list'] = $this->ion_auth->users()->result_array();
+			$posted_users = (array) $this->input->post('id_users');
+			$this->data['selected_users'] = array_map('intval', $posted_users);
 
 			/* Load Template */
 			$this->template->admin_render('admin/loket/create', $this->data);
@@ -148,15 +157,13 @@ class Loket extends Admin_Controller {
 				'status_buka' => $this->input->post('status_buka'),
 			);
 
-			if ($this->db->where('id', $id)->update('loket', $data))
-			{
-				$this->session->set_flashdata('message', '<div class="alert alert-success">'.lang('loket_updated_success').'</div>');
-				redirect('admin/loket', 'refresh');
-			}
-			else
-			{
-				$this->session->set_flashdata('message', '<div class="alert alert-danger">'.lang('loket_updated_error').'</div>');
-			}
+			$this->db->where('id', $id)->update('loket', $data);
+
+			$selected_users = (array) $this->input->post('id_users');
+			$this->Loket_model->sync_users($id, $selected_users);
+
+			$this->session->set_flashdata('message', '<div class="alert alert-success">'.lang('loket_updated_success').'</div>');
+			redirect('admin/loket', 'refresh');
 		}
 
 		$this->data['message'] = (validation_errors()
@@ -184,6 +191,17 @@ class Loket extends Admin_Controller {
 			'value'     => $this->form_validation->set_value('nama_loket', $loket['nama_loket']),
 		);
 		$this->data['selected_status'] = $this->form_validation->set_value('status_buka', $loket['status_buka']);
+
+		/* Users list + user yang sudah ter-assign */
+		$this->data['users_list'] = $this->ion_auth->users()->result_array();
+		if ($this->input->post('id_users') !== NULL)
+		{
+			$this->data['selected_users'] = array_map('intval', (array) $this->input->post('id_users'));
+		}
+		else
+		{
+			$this->data['selected_users'] = $this->Loket_model->get_user_ids($id);
+		}
 
 		/* Load Template */
 		$this->template->admin_render('admin/loket/edit', $this->data);

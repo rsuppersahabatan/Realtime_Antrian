@@ -42,6 +42,33 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 											</div>
 										</div>
 										<div class="form-group">
+											<label class="col-sm-3 control-label"><?php echo lang('loket_users'); ?></label>
+											<div class="col-sm-9">
+<?php if (empty($users_list)): ?>
+												<p class="form-control-static text-muted"><?php echo lang('loket_users_empty'); ?></p>
+<?php else: ?>
+												<div style="max-height:240px;overflow-y:auto;border:1px solid #ddd;padding:8px;border-radius:3px;">
+<?php foreach ($users_list as $u): ?>
+<?php
+	$uid     = (int) $u['id'];
+	$checked = in_array($uid, $selected_users, TRUE) ? ' checked="checked"' : '';
+	$label   = $u['username'];
+	$full    = trim($u['first_name'].' '.$u['last_name']);
+	if ($full !== '') { $label .= ' ('.$full.')'; }
+?>
+													<div class="checkbox">
+														<label>
+															<input type="checkbox" name="id_users[]" value="<?php echo $uid; ?>"<?php echo $checked; ?>>
+															<?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?>
+														</label>
+													</div>
+<?php endforeach; ?>
+												</div>
+												<p class="help-block"><?php echo lang('loket_users_help'); ?></p>
+<?php endif; ?>
+											</div>
+										</div>
+										<div class="form-group">
 											<div class="col-sm-offset-3 col-sm-9">
 												<div class="btn-group">
 													<?php echo form_button(array('type' => 'submit', 'class' => 'btn btn-primary btn-flat', 'content' => lang('actions_submit'))); ?>

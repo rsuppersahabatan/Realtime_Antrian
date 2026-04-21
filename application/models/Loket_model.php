@@ -4,12 +4,36 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Loket_model extends CI_Model {
     protected $table = 'loket';
 
-    // Ambil daftar semua loket beserta info nama/kode layanannya
+    // Ambil daftar semua loket beserta info nama/kode layanannya + daftar user yang ter-assign
     public function get_all() {
         $this->db->select('loket.*, layanan.nama_layanan, layanan.kode_huruf');
         $this->db->from($this->table);
         $this->db->join('layanan', 'layanan.id = loket.id_layanan', 'left');
-        return $this->db->get()->result_array();
+        $rows = $this->db->get()->result_array();
+
+        if ( ! empty($rows))
+        {
+            $loket_ids = array_column($rows, 'id');
+            $this->db->select('lu.id_loket, u.id, u.username, u.first_name, u.last_name');
+            $this->db->from('loket_user lu');
+            $this->db->join('users u', 'u.id = lu.id_user', 'inner');
+            $this->db->where_in('lu.id_loket', $loket_ids);
+            $this->db->order_by('u.username', 'ASC');
+            $users = $this->db->get()->result_array();
+
+            $grouped = array();
+            foreach ($users as $u)
+            {
+                $grouped[$u['id_loket']][] = $u;
+            }
+            foreach ($rows as &$row)
+            {
+                $row['users'] = isset($grouped[$row['id']]) ? $grouped[$row['id']] : array();
+            }
+            unset($row);
+        }
+
+        return $rows;
     }
     
     // Ambil detail satu loket spesifik
@@ -65,5 +89,39 @@ class Loket_model extends CI_Model {
     public function delete($id) {
         $this->db->where('id', $id);
         return $this->db->delete($this->table);
+    }
+
+    // Ambil daftar ID user yang di-assign ke loket tertentu
+    public function get_user_ids($id_loket) {
+        $this->db->select('id_user');
+        $this->db->from('loket_user');
+        $this->db->where('id_loket', $id_loket);
+        $rows = $this->db->get()->result_array();
+        return array_map('intval', array_column($rows, 'id_user'));
+    }
+
+    // Sinkronkan assignment user untuk sebuah loket (replace all)
+    public function sync_users($id_loket, array $user_ids) {
+        $user_ids = array_unique(array_filter(array_map('intval', $user_ids)));
+
+        $this->db->trans_start();
+
+        $this->db->where('id_loket', (int) $id_loket)->delete('loket_user');
+
+        if ( ! empty($user_ids))
+        {
+            $batch = array();
+            foreach ($user_ids as $uid)
+            {
+                $batch[] = array(
+                    'id_loket' => (int) $id_loket,
+                    'id_user'  => $uid,
+                );
+            }
+            $this->db->insert_batch('loket_user', $batch);
+        }
+
+        $this->db->trans_complete();
+        return $this->db->trans_status();
     }
 }
