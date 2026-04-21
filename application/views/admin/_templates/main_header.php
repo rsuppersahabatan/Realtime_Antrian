@@ -97,6 +97,33 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                             </li>
 
 <?php endif; ?>
+                            <!-- Language Switcher -->
+                            <li class="dropdown language-menu">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" title="<?php echo lang('header_language'); ?>">
+                                    <i class="fa fa-globe"></i>
+                                    <span class="hidden-xs"><?php echo strtoupper(element($current_language, $this->config->item('language_abbr'), $current_language)); ?></span>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li class="header"><?php echo lang('header_language'); ?></li>
+                                    <li>
+                                        <ul class="menu">
+<?php foreach ($available_languages as $lang_code => $lang_label): ?>
+                                            <li>
+                                                <a href="<?php echo site_url('language/set/'.$lang_code); ?>">
+<?php if ($lang_code === $current_language): ?>
+                                                    <i class="fa fa-check text-green"></i>
+<?php else: ?>
+                                                    <i class="fa fa-angle-right"></i>
+<?php endif; ?>
+                                                    <?php echo $lang_label; ?>
+                                                </a>
+                                            </li>
+<?php endforeach; ?>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+
 <?php if ($admin_prefs['user_menu'] == TRUE): ?>
                             <!-- User Account -->
                             <li class="dropdown user user-menu">
