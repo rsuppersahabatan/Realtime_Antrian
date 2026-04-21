@@ -22,3 +22,4 @@ $lang['header_sales']        = 'Penjualan';
 $lang['header_friends']      = 'Teman';
 $lang['header_profile']      = 'Profil';
 $lang['header_sign_out']     = 'Keluar';
+$lang['header_language']     = 'Bahasa';

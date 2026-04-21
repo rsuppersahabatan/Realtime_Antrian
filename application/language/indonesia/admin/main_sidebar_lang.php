@@ -33,6 +33,8 @@ $lang['menu_search'] = 'Cari';
 /* *********** */$lang['menu_antrian_delete']   = 'Hapus';
 /* *********** */$lang['menu_antrian_reset']    = 'Reset';
 
+/* ****** */$lang['menu_panggilan']             = 'Panggilan';
+
 
 /* * */$lang['menu_administration']             = 'Administrasi';
 /* ****** */$lang['menu_users']                 = 'Pengguna';
