@@ -82,11 +82,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 <script type="text/javascript" src="<?php echo base_url('assets/script/soundmanager2-nodebug-jsmin.js'); ?>"></script>
 <script type="text/javascript" src="<?php echo base_url('assets/script/terbilang.js'); ?>"></script>
 <script type="text/javascript">
-(function () {
-	soundManager.url           = '<?php echo base_url('assets/swf/'); ?>';
-	soundManager.preferFlash   = false;
-	soundManager.useHTML5Audio = true;
+/* soundManager boleh dikonfigurasi lebih awal (tidak butuh jQuery). */
+soundManager.url           = '<?php echo base_url('assets/swf/'); ?>';
+soundManager.preferFlash   = false;
+soundManager.useHTML5Audio = true;
 
+/* Tunggu DOMContentLoaded agar jQuery (dimuat di footer template) sudah siap. */
+document.addEventListener('DOMContentLoaded', function () {
 	var audioBase = '<?php echo base_url('assets/audio/'); ?>';
 	var callUrl   = '<?php echo site_url('admin/panggilan/call'); ?>';
 	var recallUrl = '<?php echo site_url('admin/panggilan/recall'); ?>';
@@ -222,15 +224,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		}
 	}
 
-	$(document).ready(function () {
-		$.getScript(sockUrl + '/socket.io/socket.io.js').done(function () {
-			var socket = io.connect(sockUrl);
-			socket.on('connect',      function () { setStatus('connected'); });
-			socket.on('disconnect',   function () { setStatus('disconnected'); });
-			socket.on('reconnecting', function () { setStatus('reconnecting'); });
-		}).fail(function () {
-			setStatus('disconnected');
-		});
+	$.getScript(sockUrl + '/socket.io/socket.io.js').done(function () {
+		var socket = io.connect(sockUrl);
+		socket.on('connect',      function () { setStatus('connected'); });
+		socket.on('disconnect',   function () { setStatus('disconnected'); });
+		socket.on('reconnecting', function () { setStatus('reconnecting'); });
+	}).fail(function () {
+		setStatus('disconnected');
 	});
-})();
+});
 </script>
