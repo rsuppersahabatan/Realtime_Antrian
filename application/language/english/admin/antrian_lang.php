@@ -5,43 +5,43 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /* Menu */
-$lang['menu_antrian']        = 'Antrian';
-$lang['menu_antrian_create'] = 'Tambah Antrian';
-$lang['menu_antrian_delete'] = 'Hapus Antrian';
-$lang['menu_antrian_reset']  = 'Reset Antrian';
+$lang['menu_antrian']        = 'Queue';
+$lang['menu_antrian_create'] = 'Add Queue';
+$lang['menu_antrian_delete'] = 'Delete Queue';
+$lang['menu_antrian_reset']  = 'Reset Queue';
 
 /* Fields */
 $lang['antrian_no']          = 'No';
-$lang['antrian_nomor']       = 'Nomor';
-$lang['antrian_layanan']     = 'Layanan';
-$lang['antrian_loket']       = 'Loket';
+$lang['antrian_nomor']       = 'Number';
+$lang['antrian_layanan']     = 'Service';
+$lang['antrian_loket']       = 'Counter';
 $lang['antrian_status']      = 'Status';
-$lang['antrian_waktu_ambil'] = 'Waktu Ambil';
-$lang['antrian_waktu_panggil'] = 'Waktu Panggil';
-$lang['antrian_waktu_selesai'] = 'Waktu Selesai';
-$lang['antrian_action']      = 'Aksi';
-$lang['antrian_tanggal']     = 'Tanggal';
-$lang['antrian_confirm']     = 'Konfirmasi';
+$lang['antrian_waktu_ambil'] = 'Taken At';
+$lang['antrian_waktu_panggil'] = 'Called At';
+$lang['antrian_waktu_selesai'] = 'Finished At';
+$lang['antrian_action']      = 'Action';
+$lang['antrian_tanggal']     = 'Date';
+$lang['antrian_confirm']     = 'Confirmation';
 
 /* Status */
-$lang['antrian_status_menunggu']  = 'Menunggu';
-$lang['antrian_status_dipanggil'] = 'Dipanggil';
-$lang['antrian_status_selesai']   = 'Selesai';
-$lang['antrian_status_batal']     = 'Batal';
+$lang['antrian_status_menunggu']  = 'Waiting';
+$lang['antrian_status_dipanggil'] = 'Called';
+$lang['antrian_status_selesai']   = 'Finished';
+$lang['antrian_status_batal']     = 'Cancelled';
 
 /* Buttons / Labels */
-$lang['antrian_create']      = 'Tambah Antrian Manual';
-$lang['antrian_reset_hari_ini'] = 'Reset Antrian Hari Ini';
-$lang['antrian_btn_selesai'] = 'Selesai';
-$lang['antrian_btn_batal']   = 'Batal';
+$lang['antrian_create']      = 'Add Manual Queue';
+$lang['antrian_reset_hari_ini'] = 'Reset Today\'s Queue';
+$lang['antrian_btn_selesai'] = 'Finish';
+$lang['antrian_btn_batal']   = 'Cancel';
 
 /* Messages */
-$lang['antrian_created_success'] = 'Antrian <strong>%s</strong> berhasil dibuat.';
-$lang['antrian_created_error']   = 'Gagal membuat antrian. Pastikan layanan valid.';
-$lang['antrian_status_updated']  = 'Status antrian berhasil diperbarui.';
-$lang['antrian_reset_success']   = 'Semua antrian yang masih menunggu/dipanggil hari ini telah dibatalkan.';
-$lang['antrian_deleted_success'] = 'Data antrian berhasil dihapus.';
-$lang['antrian_not_found']       = 'Data antrian tidak ditemukan.';
-$lang['antrian_delete_confirm']  = 'Apakah Anda yakin ingin menghapus antrian <strong>%s</strong>?';
-$lang['antrian_reset_confirm']   = 'Reset akan membatalkan <strong>%d</strong> antrian yang masih berstatus menunggu/dipanggil hari ini. Lanjutkan?';
-$lang['antrian_kosong']          = 'Tidak ada data antrian untuk tanggal ini.';
+$lang['antrian_created_success'] = 'Queue <strong>%s</strong> successfully created.';
+$lang['antrian_created_error']   = 'Failed to create queue. Make sure the service is valid.';
+$lang['antrian_status_updated']  = 'Queue status successfully updated.';
+$lang['antrian_reset_success']   = 'All queues still waiting/called today have been cancelled.';
+$lang['antrian_deleted_success'] = 'Queue data successfully deleted.';
+$lang['antrian_not_found']       = 'Queue data not found.';
+$lang['antrian_delete_confirm']  = 'Are you sure you want to delete queue <strong>%s</strong>?';
+$lang['antrian_reset_confirm']   = 'Reset will cancel <strong>%d</strong> queues still waiting/called today. Continue?';
+$lang['antrian_kosong']          = 'No queue data for this date.';

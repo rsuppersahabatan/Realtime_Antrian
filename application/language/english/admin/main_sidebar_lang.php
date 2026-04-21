@@ -18,20 +18,22 @@ $lang['menu_search'] = 'Search';
 
 /* * */$lang['menu_main_navigation']            = 'Main Navigation';
 /* ****** */$lang['menu_dashboard']             = 'Dashboard';
-/* ****** */$lang['menu_layanan']               = 'Layanan';
-/* *********** */$lang['menu_layanan_create']   = 'Tambah';
+/* ****** */$lang['menu_layanan']               = 'Service';
+/* *********** */$lang['menu_layanan_create']   = 'Add';
 /* *********** */$lang['menu_layanan_edit']     = 'Edit';
-/* *********** */$lang['menu_layanan_delete']   = 'Hapus';
+/* *********** */$lang['menu_layanan_delete']   = 'Delete';
 
-/* ****** */$lang['menu_loket']                 = 'Loket';
-/* *********** */$lang['menu_loket_create']     = 'Tambah';
+/* ****** */$lang['menu_loket']                 = 'Counter';
+/* *********** */$lang['menu_loket_create']     = 'Add';
 /* *********** */$lang['menu_loket_edit']       = 'Edit';
-/* *********** */$lang['menu_loket_delete']     = 'Hapus';
+/* *********** */$lang['menu_loket_delete']     = 'Delete';
 
-/* ****** */$lang['menu_antrian']               = 'Antrian';
-/* *********** */$lang['menu_antrian_create']   = 'Tambah';
-/* *********** */$lang['menu_antrian_delete']   = 'Hapus';
+/* ****** */$lang['menu_antrian']               = 'Queue';
+/* *********** */$lang['menu_antrian_create']   = 'Add';
+/* *********** */$lang['menu_antrian_delete']   = 'Delete';
 /* *********** */$lang['menu_antrian_reset']    = 'Reset';
+
+/* ****** */$lang['menu_panggilan']             = 'Calling';
 
 
 /* * */$lang['menu_administration']             = 'Administration';

@@ -5,34 +5,34 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /* Menu */
-$lang['menu_loket']        = 'Loket';
-$lang['menu_loket_create'] = 'Tambah Loket';
-$lang['menu_loket_edit']   = 'Edit Loket';
-$lang['menu_loket_delete'] = 'Hapus Loket';
+$lang['menu_loket']        = 'Counter';
+$lang['menu_loket_create'] = 'Add Counter';
+$lang['menu_loket_edit']   = 'Edit Counter';
+$lang['menu_loket_delete'] = 'Delete Counter';
 
 /* Fields */
-$lang['loket_layanan']     = 'Layanan';
-$lang['loket_nama_loket']  = 'Nama Loket';
+$lang['loket_layanan']     = 'Service';
+$lang['loket_nama_loket']  = 'Counter Name';
 $lang['loket_status_buka'] = 'Status';
-$lang['loket_created_at']  = 'Dibuat';
-$lang['loket_action']      = 'Aksi';
+$lang['loket_created_at']  = 'Created';
+$lang['loket_action']      = 'Action';
 
 /* Status */
-$lang['loket_buka']  = 'Buka';
-$lang['loket_tutup'] = 'Tutup';
+$lang['loket_buka']  = 'Open';
+$lang['loket_tutup'] = 'Closed';
 
 /* Buttons / Labels */
-$lang['loket_create']  = 'Tambah Loket';
-$lang['loket_edit']    = 'Edit Loket';
-$lang['loket_delete']  = 'Hapus Loket';
-$lang['loket_confirm'] = 'Konfirmasi';
+$lang['loket_create']  = 'Add Counter';
+$lang['loket_edit']    = 'Edit Counter';
+$lang['loket_delete']  = 'Delete Counter';
+$lang['loket_confirm'] = 'Confirmation';
 
 /* Messages */
-$lang['loket_created_success'] = 'Loket berhasil ditambahkan.';
-$lang['loket_created_error']   = 'Gagal menambahkan loket.';
-$lang['loket_updated_success'] = 'Loket berhasil diperbarui.';
-$lang['loket_updated_error']   = 'Gagal memperbarui loket.';
-$lang['loket_deleted_success'] = 'Loket berhasil dihapus.';
-$lang['loket_status_updated']  = 'Status loket berhasil diubah.';
-$lang['loket_not_found']       = 'Loket tidak ditemukan.';
-$lang['loket_delete_confirm']  = 'Apakah Anda yakin ingin menghapus loket <strong>%s</strong>?';
+$lang['loket_created_success'] = 'Counter successfully added.';
+$lang['loket_created_error']   = 'Failed to add counter.';
+$lang['loket_updated_success'] = 'Counter successfully updated.';
+$lang['loket_updated_error']   = 'Failed to update counter.';
+$lang['loket_deleted_success'] = 'Counter successfully deleted.';
+$lang['loket_status_updated']  = 'Counter status successfully changed.';
+$lang['loket_not_found']       = 'Counter not found.';
+$lang['loket_delete_confirm']  = 'Are you sure you want to delete counter <strong>%s</strong>?';
