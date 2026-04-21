@@ -99,6 +99,106 @@
         font-size: 20px;
         border-top: 3px solid var(--dp-primary);
       }
+
+      /* Popup Aktifkan Audio + Fullscreen */
+      .audio-popup-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9998;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .audio-popup-backdrop.hidden {
+        display: none;
+      }
+      .audio-popup {
+        background: #fff;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 620px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        position: relative;
+      }
+      .audio-popup-close-x {
+        position: absolute;
+        top: 10px;
+        right: 14px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #888;
+        cursor: pointer;
+        line-height: 1;
+      }
+      .audio-popup-close-x:hover {
+        color: #333;
+      }
+      .audio-popup-body {
+        display: flex;
+        align-items: flex-start;
+        padding: 28px 30px 24px 30px;
+        gap: 18px;
+      }
+      .audio-popup-icon {
+        flex: 0 0 auto;
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: #8e44ad;
+        color: #fff;
+        font-weight: bold;
+        font-size: 28px;
+        font-family: Georgia, "Times New Roman", serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-style: italic;
+      }
+      .audio-popup-text {
+        font-size: 17px;
+        color: #333;
+        line-height: 1.5;
+        padding-top: 4px;
+      }
+      .audio-popup-footer {
+        border-top: 1px solid #e5e5e5;
+        padding: 14px 20px;
+        text-align: right;
+      }
+      .audio-popup-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        margin-left: 8px;
+      }
+      .audio-popup-btn-close {
+        background: #2c2f33;
+        color: #fff;
+      }
+      .audio-popup-btn-close:hover {
+        background: #1f2226;
+      }
+      .audio-popup-btn-primary {
+        background: #2f80ed;
+        color: #fff;
+        box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.2);
+      }
+      .audio-popup-btn-primary:hover {
+        background: #1f6fe0;
+      }
     </style>
 
     <script type="text/javascript">
@@ -311,6 +411,89 @@
         Gunakan selalu masker di lingkungan rumah sakit.
       </marquee>
     </div>
+
+    <div class="audio-popup-backdrop" id="audioPopup">
+      <div class="audio-popup" role="dialog" aria-modal="true" aria-labelledby="audioPopupText">
+        <button type="button" class="audio-popup-close-x" id="audioPopupCloseX" aria-label="Tutup">&times;</button>
+        <div class="audio-popup-body">
+          <div class="audio-popup-icon">i</div>
+          <div class="audio-popup-text" id="audioPopupText">
+            Klik tombol <strong>Aktifkan Audio + Fullscreen</strong> untuk
+            mengaktifkan audio di halaman ini dan membuat halaman menjadi
+            fullscreen. Klik tombol <strong>Close</strong> untuk mengaktifkan
+            audio saja
+          </div>
+        </div>
+        <div class="audio-popup-footer">
+          <button type="button" class="audio-popup-btn audio-popup-btn-close" id="audioPopupCloseBtn">
+            <span aria-hidden="true">&times;</span> Close
+          </button>
+          <button type="button" class="audio-popup-btn audio-popup-btn-primary" id="audioPopupEnableBtn">
+            <span aria-hidden="true">&#10003;</span> Aktifkan Audio + Fullscreen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var popup = document.getElementById("audioPopup");
+        var btnClose = document.getElementById("audioPopupCloseBtn");
+        var btnCloseX = document.getElementById("audioPopupCloseX");
+        var btnEnable = document.getElementById("audioPopupEnableBtn");
+
+        function unlockAudio() {
+          try {
+            if (window.soundManager && soundManager.setup) {
+              soundManager.setup({ useHTML5Audio: true, preferFlash: false });
+            }
+            // Putar audio diam singkat untuk membuka autoplay policy browser.
+            var unlock = new Audio();
+            unlock.src =
+              "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+            unlock.volume = 0;
+            var p = unlock.play();
+            if (p && typeof p.then === "function") {
+              p.catch(function () {});
+            }
+          } catch (e) {}
+        }
+
+        function requestFullscreen() {
+          var el = document.documentElement;
+          var fn =
+            el.requestFullscreen ||
+            el.webkitRequestFullscreen ||
+            el.msRequestFullscreen ||
+            el.mozRequestFullScreen;
+          if (fn) {
+            try {
+              fn.call(el);
+            } catch (e) {}
+          }
+        }
+
+        function hidePopup() {
+          popup.classList.add("hidden");
+        }
+
+        btnClose.addEventListener("click", function () {
+          unlockAudio();
+          hidePopup();
+        });
+
+        btnCloseX.addEventListener("click", function () {
+          unlockAudio();
+          hidePopup();
+        });
+
+        btnEnable.addEventListener("click", function () {
+          unlockAudio();
+          requestFullscreen();
+          hidePopup();
+        });
+      })();
+    </script>
 
     <!-- Fallback jQuery if not loaded from relative path, keep Bootstrap js functioning -->
     <script>
