@@ -204,6 +204,12 @@
 
           $("#online").html(nomor_antrian);
 
+          var slug = loket_raw.replace(/[^a-z0-9]/g, "");
+          var $side = $("#side-" + slug);
+          if ($side.length) {
+            $side.html(nomor_antrian);
+          }
+
           var loket_name = "LOKET X";
           if (loket_raw.startsWith("loket")) {
             loket_name =
@@ -247,32 +253,31 @@
         </div>
 
         <div class="col-md-4 side-queue">
-          <div class="panel panel-default">
-            <div class="panel-body">
-              <div class="row">
-                <div class="col-xs-6 side-label">LOKET 2</div>
-                <div class="col-xs-6 text-right side-number">A-123</div>
+          <?php if (!empty($loket)): ?>
+            <?php foreach ($loket as $lk): ?>
+              <?php
+                $nama_loket = !empty($lk['nama_loket']) ? $lk['nama_loket'] : ('LOKET ' . $lk['id']);
+                $slug_loket = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $nama_loket));
+                $nomor_terakhir = !empty($lk['nomor_terakhir']) ? $lk['nomor_terakhir'] : '-';
+              ?>
+              <div class="panel panel-default">
+                <div class="panel-body">
+                  <div class="row">
+                    <div class="col-xs-6 side-label"><?= strtoupper($nama_loket) ?></div>
+                    <div class="col-xs-6 text-right side-number" id="side-<?= $slug_loket ?>">
+                      <?= htmlspecialchars($nomor_terakhir, ENT_QUOTES, 'UTF-8') ?>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <div class="panel panel-default">
+              <div class="panel-body text-center">
+                <div class="side-label">BELUM ADA LOKET DIBUKA</div>
               </div>
             </div>
-          </div>
-
-          <div class="panel panel-default">
-            <div class="panel-body">
-              <div class="row">
-                <div class="col-xs-6 side-label">LOKET 3</div>
-                <div class="col-xs-6 text-right side-number">B-010</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel panel-default">
-            <div class="panel-body">
-              <div class="row">
-                <div class="col-xs-6 side-label">LOKET 4</div>
-                <div class="col-xs-6 text-right side-number">C-005</div>
-              </div>
-            </div>
-          </div>
+          <?php endif; ?>
 
           <div
             class="embed-responsive embed-responsive-16by9"

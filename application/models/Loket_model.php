@@ -29,6 +29,26 @@ class Loket_model extends CI_Model {
         $this->db->where('loket.status_buka', 'buka');
         return $this->db->get()->result_array();
     }
+
+    // Ambil loket buka + nomor antrian terakhir yang dipanggil hari ini per loket
+    public function get_loket_buka_with_last_nomor($tanggal = null) {
+        if ($tanggal === null) {
+            $tanggal = date('Y-m-d');
+        }
+
+        $subquery = '(SELECT a.nomor_antrian FROM antrian a '
+            . 'WHERE a.id_loket = loket.id '
+            . 'AND a.tanggal = ' . $this->db->escape($tanggal) . ' '
+            . 'AND a.waktu_panggil IS NOT NULL '
+            . 'ORDER BY a.waktu_panggil DESC LIMIT 1) AS nomor_terakhir';
+
+        $this->db->select('loket.*, layanan.nama_layanan, layanan.kode_huruf, ' . $subquery, FALSE);
+        $this->db->from($this->table);
+        $this->db->join('layanan', 'layanan.id = loket.id_layanan', 'left');
+        $this->db->where('loket.status_buka', 'buka');
+        $this->db->order_by('loket.id', 'ASC');
+        return $this->db->get()->result_array();
+    }
     
     // Mengubah status buka/tutup loket
     public function update_status($id, $status) {

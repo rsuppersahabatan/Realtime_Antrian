@@ -10,7 +10,7 @@ class Client extends Public_Controller {
 
     public function index()
     {
-        $this->data['loket'] = $this->Loket_model->get_loket_buka();
+        $this->data['loket'] = $this->Loket_model->get_loket_buka_with_last_nomor();
         $this->load->view('client/display', $this->data);
     }
 }
