@@ -13,6 +13,7 @@ Dibangun di atas **CodeIgniter 3** (backend & admin panel), **Node.js + Socket.I
 - **Manajemen master data** — CRUD layanan, loket, pengguna, dan grup (role) berbasis Ion Auth.
 - **Reset harian otomatis** — nomor urut direset per tanggal, riwayat tetap tersimpan.
 - **Multi-layanan** — setiap layanan punya prefix huruf sendiri (A, B, C, …) dan bisa dilayani lebih dari satu loket.
+- **REST API** — endpoint JSON untuk modul **layanan**, **loket**, dan **antrian** (list, create, update, delete, panggil antrian, selesaikan) yang dilindungi **HTTP Basic Auth** via [chriskacerguis/codeigniter-restserver](https://github.com/chriskacerguis/codeigniter-restserver). Lihat [REST API](#rest-api).
 - **Deploy sekali jalan** — `docker-compose up -d` menyiapkan PHP+Apache, Node.js, Redis, dan MySQL.
 
 ## Tampilan Aplikasi
@@ -88,7 +89,10 @@ Alur realtime:
 ```
 Realtime_Antrian/
 ├── application/          # Kode CodeIgniter (controller, model, view)
-│   ├── controllers/      # Welcome, Client, Auth, admin/*
+│   ├── controllers/      # Welcome, Client, Auth, admin/*, api/*
+│   │   └── api/          # REST controllers: Layanan, Loket, Antrian
+│   ├── config/
+│   │   └── rest.php      # Konfigurasi REST server (basic auth, dll.)
 │   └── views/            # welcome_message, client/display, admin/*
 ├── bin/                  # Helper CLI (install.php, server.sh, dll.)
 ├── database/
@@ -205,17 +209,132 @@ Detail lengkap & seeder contoh lihat [database/schema.sql](database/schema.sql).
 
 Format pesan mengikuti konvensi string sederhana (mis. `antrian-baru-A12`, `panggil-A12-loket-1`) agar mudah di-parse oleh frontend display.
 
+## REST API
+
+Modul **layanan**, **loket**, dan **antrian** diekspos sebagai REST API JSON di bawah prefix `/api/*`, dibangun dengan [chriskacerguis/codeigniter-restserver](https://github.com/chriskacerguis/codeigniter-restserver). Controller ada di [application/controllers/api/](application/controllers/api/) dan konfigurasi server REST di [application/config/rest.php](application/config/rest.php).
+
+### Autentikasi
+
+Seluruh endpoint dilindungi **HTTP Basic Auth**. Kredensial default ada di [application/config/rest.php](application/config/rest.php) pada array `$config['rest_valid_logins']`:
+
+```php
+$config['rest_valid_logins'] = [
+    'admin' => 'antrian2024',
+];
+```
+
+> **Ganti kredensial default sebelum deploy ke production.** Tambah user baru dengan menambah entry pada array di atas. Untuk memaksa HTTPS, set `$config['force_https'] = true` di file yang sama.
+
+Request tanpa header `Authorization` akan menerima response `401 Unauthorized` beserta header `WWW-Authenticate: Basic realm="Realtime Antrian REST API"`.
+
+### Daftar Endpoint
+
+Base URL (Docker default): `http://localhost:8080/api`
+
+#### Layanan — `/api/layanan`
+
+| Method | URI | Keterangan |
+|---|---|---|
+| `GET` | `/api/layanan` | List semua layanan |
+| `GET` | `/api/layanan/{id}` | Detail satu layanan |
+| `POST` | `/api/layanan` | Tambah layanan. Body: `kode_huruf`, `nama_layanan`, `keterangan?` |
+| `PUT` | `/api/layanan/{id}` | Update partial (`kode_huruf` / `nama_layanan` / `keterangan`) |
+| `DELETE` | `/api/layanan/{id}` | Hapus layanan |
+
+#### Loket — `/api/loket`
+
+| Method | URI | Keterangan |
+|---|---|---|
+| `GET` | `/api/loket` | List semua loket |
+| `GET` | `/api/loket/{id}` | Detail satu loket |
+| `GET` | `/api/loket/buka` | Loket yang sedang buka. Query: `?with_last=1&tanggal=YYYY-MM-DD` untuk sertakan nomor antrian terakhir hari tersebut per loket |
+| `POST` | `/api/loket` | Tambah loket. Body: `id_layanan`, `nama_loket`, `status_buka?` (`buka`\|`tutup`) |
+| `PUT` | `/api/loket/status/{id}` | Update status. Body: `status_buka` (`buka`\|`tutup`) |
+| `DELETE` | `/api/loket/{id}` | Hapus loket |
+
+#### Antrian — `/api/antrian`
+
+| Method | URI | Keterangan |
+|---|---|---|
+| `GET` | `/api/antrian` | Daftar antrian + rekap per status. Query: `?tanggal=YYYY-MM-DD` (default hari ini) |
+| `POST` | `/api/antrian` | Generate nomor antrian baru. Body: `id_layanan`, `nik?` (16 digit) |
+| `POST` | `/api/antrian/call` | Panggil antrian berikutnya untuk sebuah loket. Body: `id_loket` |
+| `PUT` | `/api/antrian/selesai/{id}` | Tandai antrian selesai (isi `waktu_selesai`) |
+| `PUT` | `/api/antrian/batal/{id}` | Tandai antrian batal |
+| `DELETE` | `/api/antrian/{id}` | Hapus record antrian |
+
+### Format Response
+
+Semua response menggunakan `Content-Type: application/json` dengan struktur umum:
+
+```json
+{
+  "status": true,
+  "message": "Layanan berhasil ditambahkan",
+  "data": { "id": 4, "kode_huruf": "D", "nama_layanan": "Rekam Medis", "keterangan": null }
+}
+```
+
+Status HTTP mengikuti konvensi: `200 OK`, `201 Created`, `400 Bad Request`, `401 Unauthorized`, `404 Not Found`, `500 Internal Error`.
+
+### Contoh Pemakaian
+
+**cURL — list layanan**
+
+```bash
+curl -u admin:antrian2024 http://localhost:8080/api/layanan
+```
+
+**cURL — generate nomor antrian baru**
+
+```bash
+curl -u admin:antrian2024 \
+     -X POST \
+     -d "id_layanan=1&nik=3201010101010001" \
+     http://localhost:8080/api/antrian
+```
+
+**cURL — panggil antrian berikutnya untuk loket 1**
+
+```bash
+curl -u admin:antrian2024 \
+     -X POST \
+     -d "id_loket=1" \
+     http://localhost:8080/api/antrian/call
+```
+
+**cURL — tandai antrian selesai**
+
+```bash
+curl -u admin:antrian2024 \
+     -X PUT \
+     http://localhost:8080/api/antrian/selesai/12
+```
+
+**Postman / Insomnia** — pilih Auth type **Basic Auth**, isi username & password.
+
+**Header manual**
+
+```
+Authorization: Basic YWRtaW46YW50cmlhbjIwMjQ=
+```
+
+(value = `base64("admin:antrian2024")`)
+
 ## Troubleshooting
 
 - **Display tidak update** — cek container `antrian_nodejs` berjalan dan port `8085` terbuka. Pastikan browser tidak diblokir CORS/mixed-content.
 - **`redis` connection refused** — pastikan service `redis` up (`docker-compose ps`) dan `REDIS_HOST`/`REDIS_PORT` konsisten antara PHP dan Node.js.
 - **Nomor antrian tidak reset** — reset dilakukan per tanggal (`tanggal = CURDATE()` di tabel `antrian`). Pastikan timezone server sesuai.
 - **`server.js` tidak ketemu** di container Node.js — rebuild tanpa cache: `docker-compose up --build -d`.
+- **REST API selalu 401** — pastikan header `Authorization: Basic ...` terkirim (Apache `mod_php` biasanya aman, beberapa setup FastCGI perlu menambahkan `SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1` di `.htaccess`). Cek juga password di [application/config/rest.php](application/config/rest.php) sesuai dengan yang dikirim.
+- **REST API 404 padahal URL benar** — pastikan `mod_rewrite` aktif dan `public/.htaccess` terbaca; tanpa itu URL harus berbentuk `http://host/index.php/api/layanan`.
 
 ## Credits & Referensi
 
 - [CodeIgniter 3](https://github.com/bcit-ci/CodeIgniter)
 - [Ion Auth](https://github.com/benedmunds/CodeIgniter-Ion-Auth)
+- [chriskacerguis/codeigniter-restserver](https://github.com/chriskacerguis/codeigniter-restserver) untuk REST API
 - [AdminLTE](https://adminlte.io/) untuk template panel admin
 - [Socket.IO](https://socket.io/) & [node-redis](https://github.com/redis/node-redis) untuk realtime gateway
 - Pola dasar realtime gateway terinspirasi dari [vanuganti/realtime](http://github.com/vanuganti/realtime)
