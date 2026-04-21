@@ -28,6 +28,11 @@ $lang['menu_search'] = 'Search';
 /* *********** */$lang['menu_loket_edit']       = 'Edit';
 /* *********** */$lang['menu_loket_delete']     = 'Hapus';
 
+/* ****** */$lang['menu_antrian']               = 'Antrian';
+/* *********** */$lang['menu_antrian_create']   = 'Tambah';
+/* *********** */$lang['menu_antrian_delete']   = 'Hapus';
+/* *********** */$lang['menu_antrian_reset']    = 'Reset';
+
 
 /* * */$lang['menu_administration']             = 'Administration';
 /* ****** */$lang['menu_users']                 = 'Users';
