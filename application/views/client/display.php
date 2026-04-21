@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>Display Antrian - UPDRS RS PERSAHABATAN</title>
     <!-- jQuery harus diload sebelum script lokal jika ingin menggunakan global $ -->
-    <script src="<?= base_url('client-assets/jquery.min.js') ?>"></script>
+    <script src="<?= base_url('assets/js/jquery.min.js') ?>"></script>
     <link
       rel="stylesheet"
       href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
