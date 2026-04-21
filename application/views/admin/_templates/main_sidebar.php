@@ -9,7 +9,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     <!-- Sidebar user panel -->
                     <div class="user-panel">
                         <div class="pull-left image">
-                            <img src="<?php echo base_url($avatar_dir . '/m_001.png'); ?>" class="img-circle" alt="User Image">
+                            <img src="<?php echo base_url($avatar_dir . '/user.png'); ?>" class="img-circle" alt="User Image">
                         </div>
                         <div class="pull-left info">
                             <p><?php echo $user_login['firstname'].$user_login['lastname']; ?></p>
