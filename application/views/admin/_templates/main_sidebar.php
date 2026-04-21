@@ -62,7 +62,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                 <i class="fa fa-ticket"></i> <span><?php echo lang('menu_antrian'); ?></span>
                             </a>
                         </li>
-                        
+                        <li class="<?=active_link_controller('panggilan')?>">
+                            <a href="<?php echo site_url('admin/panggilan'); ?>">
+                                <i class="fa fa-bullhorn"></i> <span><?php echo lang('menu_panggilan'); ?></span>
+                            </a>
+                        </li>
+
                         <li class="<?=active_link_controller('users')?>">
                             <a href="<?php echo site_url('admin/users'); ?>">
                                 <i class="fa fa-user"></i> <span><?php echo lang('menu_users'); ?></span>
