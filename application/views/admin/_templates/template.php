@@ -27,7 +27,7 @@ if (isset($content))
     echo $content;
 }
 
-if (isset($control_sidebar) AND $admin_prefs['ctrl_sidebar'] == TRUE)
+if (isset($control_sidebar) AND ! empty($admin_prefs['ctrl_sidebar']))
 {
     echo $control_sidebar;
 }

@@ -8,6 +8,13 @@ class Breadcrumbs {
 
     private $breadcrumbs = array();
 
+    protected $breadcrumb_open;
+    protected $breadcrumb_close;
+    protected $breadcrumb_el_open;
+    protected $breadcrumb_el_close;
+    protected $breadcrumb_el_first;
+    protected $breadcrumb_el_last_open;
+
     public function __construct()
     {	
 		$this->CI =& get_instance();

@@ -4,6 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Template {
 
     protected $CI;
+    protected $template = array();
 
     public function __construct()
     {	

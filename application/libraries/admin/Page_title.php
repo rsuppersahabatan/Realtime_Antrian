@@ -8,6 +8,11 @@ class Page_title {
 
     private $page_title = array();
 
+    protected $pagetitle_open;
+    protected $pagetitle_close;
+    protected $pagetitle_el_open;
+    protected $pagetitle_el_close;
+
     public function __construct()
     {	
 		$this->CI =& get_instance();
