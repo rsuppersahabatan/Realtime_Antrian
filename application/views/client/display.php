@@ -5,6 +5,8 @@
     <title>Display Antrian - UPDRS RS PERSAHABATAN</title>
     <!-- jQuery harus diload sebelum script lokal jika ingin menggunakan global $ -->
     <script src="<?= base_url('assets/js/jquery.min.js') ?>"></script>
+    <script src="<?= base_url('assets/script/soundmanager2-nodebug-jsmin.js') ?>"></script>
+    <script src="<?= base_url('assets/script/terbilang.js') ?>"></script>
     <link
       rel="stylesheet"
       href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
@@ -97,6 +99,16 @@
         ":" +
         socketPort;
 
+      var audioBase = "<?= base_url('assets/audio/') ?>";
+      var soundManagerReady = false;
+
+      soundManager.url = "<?= base_url('assets/swf/') ?>";
+      soundManager.preferFlash = false;
+      soundManager.useHTML5Audio = true;
+      soundManager.onready(function () {
+        soundManagerReady = true;
+      });
+
       var script = document.createElement("script");
       script.src = socketUrl + "/socket.io/socket.io.js";
       script.onload = function () {
@@ -117,6 +129,59 @@
         );
       };
       document.head.appendChild(script);
+
+      /**
+       * Bangun daftar nama file audio dari nomor antrian.
+       * Mendukung alfanumerik, misal "A206" -> ["huruf/a","dua","ratus","enam"].
+       * Angka murni, misal "206" -> ["dua","ratus","enam"].
+       */
+      function buatDaftarSuara(nomorAntrian) {
+        var daftar = [];
+        var matchAlfa = nomorAntrian.match(/^([a-zA-Z]+)(\d+)$/);
+        if (matchAlfa) {
+          var prefixHuruf = matchAlfa[1].toUpperCase();
+          var angka = matchAlfa[2];
+          for (var h = 0; h < prefixHuruf.length; h++) {
+            daftar.push("huruf/" + prefixHuruf[h].toLowerCase());
+          }
+          if (parseInt(angka, 10) > 0) {
+            var s = terbilang(angka).trim().replace(/\s+/g, "-");
+            daftar = daftar.concat(s.split("-"));
+          }
+        } else if (/^\d+$/.test(nomorAntrian) && parseInt(nomorAntrian, 10) > 0) {
+          var s2 = terbilang(nomorAntrian).trim().replace(/\s+/g, "-");
+          daftar = s2.split("-");
+        }
+        return daftar.filter(function (x) { return x && x.length > 0; });
+      }
+
+      // Sequence counter supaya setiap panggilan punya ID sound unik — kalau
+      // message datang beruntun, sound baru tidak bentrok dengan ID lama yang
+      // belum sempat destruct.
+      var soundSeq = 0;
+
+      function putarSuara(daftarSuara) {
+        if (!soundManagerReady || !daftarSuara || daftarSuara.length === 0) return;
+        var seqId = ++soundSeq;
+        var sounds = [];
+        for (var i = 0; i < daftarSuara.length; i++) {
+          (function (idx) {
+            var isLast = idx === daftarSuara.length - 1;
+            sounds[idx] = soundManager.createSound({
+              id: "disp-" + seqId + "-" + idx,
+              volume: 100,
+              url: audioBase + daftarSuara[idx] + ".wav",
+              onfinish: function () {
+                if (!isLast && sounds[idx + 1]) {
+                  sounds[idx + 1].play();
+                }
+                this.destruct();
+              },
+            });
+          })(i);
+        }
+        sounds[0].play();
+      }
 
       function addMessage(data) {
         if (!data) return;
@@ -140,8 +205,11 @@
           }
 
           $("#loket_display").html("SILAHKAN KE " + loket_name);
+
+          putarSuara(buatDaftarSuara(nomor_antrian));
         } else {
           $("#online").html(data);
+          putarSuara(buatDaftarSuara(String(data)));
         }
       }
     </script>
