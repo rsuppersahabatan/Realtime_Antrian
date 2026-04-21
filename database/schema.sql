@@ -57,6 +57,19 @@ CREATE TABLE IF NOT EXISTS `antrian` (
   INDEX `idx_nik` (`nik`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- --------------------------------------------------------
+-- 4. Tabel Loket User (Pengaturan Loket User)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `loket_user` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `id_loket` INT NOT NULL,
+  `id_user` INT(11) UNSIGNED NOT NULL,
+  UNIQUE KEY `unique_loket_user` (`id_loket`, `id_user`), -- Mencegah duplikasi user di loket yang sama
+  KEY `idx_loket_user_user` (`id_user`),
+  CONSTRAINT `fk_loket_user_loket` FOREIGN KEY (`id_loket`) REFERENCES `loket`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_loket_user_user` FOREIGN KEY (`id_user`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Migrasi untuk DB yang sudah terpasang tanpa kolom nik (idempotent via IF NOT EXISTS
 -- membutuhkan MariaDB 10.0.2+ / MySQL 8+. Untuk versi lama, jalankan manual).
 -- ALTER TABLE `antrian` ADD COLUMN `nik` VARCHAR(16) NULL AFTER `id_layanan`,
