@@ -13,31 +13,40 @@
     />
 
     <style>
+      :root {
+        --dp-primary: #00baae;
+        --dp-primary-dark: #009186;
+        --dp-accent: #ccdb2a;
+        --dp-accent-dark: #a7b322;
+        --dp-dark: #1f2d00;
+      }
+
       body {
-        background-color: #ecf0f1;
+        background-color: #f4f6f0;
         overflow: hidden; /* Menghilangkan scrollbar pada display TV */
       }
 
       .header-blue {
-        background-color: #2980b9;
+        background: linear-gradient(90deg, var(--dp-primary) 0%, var(--dp-primary-dark) 100%);
         color: white;
         padding: 15px 0;
         margin-bottom: 20px;
-        border-bottom: 5px solid #2c3e50;
+        border-bottom: 5px solid var(--dp-accent);
       }
 
       /* Styling Nomor Utama */
       .main-queue {
         background: #fff;
-        border: 4px solid #27ae60;
+        border: 4px solid var(--dp-primary);
         border-radius: 10px;
         padding: 20px;
         text-align: center;
+        box-shadow: 0 6px 18px rgba(0, 186, 174, 0.15);
       }
 
       .main-queue h2 {
         font-size: 30px;
-        color: #7f8c8d;
+        color: var(--dp-primary-dark);
         margin-top: 10px;
         font-weight: bold;
       }
@@ -45,14 +54,14 @@
       .main-number {
         font-size: 160px;
         font-weight: 900;
-        color: #27ae60;
+        color: var(--dp-primary);
         line-height: 1;
         margin: 20px 0;
       }
 
       .main-counter {
-        background-color: #27ae60;
-        color: white;
+        background-color: var(--dp-accent);
+        color: var(--dp-dark);
         font-size: 40px;
         padding: 10px;
         border-radius: 5px;
@@ -63,18 +72,19 @@
       .side-queue .panel {
         margin-bottom: 10px;
         border: none;
+        border-left: 5px solid var(--dp-accent);
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       }
 
       .side-number {
         font-size: 45px;
         font-weight: bold;
-        color: #2980b9;
+        color: var(--dp-primary);
       }
 
       .side-label {
         font-size: 18px;
-        color: #7f8c8d;
+        color: var(--dp-primary-dark);
         font-weight: bold;
       }
 
@@ -83,10 +93,11 @@
         position: fixed;
         bottom: 0;
         width: 100%;
-        background: #2c3e50;
-        color: #ecf0f1;
+        background: var(--dp-dark);
+        color: var(--dp-accent);
         padding: 10px 0;
         font-size: 20px;
+        border-top: 3px solid var(--dp-primary);
       }
     </style>
 

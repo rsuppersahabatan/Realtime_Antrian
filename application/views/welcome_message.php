@@ -6,27 +6,36 @@
 
 	<style type="text/css">
 
-	::selection{ background-color: #E13300; color: white; }
-	::moz-selection{ background-color: #E13300; color: white; }
-	::webkit-selection{ background-color: #E13300; color: white; }
+	:root {
+		--dp-primary: #00baae;
+		--dp-primary-dark: #009186;
+		--dp-accent: #ccdb2a;
+		--dp-accent-dark: #a7b322;
+		--dp-dark: #1f2d00;
+	}
+
+	::selection{ background-color: var(--dp-primary); color: white; }
+	::-moz-selection{ background-color: var(--dp-primary); color: white; }
 
 	body {
-		background-color: #fff;
+		background-color: #f4f6f0;
 		margin: 40px;
 		font: 13px/20px normal Helvetica, Arial, sans-serif;
 		color: #4F5155;
 	}
 
 	a {
-		color: #003399;
+		color: var(--dp-primary-dark);
 		background-color: transparent;
 		font-weight: normal;
 	}
 
+	a:hover { color: var(--dp-primary); }
+
 	h1 {
-		color: #444;
-		background-color: transparent;
-		border-bottom: 1px solid #D0D0D0;
+		color: #fff;
+		background-color: var(--dp-primary);
+		border-bottom: 3px solid var(--dp-accent);
 		font-size: 19px;
 		font-weight: normal;
 		margin: 0 0 14px 0;
@@ -38,7 +47,7 @@
 		font-size: 12px;
 		background-color: #f9f9f9;
 		border: 1px solid #D0D0D0;
-		color: #002166;
+		color: var(--dp-primary-dark);
 		display: block;
 		margin: 14px 0 14px 0;
 		padding: 12px 10px 12px 10px;
@@ -47,20 +56,41 @@
 	#body{
 		margin: 0 15px 0 15px;
 	}
-	
+
+	#body button {
+		background-color: var(--dp-primary);
+		color: #fff;
+		border: 1px solid var(--dp-primary-dark);
+		border-radius: 4px;
+		padding: 8px 16px;
+		margin: 4px;
+		cursor: pointer;
+		font-weight: bold;
+	}
+
+	#body button:hover {
+		background-color: var(--dp-accent);
+		color: var(--dp-dark);
+		border-color: var(--dp-accent-dark);
+	}
+
 	p.footer{
 		text-align: right;
 		font-size: 11px;
-		border-top: 1px solid #D0D0D0;
+		border-top: 1px solid var(--dp-accent);
 		line-height: 32px;
 		padding: 0 10px 0 10px;
 		margin: 20px 0 0 0;
+		color: var(--dp-primary-dark);
 	}
-	
+
 	#container{
 		margin: 10px;
-		border: 1px solid #D0D0D0;
-		-webkit-box-shadow: 0 0 8px #D0D0D0;
+		border: 1px solid var(--dp-primary);
+		border-radius: 4px;
+		overflow: hidden;
+		-webkit-box-shadow: 0 0 8px rgba(0, 186, 174, 0.25);
+		        box-shadow: 0 0 8px rgba(0, 186, 174, 0.25);
 	}
 	</style>
     <script type="text/javascript" src="<?php echo base_url();?>assets/js/jquery.min.js"></script>
@@ -250,8 +280,8 @@
 	<div id="body">
         <table>
             <tr style="width:100%; height: 200px;">
-                <td align="center" style="width: 30%; height: 100%; border: 1px solid #000;" >
-                    <p id="online" style="font-size: 100px;">A10</p>
+                <td align="center" style="width: 30%; height: 100%; border: 4px solid #00baae; border-radius: 10px; background: #fff;" >
+                    <p id="online" style="font-size: 100px; color: #00baae; font-weight: 900; margin: 0;">A10</p>
                 </td>
             </tr>
         </table>

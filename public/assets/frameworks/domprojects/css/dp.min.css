@@ -1,2 +1,214 @@
+/* ==========================================================================
+   Realtime Antrian - Tema Kustom
+   Palet: #00baae (teal) sebagai warna utama, #ccdb2a (lime) sebagai aksen
+   ========================================================================== */
 
+:root {
+    --dp-primary: #00baae;
+    --dp-primary-dark: #009186;
+    --dp-primary-darker: #006e66;
+    --dp-primary-light: #33c8bf;
+    --dp-accent: #ccdb2a;
+    --dp-accent-dark: #a7b322;
+    --dp-accent-light: #d8e35a;
+    --dp-text-on-primary: #ffffff;
+    --dp-text-on-accent: #1f2d00;
+}
 
+/* ---------- Body / global ---------- */
+body.skin-blue,
+body.hold-transition {
+    background-color: #f4f6f0;
+}
+
+::selection       { background-color: var(--dp-primary); color: #fff; }
+::-moz-selection  { background-color: var(--dp-primary); color: #fff; }
+
+/* ---------- Header / Navbar (AdminLTE skin-blue override) ---------- */
+.skin-blue .main-header .navbar,
+.skin-blue .main-header .logo {
+    background-color: var(--dp-primary) !important;
+    color: #fff;
+    border-bottom: 2px solid var(--dp-accent);
+}
+
+.skin-blue .main-header .logo:hover,
+.skin-blue .main-header .navbar .sidebar-toggle:hover,
+.skin-blue .main-header .navbar .nav > li > a:hover {
+    background-color: var(--dp-primary-dark) !important;
+    color: var(--dp-accent) !important;
+}
+
+.skin-blue .main-header li.user-header {
+    background-color: var(--dp-primary);
+}
+
+/* ---------- Sidebar ---------- */
+.skin-blue .main-sidebar,
+.skin-blue .left-side {
+    background-color: #1f2d00;
+}
+
+.skin-blue .sidebar a {
+    color: #e9f0b8;
+}
+
+.skin-blue .sidebar-menu > li.header {
+    background: #2c3b06;
+    color: var(--dp-accent);
+}
+
+.skin-blue .sidebar-menu > li:hover > a,
+.skin-blue .sidebar-menu > li.active > a,
+.skin-blue .sidebar-menu > li.menu-open > a {
+    color: #fff;
+    background: var(--dp-primary-dark);
+    border-left-color: var(--dp-accent);
+}
+
+.skin-blue .sidebar-menu > li > .treeview-menu {
+    background: #16200a;
+}
+
+.skin-blue .sidebar-menu .treeview-menu > li > a {
+    color: #c9d68a;
+}
+
+.skin-blue .sidebar-menu .treeview-menu > li.active > a,
+.skin-blue .sidebar-menu .treeview-menu > li > a:hover {
+    color: var(--dp-accent);
+}
+
+.skin-blue .sidebar-form {
+    border-color: var(--dp-primary-dark);
+}
+
+/* ---------- Tombol ---------- */
+.btn-primary {
+    background-color: var(--dp-primary) !important;
+    border-color: var(--dp-primary-dark) !important;
+    color: #fff !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active,
+.open > .dropdown-toggle.btn-primary {
+    background-color: var(--dp-primary-dark) !important;
+    border-color: var(--dp-primary-darker) !important;
+    color: #fff !important;
+}
+
+.btn-success {
+    background-color: var(--dp-accent) !important;
+    border-color: var(--dp-accent-dark) !important;
+    color: var(--dp-text-on-accent) !important;
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+    background-color: var(--dp-accent-dark) !important;
+    border-color: var(--dp-accent-dark) !important;
+    color: var(--dp-text-on-accent) !important;
+}
+
+/* ---------- Link / teks ---------- */
+a,
+a:focus {
+    color: var(--dp-primary-dark);
+}
+
+a:hover {
+    color: var(--dp-primary);
+}
+
+/* ---------- Box / Panel ---------- */
+.box.box-primary         { border-top-color: var(--dp-primary); }
+.box.box-success         { border-top-color: var(--dp-accent); }
+.box-header.with-border  { border-bottom-color: #e6edcd; }
+
+.bg-teal,
+.bg-aqua,
+.bg-light-blue {
+    background-color: var(--dp-primary) !important;
+    color: #fff !important;
+}
+
+.bg-lime,
+.bg-green {
+    background-color: var(--dp-accent) !important;
+    color: var(--dp-text-on-accent) !important;
+}
+
+/* ---------- Label / badge ---------- */
+.label-primary,
+.badge-primary {
+    background-color: var(--dp-primary);
+}
+
+.label-success,
+.badge-success {
+    background-color: var(--dp-accent);
+    color: var(--dp-text-on-accent);
+}
+
+/* ---------- Form controls ---------- */
+.form-control:focus {
+    border-color: var(--dp-primary);
+    box-shadow: 0 0 0 2px rgba(0, 186, 174, 0.18);
+}
+
+/* ---------- Pagination & progress ---------- */
+.pagination > .active > a,
+.pagination > .active > a:hover {
+    background-color: var(--dp-primary);
+    border-color: var(--dp-primary-dark);
+}
+
+.progress-bar-primary { background-color: var(--dp-primary); }
+.progress-bar-success { background-color: var(--dp-accent); }
+
+/* ---------- Halaman Login (auth) ---------- */
+body.login-page {
+    background: linear-gradient(135deg, #00baae 0%, #00baae 45%, #ccdb2a 100%);
+}
+
+.login-page .login-logo a,
+.login-page .register-logo a {
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.login-box-body,
+.register-box-body {
+    border-top: 4px solid var(--dp-accent);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+.login-box-body .form-control-feedback {
+    color: var(--dp-primary);
+}
+
+.login-page .btn-primary {
+    background-color: var(--dp-primary) !important;
+    border-color: var(--dp-primary-dark) !important;
+}
+
+/* ---------- Callout overrides ---------- */
+.callout.callout-info {
+    border-color: var(--dp-primary-dark);
+    background-color: var(--dp-primary) !important;
+}
+
+.callout.callout-success {
+    border-color: var(--dp-accent-dark);
+    background-color: var(--dp-accent) !important;
+    color: var(--dp-text-on-accent) !important;
+}
+
+/* ---------- Footer ---------- */
+.main-footer {
+    border-top-color: var(--dp-accent);
+}
