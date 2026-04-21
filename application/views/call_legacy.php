@@ -232,8 +232,7 @@
         }
     </script>
     <script type="text/javascript">
-        var socketPort = 8085;
-        var socketUrl = window.location.protocol + '//' + window.location.hostname + ':' + socketPort;
+        var socketUrl = <?php $__s = $this->config->item('socket_url'); echo $__s ? json_encode($__s) : "window.location.protocol + '//' + window.location.host"; ?>;
     </script>
     <script type="text/javascript">
         document.write('<script type="text/javascript" src="' + socketUrl + '/socket.io/socket.io.js"><\/script>');

@@ -92,8 +92,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	var audioBase = '<?php echo base_url('assets/audio/'); ?>';
 	var callUrl   = '<?php echo site_url('admin/panggilan/call'); ?>';
 	var recallUrl = '<?php echo site_url('admin/panggilan/recall'); ?>';
-	var sockPort  = 8085;
-	var sockUrl   = window.location.protocol + '//' + window.location.hostname + ':' + sockPort;
+	var sockUrl   = <?php $__s = $this->config->item('socket_url'); echo $__s ? json_encode($__s) : "window.location.protocol + '//' + window.location.host"; ?>;
 
 	var LABEL = {
 		error       : '<?php echo lang('panggilan_error'); ?>',

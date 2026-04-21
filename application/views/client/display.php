@@ -202,13 +202,7 @@
     </style>
 
     <script type="text/javascript">
-      var socketPort = 8085;
-      var socketUrl =
-        window.location.protocol +
-        "//" +
-        window.location.hostname +
-        ":" +
-        socketPort;
+      var socketUrl = <?php $__s = $this->config->item('socket_url'); echo $__s ? json_encode($__s) : "window.location.protocol + '//' + window.location.host"; ?>;
 
       var audioBase = "<?= base_url('assets/audio/') ?>";
       var soundManagerReady = false;
@@ -247,8 +241,7 @@
 
       script.onerror = function () {
         console.error(
-          "Gagal memuat socket.io.js. Pastikan Node.js berjalan di port " +
-            socketPort,
+          "Gagal memuat socket.io.js. Pastikan reverse proxy '/socket.io/' terhubung ke service Node.js.",
         );
       };
       document.head.appendChild(script);
