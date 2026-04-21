@@ -1,148 +1,225 @@
-# CodeIgniter Composer Installer
+# Realtime Antrian
 
-[![Latest Stable Version](https://poser.pugx.org/kenjis/codeigniter-composer-installer/v/stable)](https://packagist.org/packages/kenjis/codeigniter-composer-installer) [![Total Downloads](https://poser.pugx.org/kenjis/codeigniter-composer-installer/downloads)](https://packagist.org/packages/kenjis/codeigniter-composer-installer) [![Latest Unstable Version](https://poser.pugx.org/kenjis/codeigniter-composer-installer/v/unstable)](https://packagist.org/packages/kenjis/codeigniter-composer-installer) [![License](https://poser.pugx.org/kenjis/codeigniter-composer-installer/license)](https://packagist.org/packages/kenjis/codeigniter-composer-installer)
+Sistem antrian realtime berbasis web untuk rumah sakit/klinik/instansi pelayanan publik. Pengunjung mengambil nomor antrian secara mandiri dengan input NIK, petugas loket memanggil antrian dari panel admin, dan layar publik memperbarui nomor yang sedang dipanggil secara realtime melalui Redis Pub/Sub + Socket.IO — tanpa refresh.
 
-This package installs the legacy offical [CodeIgniter](https://github.com/pocketarc/codeigniter) (version `3.4.*`) with secure folder structure via Composer.
+Dibangun di atas **CodeIgniter 3** (backend & admin panel), **Node.js + Socket.IO** (realtime gateway), **Redis** (pub/sub & cache), dan **MySQL** (data antrian). Seluruh stack siap dijalankan via **Docker Compose**.
 
-You can update CodeIgniter system folder to latest version with one command.
+## Fitur
 
-## Folder Structure
+- **Pengambilan tiket mandiri** — pengunjung pilih layanan dan input NIK (16 digit) untuk mencetak nomor antrian.
+- **Panel petugas (loket)** — panggil berikutnya, panggil ulang, tandai selesai/batal, pindah antrian.
+- **Layar display publik** — menampilkan nomor yang sedang dipanggil di masing-masing loket, update realtime tanpa refresh.
+- **Realtime push** — perubahan status antrian langsung dikirim ke display & halaman petugas via Socket.IO, dipantik oleh Redis `PUBLISH` dari sisi PHP.
+- **Manajemen master data** — CRUD layanan, loket, pengguna, dan grup (role) berbasis Ion Auth.
+- **Reset harian otomatis** — nomor urut direset per tanggal, riwayat tetap tersimpan.
+- **Multi-layanan** — setiap layanan punya prefix huruf sendiri (A, B, C, …) dan bisa dilayani lebih dari satu loket.
+- **Deploy sekali jalan** — `docker-compose up -d` menyiapkan PHP+Apache, Node.js, Redis, dan MySQL.
+
+## Tampilan Aplikasi
+
+### Halaman Publik
+
+**Landing page — pengambilan nomor antrian oleh pengunjung**
+
+![Landing Page](ss/landing-page.png)
+
+**Display antrian — layar publik yang menampilkan nomor yang sedang dipanggil**
+
+![Display Antrian](ss/display.png)
+
+### Panel Admin
+
+**Halaman login admin (Ion Auth)**
+
+![Login](ss/login-page.png)
+
+**Dashboard utama — ringkasan antrian hari ini**
+
+![Dashboard](ss/dashboard-1.png)
+
+**Manajemen antrian — daftar seluruh tiket hari ini beserta statusnya**
+
+![Manajemen Antrian](ss/dashboard-antrian.png)
+
+**Panel panggilan — dipakai petugas loket untuk memanggil antrian**
+
+![Panel Panggilan](ss/dashboard-panggilan.png)
+
+**Master layanan — CRUD jenis layanan dan prefix hurufnya**
+
+![Master Layanan](ss/dashboard-layanan.png)
+
+**Master loket — CRUD loket/meja petugas, status buka/tutup, dan layanan yang dilayani**
+
+![Master Loket](ss/dashboard-loket.png)
+
+**Manajemen pengguna — CRUD akun petugas**
+
+![Pengguna](ss/dashboard-users.png)
+
+**Manajemen grup/role**
+
+![Grup](ss/dashboard-groups.png)
+
+## Arsitektur Singkat
 
 ```
-codeigniter/
-├── application/
-├── composer.json
-├── composer.lock
+[Pengunjung]  --HTTP-->  [CodeIgniter / Welcome]  --INSERT-->  [MySQL]
+                                     |
+                                     +--PUBLISH "realtime"-->  [Redis]
+                                                                  |
+                                                                  v
+[Petugas / Panel]  <--HTTP-->  [CodeIgniter / admin]         [Node.js + Socket.IO]
+                                     |                            ^
+                                     +--PUBLISH "realtime"---------+
+                                                                  |
+[Layar Display]  <======= WebSocket (Socket.IO) =================+
+```
+
+Alur realtime:
+
+1. Aksi tiket (ambil / panggil / selesai) dijalankan oleh PHP dan menulis ke MySQL.
+2. PHP memanggil `PUBLISH realtime <pesan>` ke Redis.
+3. Node.js (`public/nodejs/server.js`) berlangganan channel `realtime` & `loop`, lalu mem-broadcast ke semua klien Socket.IO.
+4. Halaman display/petugas menerima pesan dan memperbarui tampilan.
+
+## Struktur Folder
+
+```
+Realtime_Antrian/
+├── application/          # Kode CodeIgniter (controller, model, view)
+│   ├── controllers/      # Welcome, Client, Auth, admin/*
+│   └── views/            # welcome_message, client/display, admin/*
+├── bin/                  # Helper CLI (install.php, server.sh, dll.)
+├── database/
+│   └── schema.sql        # Skema + seeder awal (layanan, loket, users)
 ├── public/
-│   ├── .htaccess
-│   └── index.php
-└── vendor/
-    └── codeigniter/
-        └── framework/
-            └── system/
+│   ├── index.php         # Front controller
+│   ├── assets/           # CSS/JS/image admin
+│   └── nodejs/           # Gateway realtime (Express + Socket.IO + Redis)
+├── ss/                   # Screenshot untuk README
+├── Dockerfile            # Image PHP 7.4 + Apache
+├── Dockerfile.node       # Image Node.js 18 (Socket.IO gateway)
+├── docker-compose.yml    # PHP, Node.js, Redis, MySQL
+└── composer.json
 ```
 
-## Requirements
+## Prasyarat
 
-- PHP 5.3.7 or later
-- `composer` command (See [Composer Installation](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-osx))
-- Git
+- **Docker** + **Docker Compose** (cara termudah — semua dependency sudah diatur)
 
-## How to Use
+Atau, jika ingin menjalankan tanpa Docker:
 
-### Install CodeIgniter
+- PHP **7.4+** dengan ekstensi `mysqli`, `pdo_mysql`, Apache/Nginx + `mod_rewrite`
+- **MySQL 5.7+** atau MariaDB setara
+- **Redis 6+**
+- **Node.js 18+**
+- **Composer**
 
-```
-$ composer create-project kenjis/codeigniter-composer-installer codeigniter
-$ composer require pocketarc/codeigniter
-```
+## Cara Menjalankan — Docker (direkomendasikan)
 
-Above command installs `public/.htaccess` to remove `index.php` in your URL. If you don't need it, please remove it.
+1. **Clone & masuk folder**
 
-And it changes `application/config/config.php`:
+   ```bash
+   git clone <repo-url> Realtime_Antrian
+   cd Realtime_Antrian
+   ```
 
-```
-$config['composer_autoload'] = FALSE;
-↓
-$config['composer_autoload'] = realpath(APPPATH . '../vendor/autoload.php');
-```
+2. **(Opsional) buat file `.env`** di root untuk meng-override default:
 
-```
-$config['index_page'] = 'index.php';
-↓
-$config['index_page'] = '';
-```
+   ```env
+   PHP_PORT=8080
+   NODEJS_PORT=8085
+   MYSQL_PORT=3306
+   REDIS_EXT_PORT=6380
 
-#### Install Translations for System Messages
+   DB_NAME=antrian_db
+   DB_USER=antrian
+   DB_PASS=antrian123
+   MYSQL_ROOT_PASSWORD=root123
 
-If you want to install translations for system messages:
+   REDIS_HOST=redis
+   REDIS_PORT=6379
+   REDIS_PASSWORD=
+   ```
 
-```
-$ cd /path/to/codeigniter
-$ php bin/install.php translations 3.1.0
-```
+3. **Build & jalankan stack**
 
-#### Install Third Party Libraries
+   ```bash
+   # Hentikan stack lama jika ada
+   docker-compose down
 
-[Codeigniter Matches CLI](https://github.com/avenirer/codeigniter-matches-cli):
+   # Build ulang tanpa cache supaya server.js terbaru benar-benar tersalin
+   docker-compose up --build -d
+   ```
 
-```
-$ php bin/install.php matches-cli master
-```
+4. **Import skema database** (sekali di awal)
 
-[CodeIgniter HMVC Modules](https://github.com/jenssegers/codeigniter-hmvc-modules):
+   ```bash
+   docker exec -i antrian_mysql mysql -uroot -proot123 < database/schema.sql
+   ```
 
-```
-$ php bin/install.php hmvc-modules master
-```
+5. **Akses aplikasi**
 
-[Modular Extensions - HMVC](https://bitbucket.org/wiredesignz/codeigniter-modular-extensions-hmvc):
+   | Halaman | URL |
+   |---|---|
+   | Landing / ambil antrian | <http://localhost:8080/> |
+   | Display antrian publik | <http://localhost:8080/client> |
+   | Panel admin | <http://localhost:8080/auth/login> |
+   | Socket.IO gateway | `ws://localhost:8085` |
 
-```
-$ php bin/install.php modular-extensions-hmvc codeigniter-3.x
-```
+   **Login default:** `admin@admin.com` / `password` (ubah segera setelah login pertama).
 
-[Ion Auth](https://github.com/benedmunds/CodeIgniter-Ion-Auth):
+## Cara Menjalankan — Tanpa Docker
 
-```
-$ php bin/install.php ion-auth 2
-```
+1. Install dependency PHP: `composer install`
+2. Import `database/schema.sql` ke MySQL.
+3. Sesuaikan koneksi DB di `application/config/database.php` dan Redis di `application/config/redis.php`.
+4. Arahkan document root web server ke folder `public/`.
+5. Jalankan Node.js realtime gateway:
 
-[CodeIgniter3 Filename Checker](https://github.com/kenjis/codeigniter3-filename-checker):
+   ```bash
+   cd public/nodejs
+   npm install
+   node server.js
+   # atau via PM2
+   pm2 start server.js --name "antrian-socket" --watch --ignore-watch "node_modules"
+   ```
 
-```
-$ php bin/install.php filename-checker master
-```
+## Skema Database (ringkas)
 
-[CodeIgniter Rest Server](https://github.com/chriskacerguis/codeigniter-restserver):
+- `layanan` — kategori antrian + prefix huruf (A/B/C/…)
+- `loket` — meja petugas, status buka/tutup, terkait ke `layanan`
+- `antrian` — transaksi tiket harian (`nomor_antrian`, `nomor_urut`, `status`, `id_loket`, NIK, timestamp)
+- `users`, `groups`, `users_groups`, `login_attempts` — **Ion Auth** untuk autentikasi admin
+- `admin_preferences` — preferensi tampilan AdminLTE
 
-```
-$ php bin/install.php restserver 2.7.2
-```
+Detail lengkap & seeder contoh lihat [database/schema.sql](database/schema.sql).
 
-[CodeIgniter Developer Toolbar](https://github.com/JCSama/CodeIgniter-develbar):
+## Channel Redis
 
-```
-$ php bin/install.php codeigniter-develbar master
-```
+| Channel | Dipakai untuk |
+|---|---|
+| `realtime` | Broadcast event tiket: antrian baru terbit, antrian dipanggil, panggil ulang, selesai, batal. |
+| `loop` | Pesan carousel/ticker pada display publik (opsional). |
 
-### Run PHP built-in server (PHP 5.4 or later)
+Format pesan mengikuti konvensi string sederhana (mis. `antrian-baru-A12`, `panggil-A12-loket-1`) agar mudah di-parse oleh frontend display.
 
-```
-$ cd /path/to/codeigniter
-$ bin/server.sh
-```
+## Troubleshooting
 
-### Docker
-```
-# Hapus kontainer yang gagal
-docker-compose down
+- **Display tidak update** — cek container `antrian_nodejs` berjalan dan port `8085` terbuka. Pastikan browser tidak diblokir CORS/mixed-content.
+- **`redis` connection refused** — pastikan service `redis` up (`docker-compose ps`) dan `REDIS_HOST`/`REDIS_PORT` konsisten antara PHP dan Node.js.
+- **Nomor antrian tidak reset** — reset dilakukan per tanggal (`tanggal = CURDATE()` di tabel `antrian`). Pastikan timezone server sesuai.
+- **`server.js` tidak ketemu** di container Node.js — rebuild tanpa cache: `docker-compose up --build -d`.
 
-# Build ulang tanpa cache supaya file server.js benar-benar tersalin
-docker-compose up --build -d
-```
+## Credits & Referensi
 
-### Update CodeIgniter
+- [CodeIgniter 3](https://github.com/bcit-ci/CodeIgniter)
+- [Ion Auth](https://github.com/benedmunds/CodeIgniter-Ion-Auth)
+- [AdminLTE](https://adminlte.io/) untuk template panel admin
+- [Socket.IO](https://socket.io/) & [node-redis](https://github.com/redis/node-redis) untuk realtime gateway
+- Pola dasar realtime gateway terinspirasi dari [vanuganti/realtime](http://github.com/vanuganti/realtime)
 
-```
-$ cd /path/to/codeigniter
-$ composer update
-```
+## Lisensi
 
-You must update files manually if files in `application` folder or `index.php` change. Check [CodeIgniter User Guide](http://www.codeigniter.com/user_guide/installation/upgrading.html).
-
-## Reference
-
-- [Composer Installation](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-osx)
-- [CodeIgniter](https://github.com/bcit-ci/CodeIgniter)
-- [Translations for CodeIgniter System](https://github.com/bcit-ci/codeigniter3-translations)
-
-## Related Projects for CodeIgniter 3.x
-
-- [Cli for CodeIgniter 3.0](https://github.com/kenjis/codeigniter-cli)
-- [ci-phpunit-test](https://github.com/kenjis/ci-phpunit-test)
-- [CodeIgniter Simple and Secure Twig](https://github.com/kenjis/codeigniter-ss-twig)
-- [CodeIgniter Doctrine](https://github.com/kenjis/codeigniter-doctrine)
-- [CodeIgniter Deployer](https://github.com/kenjis/codeigniter-deployer)
-- [CodeIgniter3 Filename Checker](https://github.com/kenjis/codeigniter3-filename-checker)
-- [CodeIgniter Widget (View Partial) Sample](https://github.com/kenjis/codeigniter-widgets)
+Project ini dirilis di bawah lisensi MIT — silakan sesuaikan sesuai kebutuhan organisasi Anda.
