@@ -113,6 +113,18 @@
       var audioBase = "<?= base_url('assets/audio/') ?>";
       var soundManagerReady = false;
 
+      // Map channel_id (loketNN) -> nama_loket ("Dokter 1", "Aftap 2", dll)
+      var loketLabels = <?php
+        $labels = [];
+        if (!empty($loket)) {
+          foreach ($loket as $lk) {
+            $cid = 'loket' . str_pad((int) $lk['id'], 2, '0', STR_PAD_LEFT);
+            $labels[$cid] = !empty($lk['nama_loket']) ? $lk['nama_loket'] : ('LOKET ' . $lk['id']);
+          }
+        }
+        echo json_encode($labels);
+      ?>;
+
       soundManager.url = "<?= base_url('assets/swf/') ?>";
       soundManager.preferFlash = false;
       soundManager.useHTML5Audio = true;
@@ -204,24 +216,28 @@
 
           $("#online").html(nomor_antrian);
 
-          var slug = loket_raw.replace(/[^a-z0-9]/g, "");
-          var $side = $("#side-" + slug);
+          // Channel selalu berformat "loket<id_2digit>" (lihat Panggilan::_channel).
+          // Cocokkan langsung ke ID panel samping tanpa bergantung pada nama_loket.
+          var $side = $("#side-" + loket_raw);
           if ($side.length) {
             $side.html(nomor_antrian);
           }
 
-          var loket_name = "LOKET X";
-          if (loket_raw.startsWith("loket")) {
-            loket_name =
-              "LOKET " + loket_raw.replace("loket", "").replace(/^0+/, "");
-          } else if (loket_raw.startsWith("kasir")) {
-            loket_name =
-              "KASIR " + loket_raw.replace("kasir", "").replace(/^0+/, "");
+          // Utamakan nama_loket dari DB (mis. "Dokter 1", "Aftap 2").
+          // Jika tidak ketemu (loket belum di-list / ditambah setelah halaman load),
+          // fallback ke parsing prefix loket/kasir agar tetap tampil ramah.
+          var loket_name;
+          if (loketLabels && loketLabels[loket_raw]) {
+            loket_name = loketLabels[loket_raw];
+          } else if (loket_raw.indexOf("loket") === 0) {
+            loket_name = "LOKET " + loket_raw.replace("loket", "").replace(/^0+/, "");
+          } else if (loket_raw.indexOf("kasir") === 0) {
+            loket_name = "KASIR " + loket_raw.replace("kasir", "").replace(/^0+/, "");
           } else {
             loket_name = loket_raw.toUpperCase();
           }
 
-          $("#loket_display").html("SILAHKAN KE " + loket_name);
+          $("#loket_display").html("SILAHKAN KE " + loket_name.toUpperCase());
 
           putarSuara(buatDaftarSuara(nomor_antrian));
         } else {
@@ -257,14 +273,14 @@
             <?php foreach ($loket as $lk): ?>
               <?php
                 $nama_loket = !empty($lk['nama_loket']) ? $lk['nama_loket'] : ('LOKET ' . $lk['id']);
-                $slug_loket = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $nama_loket));
+                $channel_id = 'loket' . str_pad((int) $lk['id'], 2, '0', STR_PAD_LEFT);
                 $nomor_terakhir = !empty($lk['nomor_terakhir']) ? $lk['nomor_terakhir'] : '-';
               ?>
               <div class="panel panel-default">
                 <div class="panel-body">
                   <div class="row">
                     <div class="col-xs-6 side-label"><?= strtoupper($nama_loket) ?></div>
-                    <div class="col-xs-6 text-right side-number" id="side-<?= $slug_loket ?>">
+                    <div class="col-xs-6 text-right side-number" id="side-<?= $channel_id ?>">
                       <?= htmlspecialchars($nomor_terakhir, ENT_QUOTES, 'UTF-8') ?>
                     </div>
                   </div>
