@@ -3,14 +3,14 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Salin package.json langsung dari folder project nodejs
-COPY public/client/node.js/package*.json ./
+COPY public/client-assets/node.js/package*.json ./
 
 # Install dependencies (termasuk socket.io dan redis)
 RUN npm install --production
 
 # Salin isi folder node.js ke direktori kerja (/app)
 # Pastikan ada spasi antara '.' dan '.'
-COPY public/client/node.js/ .
+COPY public/client-assets/node.js/ .
 
 # Cek isi folder untuk memastikan index.js ada di /app/index.js
 RUN ls -la
