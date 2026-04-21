@@ -1,79 +1,97 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Welcome extends CI_Controller {
+/**
+ * Antrian Online — halaman publik tempat pengunjung memilih layanan dan
+ * mencetak nomor antrian. Setelah tiket terbit, nomor akan muncul di display
+ * antrian (Client::index) begitu petugas memanggil via admin/panggilan.
+ */
+class Welcome extends Public_Controller {
 
-    var $vint=0;
-
-	/**
-	 * Index Page for this controller.
-	 *
-	 * Maps to the following URL
-	 * 		http://example.com/index.php/welcome
-	 *	- or -  
-	 * 		http://example.com/index.php/welcome/index
-	 *	- or -
-	 * Since this controller is set as the default controller in 
-	 * config/routes.php, it's displayed at http://example.com/
-	 *
-	 * So any other public methods not prefixed with an underscore will
-	 * map to /index.php/welcome/<method_name>
-	 * @see http://codeigniter.com/user_guide/general/urls.html
-	 */
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
-         $this->load->library('form_validation');
-		 $this->load->model(['Layanan_model', 'Loket_model', 'Antrian_model']);
+        $this->load->library('session');
+        $this->load->helper(['form', 'url']);
+        $this->load->model(['Layanan_model', 'Loket_model', 'Antrian_model']);
     }
 
-	public function index()
-	{
-		$this->data['message'] = $this->redis->command('PING');
-		$this->data['loket'] = $this->Loket_model->get_loket_buka();
-		$this->load->view('welcome_message',$this->data);
-	}
-
-	public function index2()
-	{		
-		//$this->data['message'] = $this->redis->command('publish realtime '.$this->input->post('cmd'));
-		//$this->redis->set('realtime', $this->input->post('cmd'));
-        $this->data['message']= $this->redis->command('publish realtime loket02-102');
-		$this->load->view('welcome_message',$this->data);
-	}
-
-
-    public function indexr()
+    public function index()
     {
-        for ($i = 0; $i <= 10; $i++) {
-             $this->redis->command('publish loop ' .$i);
-             sleep(1);
-        }
+        $this->data['mode']    = 'pilih';
+        $this->data['layanan'] = $this->Layanan_model->get_all();
+        $this->data['loket']   = $this->Loket_model->get_loket_buka();
+        $this->data['error']   = $this->session->flashdata('error');
+        $this->load->view('welcome_message', $this->data);
     }
 
-	public function index3()
-	{
-
-		$this->data['message'] = $this->redis->command($this->input->post('publish'));
-		//$this->redis->set('realtime', $this->input->post('cmd'));
-		$this->load->view('welcome_message',$this->data);
-	}
-
-    public function terbilang()
+    /**
+     * Ambil nomor antrian untuk layanan yang dipilih (POST).
+     * Cetak tiket baru, publish notifikasi realtime, lalu redirect ke tiket.
+     */
+    public function ambil()
     {
+        $id_layanan = (int) $this->input->post('id_layanan');
 
-        if ($this->input->post('desc') == 1) {
-            $this->data['message'] = $this->redis->command("publish realtime loket01-" . $this->input->post('nilai'));
-        } else if ($this->input->post('desc') == 2)  {
-            $this->data['message'] = $this->redis->command("publish realtime loket02-" . $this->input->post('nilai'));
-        } else if ($this->input->post('desc') == 3){
-            $this->data['message'] = $this->redis->command("publish realtime kasir01-" . $this->input->post('nilai2'));
+        if ( ! $id_layanan)
+        {
+            $this->session->set_flashdata('error', 'Silakan pilih layanan terlebih dahulu.');
+            redirect('welcome', 'refresh');
+            return;
         }
-        
-        //$this->redis->set('realtime', $this->input->post('cmd'));
-        $this->load->view('welcome_message',$this->data);
+
+        $layanan = $this->Layanan_model->get_by_id($id_layanan);
+        if ( ! $layanan)
+        {
+            $this->session->set_flashdata('error', 'Layanan tidak ditemukan.');
+            redirect('welcome', 'refresh');
+            return;
+        }
+
+        $tiket = $this->Antrian_model->generate_nomor_baru($id_layanan);
+        if ( ! $tiket)
+        {
+            $this->session->set_flashdata('error', 'Gagal mencetak nomor antrian.');
+            redirect('welcome', 'refresh');
+            return;
+        }
+
+        // Beri tahu display / admin bahwa ada tiket baru diterbitkan.
+        $this->redis->command('publish realtime antrian-baru-'.$tiket['nomor_antrian']);
+
+        $tiket['nama_layanan'] = $layanan['nama_layanan'];
+        $tiket['kode_huruf']   = $layanan['kode_huruf'];
+
+        $this->session->set_flashdata('tiket', $tiket);
+        redirect('welcome/tiket/'.$tiket['id'], 'refresh');
     }
 
+    /**
+     * Tampilkan tiket yang baru dicetak. Data tiket dibaca dari flashdata agar
+     * refresh tidak mencetak tiket ganda — hanya sekali tampil, lalu hilang.
+     */
+    public function tiket($id_antrian = NULL)
+    {
+        $tiket = $this->session->flashdata('tiket');
+        if ( ! $tiket OR (int) $id_antrian !== (int) $tiket['id'])
+        {
+            redirect('welcome', 'refresh');
+            return;
+        }
+
+        // Hitung berapa tiket yang masih menunggu di depan tiket ini.
+        $this->db->where('id_layanan', $tiket['id_layanan']);
+        $this->db->where('tanggal', $tiket['tanggal']);
+        $this->db->where('status', 'menunggu');
+        $this->db->where('nomor_urut <', $tiket['nomor_urut']);
+        $tiket['antrian_di_depan'] = $this->db->count_all_results('antrian');
+
+        $this->data['mode']  = 'tiket';
+        $this->data['tiket'] = $tiket;
+        $this->data['loket'] = $this->Loket_model->get_loket_buka();
+        $this->load->view('welcome_message', $this->data);
+    }
 }
 
-/* End of file welcome.php */
-/* Location: ./application/controllers/welcome.php */
+/* End of file Welcome.php */
+/* Location: ./application/controllers/Welcome.php */
