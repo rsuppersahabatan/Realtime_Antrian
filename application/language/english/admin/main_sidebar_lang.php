@@ -18,6 +18,10 @@ $lang['menu_search'] = 'Search';
 
 /* * */$lang['menu_main_navigation']            = 'Main Navigation';
 /* ****** */$lang['menu_dashboard']             = 'Dashboard';
+/* ****** */$lang['menu_layanan']               = 'Layanan';
+/* *********** */$lang['menu_layanan_create']   = 'Tambah';
+/* *********** */$lang['menu_layanan_edit']     = 'Edit';
+/* *********** */$lang['menu_layanan_delete']   = 'Hapus';
 
 
 /* * */$lang['menu_administration']             = 'Administration';

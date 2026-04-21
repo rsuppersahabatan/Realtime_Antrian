@@ -45,8 +45,14 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                             </a>
                         </li>
 
-
                         <li class="header text-uppercase"><?php echo lang('menu_administration'); ?></li>
+                        
+                        <li class="<?=active_link_controller('layanan')?>">
+                            <a href="<?php echo site_url('admin/layanan'); ?>">
+                                <i class="fa fa-list-alt"></i> <span><?php echo lang('menu_layanan'); ?></span>
+                            </a>
+                        </li>
+                        
                         <li class="<?=active_link_controller('users')?>">
                             <a href="<?php echo site_url('admin/users'); ?>">
                                 <i class="fa fa-user"></i> <span><?php echo lang('menu_users'); ?></span>
