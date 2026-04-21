@@ -23,6 +23,11 @@ $lang['menu_search'] = 'Search';
 /* *********** */$lang['menu_layanan_edit']     = 'Edit';
 /* *********** */$lang['menu_layanan_delete']   = 'Hapus';
 
+/* ****** */$lang['menu_loket']                 = 'Loket';
+/* *********** */$lang['menu_loket_create']     = 'Tambah';
+/* *********** */$lang['menu_loket_edit']       = 'Edit';
+/* *********** */$lang['menu_loket_delete']     = 'Hapus';
+
 
 /* * */$lang['menu_administration']             = 'Administration';
 /* ****** */$lang['menu_users']                 = 'Users';
