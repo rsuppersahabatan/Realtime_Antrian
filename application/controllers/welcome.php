@@ -22,20 +22,32 @@ class Welcome extends Public_Controller {
         $this->data['layanan'] = $this->Layanan_model->get_all();
         $this->data['loket']   = $this->Loket_model->get_loket_buka();
         $this->data['error']   = $this->session->flashdata('error');
+        $this->data['nik_old'] = (string) $this->session->flashdata('nik');
         $this->load->view('welcome_message', $this->data);
     }
 
     /**
      * Ambil nomor antrian untuk layanan yang dipilih (POST).
-     * Cetak tiket baru, publish notifikasi realtime, lalu redirect ke tiket.
+     * Memvalidasi NIK (16 digit numerik), mencetak tiket baru, publish
+     * notifikasi realtime, lalu redirect ke halaman tiket.
      */
     public function ambil()
     {
         $id_layanan = (int) $this->input->post('id_layanan');
+        $nik        = preg_replace('/\D+/', '', (string) $this->input->post('nik'));
+
+        if ($nik === '' || strlen($nik) !== 16)
+        {
+            $this->session->set_flashdata('error', 'NIK harus 16 digit angka.');
+            $this->session->set_flashdata('nik', $nik);
+            redirect('welcome', 'refresh');
+            return;
+        }
 
         if ( ! $id_layanan)
         {
             $this->session->set_flashdata('error', 'Silakan pilih layanan terlebih dahulu.');
+            $this->session->set_flashdata('nik', $nik);
             redirect('welcome', 'refresh');
             return;
         }
@@ -44,14 +56,16 @@ class Welcome extends Public_Controller {
         if ( ! $layanan)
         {
             $this->session->set_flashdata('error', 'Layanan tidak ditemukan.');
+            $this->session->set_flashdata('nik', $nik);
             redirect('welcome', 'refresh');
             return;
         }
 
-        $tiket = $this->Antrian_model->generate_nomor_baru($id_layanan);
+        $tiket = $this->Antrian_model->generate_nomor_baru($id_layanan, $nik);
         if ( ! $tiket)
         {
             $this->session->set_flashdata('error', 'Gagal mencetak nomor antrian.');
+            $this->session->set_flashdata('nik', $nik);
             redirect('welcome', 'refresh');
             return;
         }

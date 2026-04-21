@@ -23,40 +23,44 @@ class Antrian_model extends CI_Model {
     /**
      * GENERATE NOMOR ANTRIAN BARU UNTUK PENGUNJUNG
      * Otomatis memberikan nomor urut lanjutan (misal: A10 -> A11)
+     *
+     * @param int    $id_layanan
+     * @param string $nik  NIK pengunjung (opsional — kolom nullable di DB).
      */
-    public function generate_nomor_baru($id_layanan) {
+    public function generate_nomor_baru($id_layanan, $nik = null) {
         $tanggal = date('Y-m-d');
-        
+
         // 1. Ambil data layanan (untuk dapat prefix hurufnya, ex: "A")
         $this->db->where('id', $id_layanan);
         $layanan = $this->db->get('layanan')->row_array();
-        
+
         if(!$layanan) return null; // Jika layanan tidak ada
-        
+
         // 2. Cari nomor_urut TERTINGGI khusus pada hari ini & layanan ini
         $this->db->where('id_layanan', $id_layanan);
         $this->db->where('tanggal', $tanggal);
         $this->db->order_by('nomor_urut', 'DESC');
         $this->db->limit(1);
         $antrian_terakhir = $this->db->get($this->table)->row_array();
-        
+
         // 3. Tentukan nomor baru (jika balum ada antrian, mulai dari 1)
         $nomor_urut_baru = ($antrian_terakhir) ? (int)$antrian_terakhir['nomor_urut'] + 1 : 1;
         $nomor_antrian_gabungan = $layanan['kode_huruf'] . $nomor_urut_baru; // Jadinya: "A1"
-        
+
         // 4. Masukkan tiket baru ke Database
         $data_insert = [
             'tanggal'       => $tanggal,
             'id_layanan'    => $id_layanan,
+            'nik'           => ($nik !== null && $nik !== '') ? $nik : null,
             'nomor_antrian' => $nomor_antrian_gabungan,
             'nomor_urut'    => $nomor_urut_baru,
             'status'        => 'menunggu',
             'waktu_ambil'   => date('Y-m-d H:i:s')
         ];
-        
+
         $this->db->insert($this->table, $data_insert);
         $data_insert['id'] = $this->db->insert_id();
-        
+
         // Mengembalikan objek tiket antrian yang sukses dicetak
         return $data_insert;
     }

@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS `antrian` (
   `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
   `tanggal` DATE NOT NULL COMMENT 'Tanggal antrian terjadi (untuk reset harian)',
   `id_layanan` INT NOT NULL,
+  `nik` VARCHAR(16) NULL COMMENT 'NIK pengunjung pengambil antrian (opsional untuk legacy)',
   `nomor_antrian` VARCHAR(20) NOT NULL COMMENT 'Nomor urut gabungan (Misal: A12)',
   `nomor_urut` INT NOT NULL COMMENT 'Angka murninya saja (Misal: 12)',
   `status` ENUM('menunggu', 'dipanggil', 'selesai', 'batal') DEFAULT 'menunggu',
@@ -52,8 +53,14 @@ CREATE TABLE IF NOT EXISTS `antrian` (
   FOREIGN KEY (`id_layanan`) REFERENCES `layanan`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`id_loket`) REFERENCES `loket`(`id`) ON DELETE SET NULL,
   INDEX `idx_tanggal` (`tanggal`),
-  INDEX `idx_status` (`status`)
+  INDEX `idx_status` (`status`),
+  INDEX `idx_nik` (`nik`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Migrasi untuk DB yang sudah terpasang tanpa kolom nik (idempotent via IF NOT EXISTS
+-- membutuhkan MariaDB 10.0.2+ / MySQL 8+. Untuk versi lama, jalankan manual).
+-- ALTER TABLE `antrian` ADD COLUMN `nik` VARCHAR(16) NULL AFTER `id_layanan`,
+--                      ADD INDEX `idx_nik` (`nik`);
 
 -- ========================================================
 -- DATA DUMMY AWAL (Seeder)
