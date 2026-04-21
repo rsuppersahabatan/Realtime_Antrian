@@ -101,3 +101,20 @@ class Admin_Controller extends MY_Controller
 }
 
 
+class Public_Controller extends MY_Controller
+{
+    public function __construct()
+    {
+        parent::__construct();
+
+        /* Load */
+        $this->load->helper(['url', 'form']);
+
+        /* Data */
+        $this->data['title']      = $this->config->item('title');
+        $this->data['title_lg']   = $this->config->item('title_lg');
+        $this->data['title_mini'] = $this->config->item('title_mini');
+    }
+}
+
+
