@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Welcome to Antrian</title>
+
+	<style type="text/css">
+
+	:root {
+		--dp-primary: #00baae;
+		--dp-primary-dark: #009186;
+		--dp-accent: #ccdb2a;
+		--dp-accent-dark: #a7b322;
+		--dp-dark: #1f2d00;
+	}
+
+	::selection{ background-color: var(--dp-primary); color: white; }
+	::-moz-selection{ background-color: var(--dp-primary); color: white; }
+
+	body {
+		background-color: #f4f6f0;
+		margin: 40px;
+		font: 13px/20px normal Helvetica, Arial, sans-serif;
+		color: #4F5155;
+	}
+
+	a {
+		color: var(--dp-primary-dark);
+		background-color: transparent;
+		font-weight: normal;
+	}
+
+	a:hover { color: var(--dp-primary); }
+
+	h1 {
+		color: #fff;
+		background-color: var(--dp-primary);
+		border-bottom: 3px solid var(--dp-accent);
+		font-size: 19px;
+		font-weight: normal;
+		margin: 0 0 14px 0;
+		padding: 14px 15px 10px 15px;
+	}
+
+	code {
+		font-family: Consolas, Monaco, Courier New, Courier, monospace;
+		font-size: 12px;
+		background-color: #f9f9f9;
+		border: 1px solid #D0D0D0;
+		color: var(--dp-primary-dark);
+		display: block;
+		margin: 14px 0 14px 0;
+		padding: 12px 10px 12px 10px;
+	}
+
+	#body{
+		margin: 0 15px 0 15px;
+	}
+
+	#body button {
+		background-color: var(--dp-primary);
+		color: #fff;
+		border: 1px solid var(--dp-primary-dark);
+		border-radius: 4px;
+		padding: 8px 16px;
+		margin: 4px;
+		cursor: pointer;
+		font-weight: bold;
+	}
+
+	#body button:hover {
+		background-color: var(--dp-accent);
+		color: var(--dp-dark);
+		border-color: var(--dp-accent-dark);
+	}
+
+	p.footer{
+		text-align: right;
+		font-size: 11px;
+		border-top: 1px solid var(--dp-accent);
+		line-height: 32px;
+		padding: 0 10px 0 10px;
+		margin: 20px 0 0 0;
+		color: var(--dp-primary-dark);
+	}
+
+	#container{
+		margin: 10px;
+		border: 1px solid var(--dp-primary);
+		border-radius: 4px;
+		overflow: hidden;
+		-webkit-box-shadow: 0 0 8px rgba(0, 186, 174, 0.25);
+		        box-shadow: 0 0 8px rgba(0, 186, 174, 0.25);
+	}
+	</style>
+    <script type="text/javascript" src="<?php echo base_url();?>assets/js/jquery.min.js"></script>
+    <script type="text/javascript" src="<?php echo base_url();?>assets/script/soundmanager2-nodebug-jsmin.js"></script>
+    <script type="text/javascript" src="<?php echo base_url();?>assets/script/terbilang.js"></script>
+    <script type="text/javascript">
+
+        var vint='A10';
+        var vint2=200;
+        var descp=1;
+        
+        soundManager.url='<?php echo base_url();?>assets/swf/'; //harus ada
+        soundManager.preferFlash = false;
+        soundManager.useHTML5Audio = true;
+
+        function incrementAntrian(nomor) {
+            var str = nomor.toString();
+            var matchAlfa = str.match(/^([a-zA-Z]+)(\d+)$/);
+            if (matchAlfa) {
+                var prefix = matchAlfa[1];
+                var angka = parseInt(matchAlfa[2], 10) + 1;
+                return prefix + angka;
+            } else if (!isNaN(str)) {
+                return parseInt(str, 10) + 1;
+            }
+            return str;
+        }
+
+        soundManager.onready(function(){
+
+            var tmb = document.getElementById('tes1');
+            var tmb2 = document.getElementById('tes2');
+            var tmb3 = document.getElementById('tes3');
+
+            tmb.onclick = function(){
+                descp=1;
+                vint = incrementAntrian(vint);
+                nilai= (vint).toString();
+                obj = new Array();
+                daftarSuara = buatDaftarSuara(nilai);
+                obj = buatSuara(daftarSuara);
+                if(obj && obj.length > 0) obj[0].play()
+            };
+
+            tmb2.onclick = function(){
+                descp=2;
+                vint = incrementAntrian(vint);
+                nilai= (vint).toString();
+                obj = new Array();
+                daftarSuara = buatDaftarSuara(nilai);
+                obj = buatSuara(daftarSuara);
+                if(obj && obj.length > 0) obj[0].play()
+            };
+
+            tmb3.onclick = function(){
+                descp=3;
+                vint2 = incrementAntrian(vint2);
+                nilai= (vint2).toString();
+                obj = new Array();
+                daftarSuara = buatDaftarSuara(nilai);
+                obj = buatSuara(daftarSuara);
+                if(obj && obj.length > 0) obj[0].play()
+            };
+
+            //alert(nilaiString);
+        });
+
+        /**
+         * Membuat daftar nama file audio dari nomor antrian.
+         * Mendukung nomor alfanumerik, misal: A10, B5, C100
+         * Jika ada prefix huruf, audio huruf (huruf_a, huruf_b, dst)
+         * akan ditambahkan di awal daftar suara.
+         */
+        function buatDaftarSuara(nomorAntrian) {
+            var daftar = [];
+            // Cek apakah nomor antrian diawali huruf (A-Z / a-z)
+            var matchAlfa = nomorAntrian.match(/^([a-zA-Z]+)(\d+)$/);
+            if (matchAlfa) {
+                var prefixHuruf = matchAlfa[1].toUpperCase(); // misal: "A", "AB"
+                var angka       = matchAlfa[2];               // misal: "10"
+                // Tambahkan audio untuk setiap huruf prefix
+                for (var h = 0; h < prefixHuruf.length; h++) {
+                    daftar.push('huruf/' + prefixHuruf[h].toLowerCase()); // misal: huruf/a.wav
+                }
+                // Tambahkan audio angka (terbilang)
+                if (parseInt(angka) > 0) {
+                    var nilaiString = terbilang(angka).trim();
+                    nilaiString = nilaiString.replace(/(\s+)/g, "-");
+                    var bagianAngka = nilaiString.split("-");
+                    for (var k = 0; k < bagianAngka.length; k++) {
+                        daftar.push(bagianAngka[k]);
+                    }
+                }
+            } else {
+                // Angka murni
+                var nilaiString = terbilang(nomorAntrian).trim();
+                nilaiString = nilaiString.replace(/(\s+)/g, "-");
+                daftar = nilaiString.split("-");
+            }
+            return daftar;
+        }
+
+        function buatSuara(daftarSuara){
+            i = 0;	j = 0;
+            while( i < daftarSuara.length ){
+                j = i.toString();
+                if( i != daftarSuara.length - 1) {
+                    obj[i]=soundManager.createSound({
+                        id:j,
+                        volume:100,
+                        url:'<?php echo base_url();?>assets/audio/'+daftarSuara[i]+'.wav',
+                        onfinish:function(){
+                            var next = parseInt(this.sID) + 1;
+                            obj[next].play();
+                            this.destruct();
+                        }
+                    })
+                }
+                else {
+                    obj[i]=soundManager.createSound({
+                        id:i.toString(),
+                        volume:100,
+                        url:'<?php echo base_url();?>assets/audio/'+daftarSuara[i]+'.wav',
+                        onfinish: function(){this.destruct();}
+                    })
+                }
+                i++;
+            }
+            $.ajax({
+                url: "<?php echo site_url('welcome/terbilang');?>",
+                type: "POST",
+                data: {
+                    nilai : vint,
+                    nilai2 : vint2,
+                    desc :descp
+                }
+            });
+            return obj;
+        }
+    </script>
+    <script type="text/javascript">
+        var socketPort = 8085;
+        var socketUrl = window.location.protocol + '//' + window.location.hostname + ':' + socketPort;
+    </script>
+    <script type="text/javascript">
+        document.write('<script type="text/javascript" src="' + socketUrl + '/socket.io/socket.io.js"><\/script>');
+    </script>
+    <script type="text/javascript">
+
+        var socket = null;
+
+            socket = io.connect(socketUrl);
+
+            socket.on('connect', function(data){
+                setStatus('connected');
+                socket.emit($('txtid').val(), {channel:'realtime'});
+            });
+
+            socket.on('reconnecting', function(data){
+                setStatus('reconnecting');
+            });
+
+            socket.on('message', function (data) {
+               // console.log('received a message: ', data);
+                addMessage(data);
+            });
+
+
+        function addMessage(data) {
+            vdt = data.split("-");
+            $('#online').html(vdt[1]);
+        }
+
+        function setStatus(msg) {
+          //  alert('Connection Status : ' + msg);
+           /// console.log('Connection Status : ' + msg);
+        }
+
+
+    </script>
+</head>
+<body>
+
+<div id="container">
+	<!--<h1><input type="text" name="txtid" id="txtid" value="" placeholder="your id"/><a href="#" class="connect">CONNECT</a> </h1>-->
+
+	<div id="body">
+        <table>
+            <tr style="width:100%; height: 200px;">
+                <td align="center" style="width: 30%; height: 100%; border: 4px solid #00baae; border-radius: 10px; background: #fff;" >
+                    <p id="online" style="font-size: 100px; color: #00baae; font-weight: 900; margin: 0;">A10</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+	<!--<b><?php //print_r($message);?></b>
+	<br/>
+	<form action="<?php echo site_url();?>/welcome/index2" method="post">
+	<input type="text" name="cmd" value="" placeholder="command"/>
+	<input type="submit" value="kirim"/>
+	</form>
+
+
+
+    <input type="text" name="cmdajax" value="" placeholder="command"/>
+    <input type="submit" value="kirim Ajax" name="btnAjax" id="btnAjax"/>
+    <form action="<?php echo site_url();?>/welcome/index3" method="post">
+        <input type="text" name="publish" value="" placeholder="command"/>
+        <input type="submit" value="command"/>
+    </form>
+    -->
+    
+    <?php 
+        foreach($loket as $key => $value){
+            echo '<button  type="submit" id="tes'.$value['id'].'">'.$value['nama_loket'].'</button>';
+        }
+    ?>
+	<p class="footer">Page rendered in <strong>{elapsed_time}</strong> seconds</p>
+
+</div>
+<script type="text/javascript">
+ $(document).ready(function() {
+
+      /*  var MaxInputs       = 8; //maximum input boxes allowed
+        var InputsWrapper   = $("#InputsWrapper"); //Input boxes wrapper ID
+        var AddButton       = $("#AddMoreFileBox"); //Add button ID
+
+        var x = InputsWrapper.length; //initlal text box count
+        var FieldCount=1; //to keep track of text box added
+
+        $(AddButton).click(function (e)  //on add input button click
+        {
+            if(x <= MaxInputs) //max input box allowed
+            {
+                FieldCount++; //text box added increment
+                //add input box
+                $(InputsWrapper).append('<div><input type="text" name="mytext[]" id="field_'+ FieldCount +'" value="Text '+ FieldCount +'"/><a href="#" class="removeclass">&times;</a></div>');
+                x++; //text box increment
+            }
+            return false;
+        });
+*/
+        $("#btnAjax").on("click", function(e){ //user click on remove text
+
+            $.ajax({
+                url: "<?php echo site_url();?>/welcome/indexr",
+                type: "GET",
+                data: {
+                    //cmdajax :   $("input[name=cmdajax]").val(),
+                    desc : "The description"
+                }
+            })
+            ;
+            return false;
+        })
+
+    });
+
+</script>
+</body>
+</html>
