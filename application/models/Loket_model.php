@@ -36,13 +36,25 @@ class Loket_model extends CI_Model {
         return $rows;
     }
     
-    // Ambil detail satu loket spesifik
+    // Ambil detail satu loket spesifik (+ daftar user yang ter-assign)
     public function get_by_id($id) {
         $this->db->select('loket.*, layanan.nama_layanan, layanan.kode_huruf');
         $this->db->from($this->table);
         $this->db->join('layanan', 'layanan.id = loket.id_layanan', 'left');
         $this->db->where('loket.id', $id);
-        return $this->db->get()->row_array();
+        $row = $this->db->get()->row_array();
+
+        if ($row)
+        {
+            $this->db->select('u.id, u.username, u.first_name, u.last_name, u.email');
+            $this->db->from('loket_user lu');
+            $this->db->join('users u', 'u.id = lu.id_user', 'inner');
+            $this->db->where('lu.id_loket', (int) $id);
+            $this->db->order_by('u.username', 'ASC');
+            $row['users'] = $this->db->get()->result_array();
+        }
+
+        return $row;
     }
 
     // Ambil semua loket yang buka saja
