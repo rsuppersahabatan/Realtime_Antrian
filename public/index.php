@@ -1,4 +1,22 @@
 <?php
+// --- MULAI KODE TAMBAHAN (SOLUSI PUTENV) ---
+if (! function_exists('putenv')) {
+    function putenv($str) {
+        if (trim($str) === '') return;
+
+        if (strpos($str, '=') !== false) {
+            list($name, $value) = explode('=', $str, 2);
+            // Simpan ke $_SERVER agar terbaca oleh env() helper CI4
+            $_SERVER[$name] = $value;
+            $_ENV[$name]    = $value;
+        } else {
+            unset($_SERVER[$str]);
+            unset($_ENV[$str]);
+        }
+    }
+}
+// --- AKHIR KODE TAMBAHAN ---
+
 /**
  * CodeIgniter
  *
