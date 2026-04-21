@@ -70,7 +70,7 @@ class Admin_Controller extends MY_Controller
         else
         {
             /* Load */
-            $this->load->config('admin/dp_config');
+            $this->load->config('admin/rta_config');
             $this->load->library(['admin/breadcrumbs', 'admin/page_title']);
             $this->load->model('admin/core_model');
             $this->load->helper('menu');

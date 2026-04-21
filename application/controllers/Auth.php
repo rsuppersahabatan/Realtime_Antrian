@@ -31,8 +31,8 @@ class Auth extends MY_Controller {
         if ( ! $this->ion_auth->logged_in())
         {
             /* Load */
-            $this->load->config('admin/dp_config');
-            $this->load->config('common/dp_config');
+            $this->load->config('admin/rta_config');
+            $this->load->config('common/rta_config');
 
             /* Valid form */
             $this->form_validation->set_rules('identity', 'Identity', 'required');

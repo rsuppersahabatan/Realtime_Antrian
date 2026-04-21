@@ -103,7 +103,7 @@ $autoload['helper'] = array('url', 'array', 'language');
 | config files.  Otherwise, leave it blank.
 |
 */
-$autoload['config'] = array('common/dp_config', 'common/dp_language');
+$autoload['config'] = array('common/rta_config', 'common/rta_language');
 
 /*
 | -------------------------------------------------------------------
