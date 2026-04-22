@@ -3,12 +3,17 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 ?>
             <div class="login-logo">
-                <a href="#"><b>Admin</b><?php echo $title_lg; ?></a>
+                <a href="<?php echo site_url('/'); ?>"><b>Admin</b><?php echo $title_lg; ?></a>
             </div>
 
             <div class="login-box-body">
                 <p class="login-box-msg"><?php echo lang('auth_sign_session'); ?></p>
-                <?php echo $message;?>
+
+                <?php if ( ! empty($message)): ?>
+                    <div class="callout callout-info">
+                        <?php echo $message; ?>
+                    </div>
+                <?php endif; ?>
 
                 <?php echo form_open('auth/login');?>
                     <div class="form-group has-feedback">
@@ -23,7 +28,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                         <div class="col-xs-8">
                             <div class="checkbox icheck">
                                 <label>
-                                    <?php echo form_checkbox('remember', '1', FALSE, 'id="remember"'); ?><?php echo lang('auth_remember_me'); ?>
+                                    <?php echo form_checkbox('remember', '1', FALSE, 'id="remember"'); ?> <?php echo lang('auth_remember_me'); ?>
                                 </label>
                             </div>
                         </div>
@@ -36,14 +41,18 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 <?php if ($auth_social_network == TRUE): ?>
                 <div class="social-auth-links text-center">
                     <p>- <?php echo lang('auth_or'); ?> -</p>
-                    <?php echo anchor('#', '<i class="fa fa-facebook"></i>' . lang('auth_sign_facebook'), array('class' => 'btn btn-block btn-social btn-facebook btn-flat')); ?>
-                    <?php echo anchor('#', '<i class="fa fa-google-plus"></i>' . lang('auth_sign_google'), array('class' => 'btn btn-block btn-social btn-google btn-flat')); ?>
+                    <?php echo anchor('#', '<i class="fa fa-facebook"></i> ' . lang('auth_sign_facebook'), array('class' => 'btn btn-block btn-social btn-facebook btn-flat')); ?>
+                    <?php echo anchor('#', '<i class="fa fa-google-plus"></i> ' . lang('auth_sign_google'), array('class' => 'btn btn-block btn-social btn-google btn-flat')); ?>
                 </div>
 <?php endif; ?>
 <?php if ($forgot_password == TRUE): ?>
                 <?php echo anchor('#', lang('auth_forgot_password')); ?><br />
 <?php endif; ?>
 <?php if ($new_membership == TRUE): ?>
-                <?php echo anchor('#', lang('auth_new_member')); ?><br />
+                <?php echo anchor('#', lang('auth_new_member')); ?>
 <?php endif; ?>
+            </div>
+
+            <div class="login-footer text-center" style="margin-top:15px;color:#777;font-size:12px;">
+                &copy; 2026-<?php echo date('Y'); ?> <a href="https://antrian.rspersahabatan.co.id" target="_blank">RS Persahabatan</a>
             </div>
