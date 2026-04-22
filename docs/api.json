@@ -1,0 +1,1541 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Realtime Antrian REST API",
+    "description": "JSON REST API untuk aplikasi Realtime Antrian. Semua endpoint di bawah `/api` menggunakan HTTP Basic Authentication (`rest_auth=basic`).\n\nResponse envelope konsisten:\n- Sukses: `{ \"status\": true, \"data\": ..., \"message\"?: \"...\" }`\n- Gagal:  `{ \"status\": false, \"message\": \"...\" }`\n",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Realtime Antrian"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost/Realtime_Antrian",
+      "description": "Local development"
+    },
+    {
+      "url": "https://{host}",
+      "description": "Production",
+      "variables": {
+        "host": {
+          "default": "antrian.example.com"
+        }
+      }
+    }
+  ],
+  "security": [
+    {
+      "basicAuth": []
+    }
+  ],
+  "tags": [
+    { "name": "Antrian",   "description": "Transaksi antrian harian" },
+    { "name": "Layanan",   "description": "Master layanan / kategori antrian" },
+    { "name": "Loket",     "description": "Master loket dan penugasan user" },
+    { "name": "Panggilan", "description": "Panggilan antrian + broadcast Redis" },
+    { "name": "Groups",    "description": "Role / group management (ion_auth)" },
+    { "name": "Users",     "description": "User management (ion_auth)" },
+    { "name": "Dashboard", "description": "Statistik ringkas" }
+  ],
+  "paths": {
+    "/api/antrian": {
+      "get": {
+        "tags": ["Antrian"],
+        "summary": "Daftar antrian pada tanggal tertentu",
+        "parameters": [
+          {
+            "name": "tanggal",
+            "in": "query",
+            "description": "Format YYYY-MM-DD. Default hari ini.",
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar antrian + rekap per status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status":  { "type": "boolean", "example": true },
+                    "tanggal": { "type": "string", "format": "date" },
+                    "rekap": {
+                      "type": "object",
+                      "properties": {
+                        "menunggu":  { "type": "integer" },
+                        "dipanggil": { "type": "integer" },
+                        "selesai":   { "type": "integer" },
+                        "batal":     { "type": "integer" }
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Antrian" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Antrian"],
+        "summary": "Generate nomor antrian baru",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["id_layanan"],
+                "properties": {
+                  "id_layanan": { "type": "integer", "example": 1 },
+                  "nik":        { "type": "string",  "pattern": "^\\d{16}$", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Nomor antrian berhasil dibuat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": { "$ref": "#/components/schemas/Antrian" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/antrian/call": {
+      "post": {
+        "tags": ["Antrian"],
+        "summary": "Panggil antrian berikutnya untuk sebuah loket (tanpa broadcast Redis)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["id_loket"],
+                "properties": {
+                  "id_loket": { "type": "integer", "example": 2 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Antrian berhasil dipanggil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "id_loket":      { "type": "integer" },
+                            "nomor_antrian": { "type": "string", "example": "A12" },
+                            "waktu_panggil": { "type": "string", "format": "date-time" }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/antrian/panggilansimpan": {
+      "post": {
+        "tags": ["Antrian"],
+        "summary": "Panggil nomor tertentu (manual / ulang) tanpa broadcast Redis",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["id_antrian", "id_loket"],
+                "properties": {
+                  "id_antrian": { "type": "integer" },
+                  "id_loket":   { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Panggilan disimpan",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PanggilanResult" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/api/antrian/selesai/{id}": {
+      "put": {
+        "tags": ["Antrian"],
+        "summary": "Tandai antrian sebagai selesai",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/AntrianUpdated" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/antrian/batal/{id}": {
+      "put": {
+        "tags": ["Antrian"],
+        "summary": "Tandai antrian sebagai batal",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/AntrianUpdated" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/antrian/{id}": {
+      "delete": {
+        "tags": ["Antrian"],
+        "summary": "Hapus record antrian",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/GenericSuccess" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+
+    "/api/layanan": {
+      "get": {
+        "tags": ["Layanan"],
+        "summary": "List semua layanan",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Layanan" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Layanan"],
+        "summary": "Tambah layanan baru",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["kode_huruf", "nama_layanan"],
+                "properties": {
+                  "kode_huruf":   { "type": "string", "example": "A" },
+                  "nama_layanan": { "type": "string", "example": "Pendaftaran" },
+                  "keterangan":   { "type": "string", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Dibuat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": { "data": { "$ref": "#/components/schemas/Layanan" } }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/layanan/{id}": {
+      "get": {
+        "tags": ["Layanan"],
+        "summary": "Detail layanan",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": { "data": { "$ref": "#/components/schemas/Layanan" } }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "put": {
+        "tags": ["Layanan"],
+        "summary": "Update layanan (partial)",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kode_huruf":   { "type": "string" },
+                  "nama_layanan": { "type": "string" },
+                  "keterangan":   { "type": "string", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/GenericSuccess" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Layanan"],
+        "summary": "Hapus layanan",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/GenericSuccess" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+
+    "/api/loket": {
+      "get": {
+        "tags": ["Loket"],
+        "summary": "List semua loket (termasuk users ter-assign)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Loket" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Loket"],
+        "summary": "Tambah loket baru",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["id_layanan", "nama_loket"],
+                "properties": {
+                  "id_layanan":  { "type": "integer" },
+                  "nama_loket":  { "type": "string" },
+                  "status_buka": { "type": "string", "enum": ["buka", "tutup"], "default": "tutup" },
+                  "id_users":    {
+                    "description": "Array ID user (form-encoded: id_users[]=1&id_users[]=2) — boleh juga CSV atau JSON array string",
+                    "type": "array",
+                    "items": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/LoketDetail" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/loket/{id}": {
+      "get": {
+        "tags": ["Loket"],
+        "summary": "Detail loket",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/LoketDetail" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Loket"],
+        "summary": "Hapus loket",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/GenericSuccess" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/loket/buka": {
+      "get": {
+        "tags": ["Loket"],
+        "summary": "List loket yang sedang buka",
+        "parameters": [
+          {
+            "name": "with_last",
+            "in": "query",
+            "description": "Set `1` untuk menyertakan nomor antrian terakhir per loket pada tanggal tsb.",
+            "schema": { "type": "integer", "enum": [0, 1] }
+          },
+          {
+            "name": "tanggal",
+            "in": "query",
+            "description": "YYYY-MM-DD. Dipakai saat `with_last=1`.",
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Loket" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/loket/status/{id}": {
+      "put": {
+        "tags": ["Loket"],
+        "summary": "Ubah status buka/tutup",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["status_buka"],
+                "properties": {
+                  "status_buka": { "type": "string", "enum": ["buka", "tutup"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/LoketDetail" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/loket/users/{id}": {
+      "get": {
+        "tags": ["Loket"],
+        "summary": "List user yang ter-assign ke loket",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status":   { "type": "boolean" },
+                    "id_loket": { "type": "integer" },
+                    "data":     {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/LoketUser" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "put": {
+        "tags": ["Loket"],
+        "summary": "Sinkronkan user loket (replace-all)",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["id_users"],
+                "properties": {
+                  "id_users": {
+                    "type": "array",
+                    "items": { "type": "integer" },
+                    "description": "Kirim array kosong untuk meng-unassign semua user"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/LoketDetail" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+
+    "/api/panggilan/loket": {
+      "get": {
+        "tags": ["Panggilan"],
+        "summary": "List loket yang sedang buka (kandidat untuk dipanggil)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Loket" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/panggilan/call": {
+      "post": {
+        "tags": ["Panggilan"],
+        "summary": "Panggil antrian berikutnya + broadcast Redis",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["id_loket"],
+                "properties": {
+                  "id_loket": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PanggilanBroadcast" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/api/panggilan/recall": {
+      "post": {
+        "tags": ["Panggilan"],
+        "summary": "Broadcast ulang nomor antrian tanpa ubah data",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["id_loket", "nomor"],
+                "properties": {
+                  "id_loket": { "type": "integer" },
+                  "nomor":    { "type": "string", "pattern": "^[A-Za-z0-9]+$", "example": "A12" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PanggilanBroadcast" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/panggilan/simpan": {
+      "post": {
+        "tags": ["Panggilan"],
+        "summary": "Panggil nomor tertentu (manual / ulang) + broadcast Redis",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["id_antrian", "id_loket"],
+                "properties": {
+                  "id_antrian": { "type": "integer" },
+                  "id_loket":   { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "id_antrian":    { "type": "integer" },
+                            "nomor_antrian": { "type": "string" },
+                            "id_loket":      { "type": "integer" },
+                            "nama_loket":    { "type": "string" },
+                            "waktu_panggil": { "type": "string", "format": "date-time" },
+                            "is_ulang":      { "type": "boolean" },
+                            "channel":       { "type": "string", "example": "loket02" }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+
+    "/api/groups": {
+      "get": {
+        "tags": ["Groups"],
+        "summary": "List semua group",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Group" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Groups"],
+        "summary": "Tambah group baru",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name":        { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
+                  "description": { "type": "string" },
+                  "bgcolor":     { "type": "string", "example": "#ff8800" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/GroupDetail" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/groups/{id}": {
+      "get": {
+        "tags": ["Groups"],
+        "summary": "Detail group",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/GroupDetail" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "put": {
+        "tags": ["Groups"],
+        "summary": "Update group (partial). Nama admin_group tidak bisa di-rename.",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name":        { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
+                  "description": { "type": "string" },
+                  "bgcolor":     { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/GroupDetail" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Groups"],
+        "summary": "Hapus group. Group `admin_group` tidak bisa dihapus.",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/GenericSuccess" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/groups/users/{id}": {
+      "get": {
+        "tags": ["Groups"],
+        "summary": "List user yang tergabung dalam group",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "boolean" },
+                    "group":  { "$ref": "#/components/schemas/Group" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/User" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+
+    "/api/users": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "List semua user + groups",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/User" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Users"],
+        "summary": "Tambah user baru",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email":      { "type": "string", "format": "email" },
+                  "password":   { "type": "string", "format": "password" },
+                  "username":   { "type": "string", "description": "Opsional, default = first+last atau prefix email" },
+                  "first_name": { "type": "string" },
+                  "last_name":  { "type": "string" },
+                  "phone":      { "type": "string" },
+                  "company":    { "type": "string" },
+                  "groups":     {
+                    "type": "array",
+                    "items": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/UserDetail" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Detail user + groups",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/UserDetail" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "put": {
+        "tags": ["Users"],
+        "summary": "Update user (partial). `groups[]` = replace-all.",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "first_name": { "type": "string" },
+                  "last_name":  { "type": "string" },
+                  "phone":      { "type": "string" },
+                  "company":    { "type": "string" },
+                  "password":   { "type": "string", "format": "password" },
+                  "groups":     {
+                    "type": "array",
+                    "items": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/UserDetail" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Hapus user",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/GenericSuccess" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/users/activate/{id}": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Aktifkan user",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/GenericSuccess" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/users/deactivate/{id}": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Nonaktifkan user",
+        "parameters": [{ "$ref": "#/components/parameters/PathId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/GenericSuccess" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+
+    "/api/dashboard": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Ringkasan lengkap: counts + disk + memory + rekap antrian",
+        "parameters": [
+          {
+            "name": "tanggal",
+            "in": "query",
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DashboardFull" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/summary": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Jumlah users / groups / loket",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "users":  { "type": "integer" },
+                            "groups": { "type": "integer" },
+                            "loket":  { "type": "integer" }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/system": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Pemakaian disk & memory",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "disk":   { "$ref": "#/components/schemas/DiskUsage" },
+                            "memory": { "$ref": "#/components/schemas/MemoryUsage" }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/antrian_status": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Rekap antrian per status pada tanggal tertentu",
+        "parameters": [
+          { "name": "tanggal", "in": "query", "schema": { "type": "string", "format": "date" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status":  { "type": "boolean" },
+                    "tanggal": { "type": "string", "format": "date" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "menunggu":  { "type": "integer" },
+                        "dipanggil": { "type": "integer" },
+                        "selesai":   { "type": "integer" },
+                        "batal":     { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/antrian_loket": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Rekap antrian per loket pada tanggal tertentu",
+        "parameters": [
+          { "name": "tanggal", "in": "query", "schema": { "type": "string", "format": "date" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status":  { "type": "boolean" },
+                    "tanggal": { "type": "string", "format": "date" },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id":            { "type": "integer" },
+                          "nama_loket":    { "type": "string" },
+                          "status_buka":   { "type": "string", "enum": ["buka", "tutup"] },
+                          "kode_huruf":    { "type": "string" },
+                          "total_antrian": { "type": "integer" },
+                          "total_selesai": { "type": "integer" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/loket_status": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Jumlah loket per status buka/tutup",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/Success" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "buka":  { "type": "integer" },
+                            "tutup": { "type": "integer" }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "basicAuth": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "HTTP Basic Auth — diaktifkan via `application/config/rest.php` (`rest_auth = 'basic'`)."
+      }
+    },
+    "parameters": {
+      "PathId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "schemas": {
+      "Success": {
+        "type": "object",
+        "properties": {
+          "status":  { "type": "boolean", "example": true },
+          "message": { "type": "string" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["status", "message"],
+        "properties": {
+          "status":  { "type": "boolean", "example": false },
+          "message": { "type": "string" }
+        }
+      },
+      "Antrian": {
+        "type": "object",
+        "properties": {
+          "id":             { "type": "integer" },
+          "tanggal":        { "type": "string", "format": "date" },
+          "id_layanan":     { "type": "integer" },
+          "id_loket":       { "type": "integer", "nullable": true },
+          "nik":            { "type": "string",  "nullable": true, "pattern": "^\\d{16}$" },
+          "nomor_antrian":  { "type": "string",  "example": "A12" },
+          "nomor_urut":     { "type": "integer" },
+          "status":         { "type": "string",  "enum": ["menunggu", "dipanggil", "selesai", "batal"] },
+          "waktu_ambil":    { "type": "string",  "format": "date-time" },
+          "waktu_panggil":  { "type": "string",  "format": "date-time", "nullable": true },
+          "waktu_selesai":  { "type": "string",  "format": "date-time", "nullable": true },
+          "kode_huruf":     { "type": "string",  "nullable": true },
+          "nama_layanan":   { "type": "string",  "nullable": true },
+          "nama_loket":     { "type": "string",  "nullable": true }
+        }
+      },
+      "Layanan": {
+        "type": "object",
+        "properties": {
+          "id":           { "type": "integer" },
+          "kode_huruf":   { "type": "string" },
+          "nama_layanan": { "type": "string" },
+          "keterangan":   { "type": "string", "nullable": true }
+        }
+      },
+      "LoketUser": {
+        "type": "object",
+        "properties": {
+          "id":         { "type": "integer" },
+          "username":   { "type": "string" },
+          "first_name": { "type": "string", "nullable": true },
+          "last_name":  { "type": "string", "nullable": true },
+          "email":      { "type": "string", "nullable": true }
+        }
+      },
+      "Loket": {
+        "type": "object",
+        "properties": {
+          "id":              { "type": "integer" },
+          "id_layanan":      { "type": "integer" },
+          "nama_loket":      { "type": "string" },
+          "status_buka":     { "type": "string", "enum": ["buka", "tutup"] },
+          "nama_layanan":    { "type": "string", "nullable": true },
+          "kode_huruf":      { "type": "string", "nullable": true },
+          "nomor_terakhir":  { "type": "string", "nullable": true, "description": "Muncul hanya pada GET /api/loket/buka?with_last=1" },
+          "users": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/LoketUser" }
+          }
+        }
+      },
+      "Group": {
+        "type": "object",
+        "properties": {
+          "id":          { "type": "integer" },
+          "name":        { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "bgcolor":     { "type": "string", "nullable": true }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id":         { "type": "integer" },
+          "username":   { "type": "string" },
+          "email":      { "type": "string", "format": "email" },
+          "first_name": { "type": "string", "nullable": true },
+          "last_name":  { "type": "string", "nullable": true },
+          "phone":      { "type": "string", "nullable": true },
+          "company":    { "type": "string", "nullable": true },
+          "active":     { "type": "integer", "enum": [0, 1] },
+          "created_on": { "type": "integer", "description": "Unix timestamp" },
+          "last_login": { "type": "integer", "nullable": true },
+          "groups": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Group" }
+          }
+        }
+      },
+      "PanggilanResult": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Success" },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id_antrian":    { "type": "integer" },
+                  "nomor_antrian": { "type": "string" },
+                  "id_loket":      { "type": "integer" },
+                  "nama_loket":    { "type": "string" },
+                  "waktu_panggil": { "type": "string", "format": "date-time" },
+                  "is_ulang":      { "type": "boolean" }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PanggilanBroadcast": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Success" },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id_loket":      { "type": "integer" },
+                  "nama_loket":    { "type": "string" },
+                  "nomor_antrian": { "type": "string" },
+                  "channel":       { "type": "string", "example": "loket02" },
+                  "waktu_panggil": { "type": "string", "format": "date-time" }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "DiskUsage": {
+        "type": "object",
+        "properties": {
+          "total":       { "type": "number", "format": "float", "description": "Byte" },
+          "free":        { "type": "number", "format": "float" },
+          "used":        { "type": "number", "format": "float" },
+          "use_percent": { "type": "number", "format": "float" }
+        }
+      },
+      "MemoryUsage": {
+        "type": "object",
+        "properties": {
+          "usage":       { "type": "integer" },
+          "peak":        { "type": "integer" },
+          "use_percent": { "type": "number", "format": "float" }
+        }
+      },
+      "DashboardFull": {
+        "type": "object",
+        "properties": {
+          "status":  { "type": "boolean" },
+          "tanggal": { "type": "string", "format": "date" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "counts": {
+                "type": "object",
+                "properties": {
+                  "users":  { "type": "integer" },
+                  "groups": { "type": "integer" },
+                  "loket":  { "type": "integer" }
+                }
+              },
+              "disk":   { "$ref": "#/components/schemas/DiskUsage" },
+              "memory": { "$ref": "#/components/schemas/MemoryUsage" },
+              "antrian_by_status": {
+                "type": "object",
+                "properties": {
+                  "menunggu":  { "type": "integer" },
+                  "dipanggil": { "type": "integer" },
+                  "selesai":   { "type": "integer" },
+                  "batal":     { "type": "integer" }
+                }
+              },
+              "antrian_by_loket": {
+                "type": "array",
+                "items": { "type": "object" }
+              },
+              "loket_by_status": {
+                "type": "object",
+                "properties": {
+                  "buka":  { "type": "integer" },
+                  "tutup": { "type": "integer" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Validasi gagal / parameter tidak valid",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource tidak ditemukan",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Konflik status / aturan bisnis",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Operasi tidak diizinkan",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "Gagal memproses di server",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      },
+      "GenericSuccess": {
+        "description": "Operasi sukses",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Success" }
+          }
+        }
+      },
+      "AntrianUpdated": {
+        "description": "Antrian diupdate",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                { "$ref": "#/components/schemas/Success" },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/Antrian" }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "LoketDetail": {
+        "description": "Detail loket",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                { "$ref": "#/components/schemas/Success" },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/Loket" }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "GroupDetail": {
+        "description": "Detail group",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                { "$ref": "#/components/schemas/Success" },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/Group" }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "UserDetail": {
+        "description": "Detail user",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                { "$ref": "#/components/schemas/Success" },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
