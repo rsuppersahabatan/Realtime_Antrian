@@ -101,6 +101,53 @@ class Antrian_model extends CI_Model {
         return null; 
     }
     
+    /**
+     * SIMPAN PANGGILAN (Panggil manual / panggil ulang)
+     * Mengubah tiket menjadi 'dipanggil' pada loket tertentu.
+     *
+     * @param int $id_antrian
+     * @param int $id_loket
+     * @return array ['code'=>string, 'data'=>array|null]
+     *               code: 'ok' | 'antrian_not_found' | 'loket_not_found'
+     *                   | 'layanan_mismatch' | 'status_final'
+     */
+    public function simpan_panggilan($id_antrian, $id_loket) {
+        $antrian = $this->db->get_where($this->table, ['id' => $id_antrian])->row_array();
+        if ( ! $antrian) {
+            return ['code' => 'antrian_not_found', 'data' => null];
+        }
+
+        $loket = $this->db->get_where('loket', ['id' => $id_loket])->row_array();
+        if ( ! $loket) {
+            return ['code' => 'loket_not_found', 'data' => null];
+        }
+
+        if ((int) $antrian['id_layanan'] !== (int) $loket['id_layanan']) {
+            return ['code' => 'layanan_mismatch', 'data' => null];
+        }
+
+        if (in_array($antrian['status'], ['selesai', 'batal'], true)) {
+            return ['code' => 'status_final', 'data' => $antrian];
+        }
+
+        $waktu_panggil = date('Y-m-d H:i:s');
+        $update = [
+            'status'        => 'dipanggil',
+            'id_loket'      => $id_loket,
+            'waktu_panggil' => $waktu_panggil,
+        ];
+
+        $this->db->where('id', $id_antrian)->update($this->table, $update);
+
+        return [
+            'code' => 'ok',
+            'data' => array_merge($antrian, $update, [
+                'nama_loket'   => $loket['nama_loket'],
+                'is_ulang'     => $antrian['status'] === 'dipanggil',
+            ]),
+        ];
+    }
+
     // Selesaikan tiket antrian
     public function selesaikan_antrian($id_antrian) {
         $this->db->where('id', $id_antrian);

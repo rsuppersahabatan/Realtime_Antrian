@@ -13,6 +13,8 @@ use chriskacerguis\RestServer\RestController;
  *                                            Body: id_layanan (required), nik (optional)
  *   POST   api/antrian/call               -> panggil antrian berikutnya di sebuah loket
  *                                            Body: id_loket (required)
+ *   POST   api/antrian/panggilansimpan    -> simpan panggilan (manual / panggil ulang)
+ *                                            Body: id_antrian (required), id_loket (required)
  *   PUT    api/antrian/selesai/{id}       -> tandai antrian selesai
  *   PUT    api/antrian/batal/{id}         -> tandai antrian batal
  *   DELETE api/antrian/{id}               -> hapus record antrian
@@ -151,6 +153,78 @@ class Antrian extends RestController {
 				'id_loket'      => $id_loket,
 				'nomor_antrian' => $nomor_antrian,
 				'waktu_panggil' => date('Y-m-d H:i:s'),
+			],
+		], RestController::HTTP_OK);
+	}
+
+
+	/**
+	 * POST api/antrian/panggilansimpan
+	 * Body: id_antrian (required), id_loket (required)
+	 * Simpan panggilan manual — bisa dipakai untuk panggil ulang
+	 * atau memanggil nomor tertentu (bukan otomatis "berikutnya").
+	 */
+	public function panggilansimpan_post()
+	{
+		$id_antrian = (int) $this->post('id_antrian');
+		$id_loket   = (int) $this->post('id_loket');
+
+		if ($id_antrian <= 0 OR $id_loket <= 0)
+		{
+			$this->response([
+				'status'  => FALSE,
+				'message' => 'Field id_antrian dan id_loket wajib diisi',
+			], RestController::HTTP_BAD_REQUEST);
+			return;
+		}
+
+		$result = $this->Antrian_model->simpan_panggilan($id_antrian, $id_loket);
+
+		switch ($result['code'])
+		{
+			case 'antrian_not_found':
+				$this->response([
+					'status'  => FALSE,
+					'message' => 'Antrian tidak ditemukan',
+				], RestController::HTTP_NOT_FOUND);
+				return;
+
+			case 'loket_not_found':
+				$this->response([
+					'status'  => FALSE,
+					'message' => 'Loket tidak ditemukan',
+				], RestController::HTTP_NOT_FOUND);
+				return;
+
+			case 'layanan_mismatch':
+				$this->response([
+					'status'  => FALSE,
+					'message' => 'Loket ini tidak melayani layanan antrian tersebut',
+				], RestController::HTTP_CONFLICT);
+				return;
+
+			case 'status_final':
+				$this->response([
+					'status'  => FALSE,
+					'message' => 'Antrian sudah selesai/batal dan tidak dapat dipanggil',
+					'data'    => $result['data'],
+				], RestController::HTTP_CONFLICT);
+				return;
+		}
+
+		$data = $result['data'];
+		$this->response([
+			'status'  => TRUE,
+			'message' => $data['is_ulang']
+				? 'Panggilan ulang berhasil disimpan'
+				: 'Panggilan berhasil disimpan',
+			'data'    => [
+				'id_antrian'    => (int) $data['id'],
+				'nomor_antrian' => $data['nomor_antrian'],
+				'id_loket'      => (int) $data['id_loket'],
+				'nama_loket'    => $data['nama_loket'],
+				'waktu_panggil' => $data['waktu_panggil'],
+				'is_ulang'      => (bool) $data['is_ulang'],
 			],
 		], RestController::HTTP_OK);
 	}
