@@ -83,6 +83,11 @@
         margin-bottom: 16px;
         box-shadow: 0 4px 10px rgba(0, 186, 174, 0.08);
         transition: transform .15s ease, box-shadow .15s ease;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        position: relative;
+        z-index: 1;
     }
     .layanan-card:hover {
         transform: translateY(-2px);
@@ -97,15 +102,13 @@
         width: 56px; height: 56px; line-height: 56px;
         text-align: center;
         border-radius: 8px;
-        margin-right: 14px;
-        vertical-align: middle;
+        flex: 0 0 auto;
     }
     .layanan-nama {
-        display: inline-block;
-        vertical-align: middle;
         font-size: 18px;
         font-weight: bold;
         color: var(--dp-dark);
+        flex: 1 1 auto;
     }
     .btn-ambil {
         background: var(--dp-accent);
@@ -114,8 +117,10 @@
         font-weight: bold;
         padding: 10px 16px;
         border-radius: 6px;
-        float: right;
-        margin-top: 8px;
+        flex: 0 0 auto;
+        cursor: pointer;
+        position: relative;
+        z-index: 2;
     }
     .btn-ambil:hover, .btn-ambil:focus {
         background: var(--dp-accent-dark);
@@ -196,9 +201,10 @@
 
     @media (max-width: 480px) {
         .tiket-nomor { font-size: 80px; }
+        .layanan-card { flex-wrap: wrap; }
         .layanan-kode { width: 48px; height: 48px; line-height: 48px; font-size: 22px; }
         .layanan-nama { font-size: 16px; }
-        .btn-ambil { float: none; display: block; width: 100%; margin-top: 14px; }
+        .btn-ambil { display: block; width: 100%; margin-top: 14px; }
     }
 
     /* --- Jam analog --- */
@@ -379,7 +385,7 @@
                         <div class="layanan-card clearfix">
                             <span class="layanan-kode"><?= htmlspecialchars($ly['kode_huruf'], ENT_QUOTES, 'UTF-8') ?></span>
                             <span class="layanan-nama"><?= htmlspecialchars($ly['nama_layanan'], ENT_QUOTES, 'UTF-8') ?></span>
-                            <button type="submit" data-id="<?= (int) $ly['id'] ?>" class="btn-ambil btn-pilih-layanan">AMBIL NOMOR</button>
+                            <button type="button" data-id="<?= (int) $ly['id'] ?>" class="btn-ambil btn-pilih-layanan">AMBIL NOMOR</button>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -450,8 +456,7 @@
             if (only !== this.value) this.value = only;
         });
 
-        // Cegah implicit submit lewat tombol Enter — user wajib klik
-        // "AMBIL NOMOR" pada layanan yang dipilih agar id_layanan terisi.
+        // Cegah implicit submit via Enter — user wajib klik tombol layanan.
         nik.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' || e.keyCode === 13) {
                 e.preventDefault();
@@ -459,29 +464,23 @@
         });
     }
 
-    // Setiap tombol "AMBIL NOMOR" mengeset id_layanan terlebih dahulu
-    // sebelum form disubmit.
-    var tombolPilih = document.querySelectorAll('.btn-pilih-layanan');
-    for (var i = 0; i < tombolPilih.length; i++) {
-        tombolPilih[i].addEventListener('click', function () {
-            if (idLayanan) {
-                idLayanan.value = this.getAttribute('data-id') || '';
-            }
-        });
-    }
-
+    // Delegasi ke form: klik pada elemen .btn-pilih-layanan mana pun akan
+    // mengisi id_layanan dari data-id, lalu submit form secara eksplisit.
     if (form) {
-        form.addEventListener('submit', function (e) {
+        form.addEventListener('click', function (e) {
+            var btn = e.target.closest ? e.target.closest('.btn-pilih-layanan') : null;
+            if ( ! btn) return;
+
             if (nik && nik.value.length !== 16) {
-                e.preventDefault();
                 nik.focus();
                 alert('NIK harus 16 digit angka.');
                 return;
             }
-            if (idLayanan && ! idLayanan.value) {
-                e.preventDefault();
-                alert('Silakan pilih layanan terlebih dahulu.');
+
+            if (idLayanan) {
+                idLayanan.value = btn.getAttribute('data-id') || '';
             }
+            form.submit();
         });
     }
 
