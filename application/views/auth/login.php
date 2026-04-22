@@ -24,11 +24,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                         <?php echo form_input($password);?>
                         <span class="glyphicon glyphicon-lock form-control-feedback"></span>
                     </div>
-                    <div class="row">
+                    <div class="row" style="display:flex;align-items:center;">
                         <div class="col-xs-8">
-                            <div class="checkbox icheck">
-                                <label>
-                                    <?php echo form_checkbox('remember', '1', FALSE, 'id="remember"'); ?> <?php echo lang('auth_remember_me'); ?>
+                            <div class="checkbox icheck" style="margin:0;padding-left:5px;">
+                                <label style="display:inline-flex;align-items:center;gap:6px;padding-left:0;">
+                                    <?php echo form_checkbox('remember', '1', FALSE, 'id="remember" style="margin:0 6px 0 0;vertical-align:middle;position:relative;top:0;"'); ?><span><?php echo lang('auth_remember_me'); ?></span>
                                 </label>
                             </div>
                         </div>
