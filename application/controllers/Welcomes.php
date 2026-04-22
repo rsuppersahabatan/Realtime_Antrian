@@ -5,6 +5,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * Antrian Online — halaman publik tempat pengunjung memilih layanan dan
  * mencetak nomor antrian. Setelah tiket terbit, nomor akan muncul di display
  * antrian (Client::index) begitu petugas memanggil via admin/panggilan.
+ * 
  */
 class Welcome extends Public_Controller {
 
