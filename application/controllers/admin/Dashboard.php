@@ -15,7 +15,7 @@ class Dashboard extends Admin_Controller {
 
 	public function index()
 	{
-        if ( ! $this->ion_auth->logged_in() OR ! $this->ion_auth->is_admin())
+        if ( ! $this->ion_auth->logged_in() /*OR ! $this->ion_auth->is_admin()*/)
         {
             redirect('auth/login', 'refresh');
         }
@@ -48,7 +48,7 @@ class Dashboard extends Admin_Controller {
 
 
             /* TEST */
-            $this->data['url_exist']    = is_url_exist('http://www.domprojects.com');
+            $this->data['url_exist']    = is_url_exist('https://www.topidesta.my.id');
 
 
             /* Load Template */

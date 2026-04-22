@@ -68,6 +68,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                             </a>
                         </li>
 
+                        <!-- /** HANYA ADMIN DAN SUPERADMIN YANG BISA MENGAKSES */ -->
+                        <?php if($this->ion_auth->is_admin()): ?>
                         <li class="<?=active_link_controller('users')?>">
                             <a href="<?php echo site_url('admin/users'); ?>">
                                 <i class="fa fa-user"></i> <span><?php echo lang('menu_users'); ?></span>
@@ -78,6 +80,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                 <i class="fa fa-shield"></i> <span><?php echo lang('menu_security_groups'); ?></span>
                             </a>
                         </li>
+                        <?php endif; ?>
                     </ul>
                 </section>
             </aside>
