@@ -1,20 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-// Load .env once (idempotent — aman kalau redis.php juga sudah memuat).
-// File ini berada di application/config/common/, jadi .env di 4 level di atas.
-$__env_path = dirname(dirname(dirname(dirname(__FILE__)))) . '/.env';
-if (file_exists($__env_path)) {
-    foreach (file($__env_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $__line) {
-        if (strpos(trim($__line), '#') === 0) continue;
-        $__parts = explode('=', $__line, 2);
-        if (count($__parts) === 2 && getenv(trim($__parts[0])) === FALSE) {
-            putenv(trim($__parts[0]) . '=' . trim($__parts[1]));
-        }
-    }
-}
-unset($__env_path, $__line, $__parts);
-
 /*
 |--------------------------------------------------------------------------
 | Assets

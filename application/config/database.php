@@ -73,12 +73,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $active_group = 'default';
 $query_builder = TRUE;
 
-// Load .env variables via vlucas/phpdotenv
-$env_dir = dirname(dirname(dirname(__FILE__)));
-if (class_exists('Dotenv\\Dotenv')) {
-    Dotenv\Dotenv::createUnsafeImmutable($env_dir)->safeLoad();
-}
-
 $db['default'] = array(
 	'dsn'	=> '',
 	'hostname' => getenv('DB_HOST') ?: 'localhost',
