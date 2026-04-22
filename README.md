@@ -13,7 +13,7 @@ Dibangun di atas **CodeIgniter 3** (backend & admin panel), **Node.js + Socket.I
 - **Manajemen master data** — CRUD layanan, loket, pengguna, dan grup (role) berbasis Ion Auth.
 - **Reset harian otomatis** — nomor urut direset per tanggal, riwayat tetap tersimpan.
 - **Multi-layanan** — setiap layanan punya prefix huruf sendiri (A, B, C, …) dan bisa dilayani lebih dari satu loket.
-- **REST API** — endpoint JSON untuk modul **layanan**, **loket**, dan **antrian** (list, create, update, delete, panggil antrian, selesaikan) yang dilindungi **HTTP Basic Auth** via [chriskacerguis/codeigniter-restserver](https://github.com/chriskacerguis/codeigniter-restserver). Lihat [REST API](#rest-api).
+- **REST API** — endpoint JSON untuk modul **layanan**, **loket**, **antrian**, **users**, dan **groups** (list, create, update, delete, panggil antrian, simpan panggilan/panggil ulang, aktivasi user, dsb.) yang dilindungi **HTTP Basic Auth** via [chriskacerguis/codeigniter-restserver](https://github.com/chriskacerguis/codeigniter-restserver). Lihat [REST API](#rest-api).
 - **Deploy sekali jalan** — `docker-compose up -d` menyiapkan PHP+Apache, Node.js, Redis, dan MySQL.
 
 ## Tampilan Aplikasi
@@ -90,7 +90,7 @@ Alur realtime:
 Realtime_Antrian/
 ├── application/          # Kode CodeIgniter (controller, model, view)
 │   ├── controllers/      # Welcome, Client, Auth, admin/*, api/*
-│   │   └── api/          # REST controllers: Layanan, Loket, Antrian
+│   │   └── api/          # REST controllers: Layanan, Loket, Antrian, Users, Groups
 │   ├── config/
 │   │   └── rest.php      # Konfigurasi REST server (basic auth, dll.)
 │   └── views/            # welcome_message, client/display, admin/*
@@ -132,19 +132,41 @@ Atau, jika ingin menjalankan tanpa Docker:
 2. **(Opsional) buat file `.env`** di root untuk meng-override default:
 
    ```env
+   # ====================================
+   # Realtime Antrian - Environment Config
+   # ====================================
+   # Copy this file to .env and adjust values as needed
+   # cp .env.example .env
+
+   # ----- Redis -----
+   REDIS_HOST=127.0.0.1
+   REDIS_PORT=6379
+   REDIS_PASSWORD=Y5HZk8u07*fY
+
+   # ----- MySQL -----
+   DB_HOST=mysql
+   DB_USER=root
+   DB_PASS=toor
+   DB_NAME=antrian_db
+   MYSQL_ROOT_PASSWORD=root123
+
+   # ----- Ports -----
    PHP_PORT=8080
    NODEJS_PORT=8085
    MYSQL_PORT=3306
-   REDIS_EXT_PORT=6380
+   REDIS_EXT_PORT=6379
 
-   DB_NAME=antrian_db
-   DB_USER=antrian
-   DB_PASS=antrian123
-   MYSQL_ROOT_PASSWORD=root123
+   # ----- Socket.IO -----
+   # URL absolut ke service Socket.IO. Kosongkan di produksi (agar view pakai
+   # same-origin via reverse proxy Nginx/Apache). Untuk dev Windows tanpa proxy,
+   # isi dengan endpoint Node.js langsung, misal:
+   # SOCKET_URL=http://127.0.0.1:8085
+   SOCKET_URL=
 
-   REDIS_HOST=redis
-   REDIS_PORT=6379
-   REDIS_PASSWORD=
+
+   # ---- API BASIC AUTH ----
+   USER_API=
+   PASS_API=
    ```
 
 3. **Build & jalankan stack**
@@ -228,7 +250,7 @@ Format pesan mengikuti konvensi string sederhana (mis. `antrian-baru-A12`, `pang
 
 ## REST API
 
-Modul **layanan**, **loket**, dan **antrian** diekspos sebagai REST API JSON di bawah prefix `/api/*`, dibangun dengan [chriskacerguis/codeigniter-restserver](https://github.com/chriskacerguis/codeigniter-restserver). Controller ada di [application/controllers/api/](application/controllers/api/) dan konfigurasi server REST di [application/config/rest.php](application/config/rest.php).
+Modul **layanan**, **loket**, **antrian**, **users**, dan **groups** diekspos sebagai REST API JSON di bawah prefix `/api/*`, dibangun dengan [chriskacerguis/codeigniter-restserver](https://github.com/chriskacerguis/codeigniter-restserver). Controller ada di [application/controllers/api/](application/controllers/api/) dan konfigurasi server REST di [application/config/rest.php](application/config/rest.php).
 
 ### Autentikasi
 
@@ -276,9 +298,37 @@ Base URL (Docker default): `http://localhost:8080/api`
 | `GET` | `/api/antrian` | Daftar antrian + rekap per status. Query: `?tanggal=YYYY-MM-DD` (default hari ini) |
 | `POST` | `/api/antrian` | Generate nomor antrian baru. Body: `id_layanan`, `nik?` (16 digit) |
 | `POST` | `/api/antrian/call` | Panggil antrian berikutnya untuk sebuah loket. Body: `id_loket` |
+| `POST` | `/api/antrian/panggilansimpan` | Simpan panggilan manual / panggil ulang tiket tertentu. Body: `id_antrian`, `id_loket`. Validasi: layanan loket harus cocok dengan layanan antrian; tiket `selesai`/`batal` ditolak. Response memuat flag `is_ulang` bila tiket sudah berstatus `dipanggil` sebelumnya |
 | `PUT` | `/api/antrian/selesai/{id}` | Tandai antrian selesai (isi `waktu_selesai`) |
 | `PUT` | `/api/antrian/batal/{id}` | Tandai antrian batal |
 | `DELETE` | `/api/antrian/{id}` | Hapus record antrian |
+
+#### Users — `/api/users`
+
+Wrapper REST atas **Ion Auth**. Semua response user sudah memfilter field sensitif (`password`, `salt`, `remember_code`, `forgotten_password_code`, `activation_code`).
+
+| Method | URI | Keterangan |
+|---|---|---|
+| `GET` | `/api/users` | List semua user beserta daftar `groups` masing-masing |
+| `GET` | `/api/users/{id}` | Detail satu user + `groups` |
+| `POST` | `/api/users` | Tambah user baru. Body: `email` (required), `password` (required, min sesuai `ion_auth.min_password_length`), `first_name?`, `last_name?`, `phone?`, `company?`, `username?` (default: gabungan first+last, fallback local-part email), `groups[]?` (array id group) |
+| `PUT` | `/api/users/{id}` | Update partial. Body: `first_name?`, `last_name?`, `phone?`, `company?`, `password?`, `groups[]?` (jika dikirim, **replace** seluruh keanggotaan group user) |
+| `PUT` | `/api/users/activate/{id}` | Aktifkan user (`active=1`) |
+| `PUT` | `/api/users/deactivate/{id}` | Nonaktifkan user (`active=0`) |
+| `DELETE` | `/api/users/{id}` | Hapus user |
+
+#### Groups — `/api/groups`
+
+CRUD role/group via **Ion Auth**, plus kolom `bgcolor` untuk label AdminLTE. Group `admin` (sesuai `ion_auth.admin_group`) dilindungi — tidak dapat di-rename maupun dihapus.
+
+| Method | URI | Keterangan |
+|---|---|---|
+| `GET` | `/api/groups` | List semua group |
+| `GET` | `/api/groups/{id}` | Detail satu group |
+| `GET` | `/api/groups/users/{id}` | List user yang menjadi anggota group {id} |
+| `POST` | `/api/groups` | Tambah group. Body: `name` (required, regex `^[A-Za-z0-9_-]+$`), `description?`, `bgcolor?` (hex, mis. `#2196F3`) |
+| `PUT` | `/api/groups/{id}` | Update partial. Body: `name?`, `description?`, `bgcolor?`. Rename group `admin` ditolak (`403 Forbidden`) |
+| `DELETE` | `/api/groups/{id}` | Hapus group. Menghapus group `admin` ditolak (`403 Forbidden`) |
 
 ### Format Response
 
@@ -292,7 +342,7 @@ Semua response menggunakan `Content-Type: application/json` dengan struktur umum
 }
 ```
 
-Status HTTP mengikuti konvensi: `200 OK`, `201 Created`, `400 Bad Request`, `401 Unauthorized`, `404 Not Found`, `500 Internal Error`.
+Status HTTP mengikuti konvensi: `200 OK`, `201 Created`, `400 Bad Request`, `401 Unauthorized`, `403 Forbidden` (mis. menghapus group `admin`), `404 Not Found`, `409 Conflict` (mis. `panggilansimpan` dengan layanan loket tidak cocok atau tiket sudah `selesai`/`batal`), `500 Internal Error`.
 
 ### Contoh Pemakaian
 
@@ -320,12 +370,43 @@ curl -u admin:antrian2024 \
      http://localhost:8080/api/antrian/call
 ```
 
+**cURL — simpan panggilan manual / panggil ulang tiket tertentu**
+
+```bash
+curl -u admin:antrian2024 \
+     -X POST \
+     -d "id_antrian=12&id_loket=1" \
+     http://localhost:8080/api/antrian/panggilansimpan
+```
+
 **cURL — tandai antrian selesai**
 
 ```bash
 curl -u admin:antrian2024 \
      -X PUT \
      http://localhost:8080/api/antrian/selesai/12
+```
+
+**cURL — tambah user dengan assignment group**
+
+```bash
+curl -u admin:antrian2024 \
+     -X POST \
+     -d "email=petugas1@contoh.id&password=rahasia123&first_name=Budi&last_name=Santoso&groups[]=2" \
+     http://localhost:8080/api/users
+```
+
+**cURL — aktivasi / deaktivasi user**
+
+```bash
+curl -u admin:antrian2024 -X PUT http://localhost:8080/api/users/activate/5
+curl -u admin:antrian2024 -X PUT http://localhost:8080/api/users/deactivate/5
+```
+
+**cURL — list user dalam sebuah group**
+
+```bash
+curl -u admin:antrian2024 http://localhost:8080/api/groups/users/2
 ```
 
 **Postman / Insomnia** — pilih Auth type **Basic Auth**, isi username & password.
