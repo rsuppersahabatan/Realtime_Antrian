@@ -89,7 +89,7 @@ $config['auth_library_function'] = '';
 | PENTING: ganti kredensial di bawah ini sebelum dipakai di production!
 */
 $config['rest_valid_logins'] = [
-    'admin' => 'antrian2024',
+    (getenv('USER_API') ?: 'admin') => (getenv('PASS_API') ?: 'antrian2024'),
 ];
 
 /*
