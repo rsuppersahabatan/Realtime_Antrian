@@ -347,6 +347,45 @@ Authorization: Basic YWRtaW46YW50cmlhbjIwMjQ=
 - **REST API selalu 401** — pastikan header `Authorization: Basic ...` terkirim (Apache `mod_php` biasanya aman, beberapa setup FastCGI perlu menambahkan `SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1` di `.htaccess`). Cek juga password di [application/config/rest.php](application/config/rest.php) sesuai dengan yang dikirim.
 - **REST API 404 padahal URL benar** — pastikan `mod_rewrite` aktif dan `public/.htaccess` terbaca; tanpa itu URL harus berbentuk `http://host/index.php/api/layanan`.
 
+## aaPanel Users by Cloude
+
+1. Cek user PHP-FPM
+
+   ```bash
+   ps aux | grep php-fpm | head -3
+   ```
+
+   Biasanya di aaPanel: www.
+
+2. Fix ownership & permission
+
+   ```bash
+      cd /www/wwwroot/antrian
+      sudo chown www:www .env
+      sudo chmod 644 .env
+   ```
+   Kalau mau lebih ketat (recommended): ```sudo chmod 640 .env    # owner rw, group r, other none```
+
+3. Cek parent directory executable
+
+   ```bash
+      /www/wwwroot/antrian/ harus x untuk user www:
+      ls -ld /www/wwwroot/antrian
+      sudo chmod 755 /www/wwwroot/antrian
+   ```
+
+4. Cek open_basedir aaPanel
+
+   Di aaPanel → Website → Settings → Config File, cari open_basedir. Pastikan /www/wwwroot/antrian/ ada di daftarnya (seharusnya default sudah termasuk).
+
+5. Verifikasi
+
+   ``` sudo -u www cat /www/wwwroot/antrian/.env ```
+   Kalau bisa tampil isinya → permission beres. Reload PHP-FPM:
+
+   ``` sudo /etc/init.d/php-fpm-* reload    # sesuai versi PHP ```
+   Setelah itu refresh halaman 
+
 ## Credits & Referensi
 
 - [CodeIgniter 3](https://github.com/bcit-ci/CodeIgniter)
