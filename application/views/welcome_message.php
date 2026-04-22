@@ -372,12 +372,14 @@
 
                 <h3 class="section-title">PILIH LAYANAN</h3>
 
+                <input type="hidden" name="id_layanan" id="idLayanan" value="">
+
                 <?php if ( ! empty($layanan)): ?>
                     <?php foreach ($layanan as $ly): ?>
                         <div class="layanan-card clearfix">
                             <span class="layanan-kode"><?= htmlspecialchars($ly['kode_huruf'], ENT_QUOTES, 'UTF-8') ?></span>
                             <span class="layanan-nama"><?= htmlspecialchars($ly['nama_layanan'], ENT_QUOTES, 'UTF-8') ?></span>
-                            <button type="submit" name="id_layanan" value="<?= (int) $ly['id'] ?>" class="btn-ambil">AMBIL NOMOR</button>
+                            <button type="submit" data-id="<?= (int) $ly['id'] ?>" class="btn-ambil btn-pilih-layanan">AMBIL NOMOR</button>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -438,23 +440,49 @@
 
 <script>
 (function () {
-    var nik = document.getElementById('nik');
+    var nik       = document.getElementById('nik');
+    var form      = document.getElementById('formAmbil');
+    var idLayanan = document.getElementById('idLayanan');
+
     if (nik) {
         nik.addEventListener('input', function () {
             var only = this.value.replace(/\D+/g, '').slice(0, 16);
             if (only !== this.value) this.value = only;
         });
 
-        var form = document.getElementById('formAmbil');
-        if (form) {
-            form.addEventListener('submit', function (e) {
-                if (nik.value.length !== 16) {
-                    e.preventDefault();
-                    nik.focus();
-                    alert('NIK harus 16 digit angka.');
-                }
-            });
-        }
+        // Cegah implicit submit lewat tombol Enter — user wajib klik
+        // "AMBIL NOMOR" pada layanan yang dipilih agar id_layanan terisi.
+        nik.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    // Setiap tombol "AMBIL NOMOR" mengeset id_layanan terlebih dahulu
+    // sebelum form disubmit.
+    var tombolPilih = document.querySelectorAll('.btn-pilih-layanan');
+    for (var i = 0; i < tombolPilih.length; i++) {
+        tombolPilih[i].addEventListener('click', function () {
+            if (idLayanan) {
+                idLayanan.value = this.getAttribute('data-id') || '';
+            }
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            if (nik && nik.value.length !== 16) {
+                e.preventDefault();
+                nik.focus();
+                alert('NIK harus 16 digit angka.');
+                return;
+            }
+            if (idLayanan && ! idLayanan.value) {
+                e.preventDefault();
+                alert('Silakan pilih layanan terlebih dahulu.');
+            }
+        });
     }
 
     var hourHand   = document.getElementById('hour');
