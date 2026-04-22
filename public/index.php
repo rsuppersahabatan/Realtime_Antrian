@@ -325,6 +325,22 @@ switch (ENVIRONMENT)
 
 /*
  * --------------------------------------------------------------------
+ * LOAD .env VIA vlucas/phpdotenv
+ * --------------------------------------------------------------------
+ * Dimuat sekali di sini sebelum CI boot, sehingga getenv() siap dipakai
+ * di semua config file (database.php, redis.php, rta_config.php, dll).
+ */
+$__autoload = __DIR__ . '/../vendor/autoload.php';
+if (is_file($__autoload)) {
+    require_once $__autoload;
+    if (class_exists('Dotenv\\Dotenv')) {
+        Dotenv\Dotenv::createUnsafeImmutable(dirname(__DIR__))->safeLoad();
+    }
+}
+unset($__autoload);
+
+/*
+ * --------------------------------------------------------------------
  * LOAD THE BOOTSTRAP FILE
  * --------------------------------------------------------------------
  *
