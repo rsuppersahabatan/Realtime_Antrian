@@ -39,6 +39,13 @@ class Dashboard extends Admin_Controller {
             $this->data['memory_peak_usage'] = $this->dashboard_model->memory_peak_usage(TRUE);
             $this->data['memory_usepercent'] = $this->dashboard_model->memory_usepercent(TRUE, FALSE);
 
+            /* Chart Antrian :: Hari ini */
+            $tanggal = date('Y-m-d');
+            $this->data['chart_tanggal']        = $tanggal;
+            $this->data['antrian_by_status']    = $this->dashboard_model->get_antrian_by_status($tanggal);
+            $this->data['antrian_by_loket']     = $this->dashboard_model->get_antrian_by_loket($tanggal);
+            $this->data['loket_by_status']      = $this->dashboard_model->get_loket_by_status();
+
 
             /* TEST */
             $this->data['url_exist']    = is_url_exist('http://www.domprojects.com');
