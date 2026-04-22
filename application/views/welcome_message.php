@@ -200,6 +200,85 @@
         .layanan-nama { font-size: 16px; }
         .btn-ambil { float: none; display: block; width: 100%; margin-top: 14px; }
     }
+
+    /* --- Jam analog --- */
+    .clock-wrap {
+        display: flex;
+        justify-content: center;
+        margin-top: 18px;
+    }
+    .clock {
+        position: relative;
+        width: 220px;
+        height: 220px;
+        background: #fff;
+        border: 8px solid var(--dp-primary);
+        border-radius: 50%;
+        box-shadow: 0 4px 10px rgba(0, 186, 174, 0.15);
+        box-sizing: border-box;
+    }
+    .clock::before {
+        content: '';
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 12px; height: 12px;
+        background: var(--dp-primary-dark);
+        border: 3px solid #fff;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 5;
+    }
+    .clock .numbers {
+        position: absolute;
+        inset: 10px;
+    }
+    .clock .number {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        font-size: 1rem;
+        font-weight: bold;
+        color: var(--dp-dark);
+    }
+    .clock .number span { position: absolute; top: 4px; }
+    .clock .number1  { transform: rotate(30deg); }  .clock .number1  span { transform: rotate(-30deg); }
+    .clock .number2  { transform: rotate(60deg); }  .clock .number2  span { transform: rotate(-60deg); }
+    .clock .number3  { transform: rotate(90deg); }  .clock .number3  span { transform: rotate(-90deg); }
+    .clock .number4  { transform: rotate(120deg); } .clock .number4  span { transform: rotate(-120deg); }
+    .clock .number5  { transform: rotate(150deg); } .clock .number5  span { transform: rotate(-150deg); }
+    .clock .number6  { transform: rotate(180deg); } .clock .number6  span { transform: rotate(-180deg); }
+    .clock .number7  { transform: rotate(210deg); } .clock .number7  span { transform: rotate(-210deg); }
+    .clock .number8  { transform: rotate(240deg); } .clock .number8  span { transform: rotate(-240deg); }
+    .clock .number9  { transform: rotate(270deg); } .clock .number9  span { transform: rotate(-270deg); }
+    .clock .number10 { transform: rotate(300deg); } .clock .number10 span { transform: rotate(-300deg); }
+    .clock .number11 { transform: rotate(330deg); } .clock .number11 span { transform: rotate(-330deg); }
+
+    .clock .hour,
+    .clock .minute,
+    .clock .second {
+        position: absolute;
+        left: 50%;
+        bottom: 50%;
+        transform-origin: bottom center;
+        border-radius: 4px 4px 0 0;
+    }
+    .clock .hour   { width: 5px; height: 28%; margin-left: -2.5px; background: var(--dp-dark); }
+    .clock .minute { width: 4px; height: 36%; margin-left: -2px;   background: var(--dp-primary-dark); }
+    .clock .second { width: 2px; height: 40%; margin-left: -1px;   background: var(--dp-accent-dark); z-index: 4; }
+
+    .clock-digital {
+        text-align: center;
+        margin-top: 8px;
+        font-weight: bold;
+        color: var(--dp-primary-dark);
+        letter-spacing: 2px;
+    }
+
+    @media (max-width: 480px) {
+        .clock { width: 180px; height: 180px; }
+        .clock .number { font-size: 0.85rem; }
+    }
     </style>
 </head>
 <body>
@@ -327,6 +406,29 @@
             <p class="text-muted" style="margin-top: 14px; font-size: 12px;">
                 Setelah mengambil nomor, perhatikan panggilan di layar antrian.
             </p>
+
+            <div class="clock-wrap">
+                <div class="clock" aria-label="Jam saat ini">
+                    <div class="hour"   id="hour"></div>
+                    <div class="minute" id="minute"></div>
+                    <div class="second" id="second"></div>
+                    <div class="numbers">
+                        <div class="number number1"><span>1</span></div>
+                        <div class="number number2"><span>2</span></div>
+                        <div class="number number3"><span>3</span></div>
+                        <div class="number number4"><span>4</span></div>
+                        <div class="number number5"><span>5</span></div>
+                        <div class="number number6"><span>6</span></div>
+                        <div class="number number7"><span>7</span></div>
+                        <div class="number number8"><span>8</span></div>
+                        <div class="number number9"><span>9</span></div>
+                        <div class="number number10"><span>10</span></div>
+                        <div class="number number11"><span>11</span></div>
+                        <div class="number number12"><span>12</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="clock-digital" id="clockDigital">--:--:--</div>
         </div>
     </div>
 
@@ -337,24 +439,47 @@
 <script>
 (function () {
     var nik = document.getElementById('nik');
-    if (!nik) return;
-
-    // Tolak karakter non-angka saat diketik / ditempel.
-    nik.addEventListener('input', function () {
-        var only = this.value.replace(/\D+/g, '').slice(0, 16);
-        if (only !== this.value) this.value = only;
-    });
-
-    // Fallback validasi kalau browser tidak menghormati pattern/required.
-    var form = document.getElementById('formAmbil');
-    if (form) {
-        form.addEventListener('submit', function (e) {
-            if (nik.value.length !== 16) {
-                e.preventDefault();
-                nik.focus();
-                alert('NIK harus 16 digit angka.');
-            }
+    if (nik) {
+        nik.addEventListener('input', function () {
+            var only = this.value.replace(/\D+/g, '').slice(0, 16);
+            if (only !== this.value) this.value = only;
         });
+
+        var form = document.getElementById('formAmbil');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                if (nik.value.length !== 16) {
+                    e.preventDefault();
+                    nik.focus();
+                    alert('NIK harus 16 digit angka.');
+                }
+            });
+        }
+    }
+
+    var hourHand   = document.getElementById('hour');
+    var minuteHand = document.getElementById('minute');
+    var secondHand = document.getElementById('second');
+    var digital    = document.getElementById('clockDigital');
+
+    if (hourHand && minuteHand && secondHand) {
+        var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+
+        var setClock = function () {
+            var now = new Date();
+            var h = now.getHours();
+            var m = now.getMinutes();
+            var s = now.getSeconds();
+
+            hourHand.style.transform   = 'rotate(' + (30 * (h % 12) + m / 2) + 'deg)';
+            minuteHand.style.transform = 'rotate(' + (6 * m + s / 10) + 'deg)';
+            secondHand.style.transform = 'rotate(' + (6 * s) + 'deg)';
+
+            if (digital) digital.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+        };
+
+        setClock();
+        setInterval(setClock, 1000);
     }
 })();
 </script>
