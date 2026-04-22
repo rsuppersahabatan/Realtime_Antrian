@@ -356,6 +356,12 @@ Authorization: Basic YWRtaW46YW50cmlhbjIwMjQ=
 - [Socket.IO](https://socket.io/) & [node-redis](https://github.com/redis/node-redis) untuk realtime gateway
 - Pola dasar realtime gateway terinspirasi dari [vanuganti/realtime](http://github.com/vanuganti/realtime)
 
+## Unknowledge & Disclaimer
+
+- [Forked From Realtime Antrian Bank](https://github.com/siagung/CI_Redis_Realtime_Antrian_Bank)
+- [Clone and Modification From CI AdminLTE](https://github.com/domProjects/CI-AdminLTE)
+- [Use AI ~ AntiGravity and Cloude For Task List](https://topidesta.my.id/era-ai-untuk-programmer-30an/)
+
 ## Lisensi
 
-Project ini dirilis di bawah lisensi MIT — silakan sesuaikan sesuai kebutuhan organisasi Anda.
+Project ini dirilis di bawah lisensi MIT.
