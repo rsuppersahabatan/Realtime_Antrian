@@ -189,6 +189,23 @@ Atau, jika ingin menjalankan tanpa Docker:
    # atau via PM2
    pm2 start server.js --name "antrian-socket" --watch --ignore-watch "node_modules"
    ```
+6. Tambahkan Konfigurasi untuk Nginx Server
+
+   ```bash
+   location / {
+      try_files $uri $uri/ /index.php?$query_string;
+   }
+
+   location /socket.io/ {
+      proxy_pass http://127.0.0.1:8085;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_read_timeout 3600s;
+   }
+   ```
 
 ## Skema Database (ringkas)
 
