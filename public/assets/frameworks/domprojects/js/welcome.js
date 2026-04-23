@@ -1,0 +1,64 @@
+(function () {
+    var nik       = document.getElementById('nik');
+    var form      = document.getElementById('formAmbil');
+    var idLayanan = document.getElementById('idLayanan');
+
+    if (nik) {
+        nik.addEventListener('input', function () {
+            var only = this.value.replace(/\D+/g, '').slice(0, 16);
+            if (only !== this.value) this.value = only;
+        });
+
+        // Cegah implicit submit via Enter — user wajib klik tombol layanan.
+        nik.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    // Delegasi ke form: klik pada elemen .btn-pilih-layanan mana pun akan
+    // mengisi id_layanan dari data-id, lalu submit form secara eksplisit.
+    if (form) {
+        form.addEventListener('click', function (e) {
+            var btn = e.target.closest ? e.target.closest('.btn-pilih-layanan') : null;
+            if ( ! btn) return;
+
+            if (nik && nik.value.length !== 16) {
+                nik.focus();
+                alert('NIK harus 16 digit angka.');
+                return;
+            }
+
+            if (idLayanan) {
+                idLayanan.value = btn.getAttribute('data-id') || '';
+            }
+            form.submit();
+        });
+    }
+
+    var hourHand   = document.getElementById('hour');
+    var minuteHand = document.getElementById('minute');
+    var secondHand = document.getElementById('second');
+    var digital    = document.getElementById('clockDigital');
+
+    if (hourHand && minuteHand && secondHand) {
+        var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+
+        var setClock = function () {
+            var now = new Date();
+            var h = now.getHours();
+            var m = now.getMinutes();
+            var s = now.getSeconds();
+
+            hourHand.style.transform   = 'rotate(' + (30 * (h % 12) + m / 2) + 'deg)';
+            minuteHand.style.transform = 'rotate(' + (6 * m + s / 10) + 'deg)';
+            secondHand.style.transform = 'rotate(' + (6 * s) + 'deg)';
+
+            if (digital) digital.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+        };
+
+        setClock();
+        setInterval(setClock, 1000);
+    }
+})();
