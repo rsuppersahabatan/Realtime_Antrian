@@ -94,8 +94,20 @@
           <div class="main-direction" id="direction_text">MENUNGGU PANGGILAN</div>
         </div>
 
-        <!-- Panel Samping — daftar semua loket -->
-        <div class="side-panel">
+        <!-- Panel Samping — Video YouTube -->
+        <div class="side-panel" style="padding:0;overflow:hidden;">
+          <iframe
+            width="100%"
+            height="100%"
+            src="https://www.youtube.com/embed/ebZwRzwEpT8?autoplay=1&mute=1&loop=1&playlist=ebZwRzwEpT8&controls=0&showinfo=0&rel=0"
+            frameborder="0"
+            allow="autoplay; encrypted-media"
+            allowfullscreen
+            style="display:block;border:none;border-radius:18px;"
+          ></iframe>
+        </div>
+
+              <!-- <div class="side-panel">
           <div class="side-panel-title">DAFTAR LOKET</div>
           <?php if (!empty($loket)): ?>
             <?php foreach ($loket as $lk): ?>
@@ -118,7 +130,7 @@
               </div>
             </div>
           <?php endif; ?>
-        </div>
+        </div> -->
 
       </div>
 

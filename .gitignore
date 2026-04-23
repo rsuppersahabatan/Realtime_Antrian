@@ -45,3 +45,4 @@ node.js/node_modules/*
 502.html
 index.php
 public/.user.ini
+.env
