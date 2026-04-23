@@ -17,7 +17,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap"
     />
 
-    <link rel="stylesheet" href="<?= base_url('assets/frameworks/domprojects/css/client.css') ?>" />
+    <?= isset($minified_css) ? $minified_css : '<link rel="stylesheet" href="' . base_url('assets/frameworks/domprojects/css/client.css') . '" />' ?>
 
     <script type="text/javascript">
       var socketUrl = <?php $__s = $this->config->item('socket_url'); echo $__s ? json_encode($__s) : "window.location.protocol + '//' + window.location.host"; ?>;
@@ -190,8 +190,8 @@
       </div>
     </div>
 
-    <script src="<?= base_url('assets/frameworks/domprojects/js/client.js') ?>"></script>
-    
+    <?= isset($minified_js) ? $minified_js : '<script src="' . base_url('assets/frameworks/domprojects/js/client.js') . '"></script>' ?>
+
     <!-- Fallback jQuery if not loaded from relative path, keep Bootstrap js functioning -->
     <script>
       window.jQuery ||
