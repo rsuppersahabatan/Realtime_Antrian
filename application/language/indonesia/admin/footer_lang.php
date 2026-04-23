@@ -12,4 +12,4 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 $lang['footer_copyright']           = 'Hak Cipta';
 $lang['footer_all_rights_reserved'] = 'Hak cipta dilindungi undang-undang';
-$lang['footer_version']             = 'versi';
+$lang['footer_version']             = 'Versi 0.0.1 & Mode ';

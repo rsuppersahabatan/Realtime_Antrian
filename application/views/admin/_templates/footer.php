@@ -5,7 +5,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
             <footer class="main-footer">
                 <div class="pull-right hidden-xs">
-                    <b><?php echo lang('footer_version'); ?></b> Development
+                    <b><?php echo lang('footer_version'); ?></b> <?php echo CI_ENV; ?>
                 </div>
                 <strong><?php echo lang('footer_copyright'); ?> &copy; 2026-<?php echo date('Y'); ?> <a href="https://github.com/mdestafadilah" target="_blank">mdestafadilah</a> &amp; <a href="https://antrian.rspersahabatan.co.id" target="_blank">RS Persahabatan</a>.</strong> <?php echo lang('footer_all_rights_reserved'); ?>.
             </footer>
