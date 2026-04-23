@@ -25,7 +25,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 if (ENVIRONMENT === 'production') {
     $hook['display_override'][] = array(
         'class'    => '',
-        'function' => 'CI_Minifier_Hook_Loader',
+        'function' => '',
         'filename' => '',
         'filepath' => ''
     );
