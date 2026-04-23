@@ -99,7 +99,11 @@
                     <small class="text-muted">NIK digunakan untuk mengidentifikasi antrian Anda. Data tidak dibagikan ke publik.</small>
                 </div>
 
-                <h3 class="section-title">PILIH LAYANAN</h3>
+                <h3 class="section-title">PILIH LAYANAN
+                <p class="text-muted" style="margin-top: 14px; font-size: 12px;">
+                    Setelah mengambil nomor, perhatikan panggilan di layar antrian.
+                </p>
+                </h3>
 
                 <input type="hidden" name="id_layanan" id="idLayanan" value="">
 
@@ -119,26 +123,34 @@
         </div>
 
         <div class="col-md-4">
-            <h3 class="section-title">LOKET DIBUKA</h3>
-            <div class="loket-list">
-                <?php if ( ! empty($loket)): ?>
-                    <?php foreach ($loket as $lk): ?>
-                        <div class="loket-item">
-                            <span class="kode"><?= htmlspecialchars($lk['kode_huruf'] ?? '-', ENT_QUOTES, 'UTF-8') ?></span>
-                            <strong><?= htmlspecialchars($lk['nama_loket'], ENT_QUOTES, 'UTF-8') ?></strong><br>
-                            <small class="text-muted"><?= htmlspecialchars($lk['nama_layanan'] ?? '', ENT_QUOTES, 'UTF-8') ?></small>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="loket-item text-muted">Belum ada loket yang dibuka saat ini.</div>
-                <?php endif; ?>
+            
+            <div class="video-wrap" style="position:relative;width:100%;padding-top:56.25%;overflow:hidden;border-radius:12px;">
+                <iframe
+                    src="https://www.youtube.com/embed/ebZwRzwEpT8?autoplay=1&mute=1&loop=1&playlist=ebZwRzwEpT8&controls=0&showinfo=0&rel=0"
+                    frameborder="0"
+                    allow="autoplay; encrypted-media"
+                    allowfullscreen
+                    style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
+                ></iframe>
             </div>
 
-            <p class="text-muted" style="margin-top: 14px; font-size: 12px;">
-                Setelah mengambil nomor, perhatikan panggilan di layar antrian.
-            </p>
+            <div class="running-text-wrap" style="margin-top:14px;background:#0a7a6b;color:#fff;border-radius:10px;overflow:hidden;padding:10px 0;">
+                <div class="running-text" style="white-space:nowrap;display:inline-block;padding-left:100%;animation:marquee 22s linear infinite;font-weight:600;font-size:14px;">
+                    <strong>PENGUMUMAN:</strong>
+                    Jam operasional : 12:00 - 19:00 WIB. &nbsp;|&nbsp;
+                    Gunakan selalu masker di lingkungan rumah sakit. &nbsp;|&nbsp;
+                    Selamat datang di UPDRS RS Persahabatan. &nbsp;|&nbsp;
+                    Mohon menunggu nomor antrian Anda dipanggil.
+                </div>
+            </div>
+            <style>
+                @keyframes marquee {
+                    0%   { transform: translateX(0); }
+                    100% { transform: translateX(-100%); }
+                }
+            </style>
 
-            <div class="clock-wrap">
+            <div class="clock-wrap" style="margin-top:55px;">
                 <div class="clock" aria-label="Jam saat ini">
                     <div class="hour"   id="hour"></div>
                     <div class="minute" id="minute"></div>
@@ -161,6 +173,8 @@
             </div>
             <div class="clock-digital" id="clockDigital">--:--:--</div>
         </div>
+
+
     </div>
 
 <?php endif; ?>
