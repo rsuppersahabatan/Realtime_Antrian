@@ -83,8 +83,8 @@ class Panggilan extends RestController {
 		{
 			$this->response([
 				'status'  => FALSE,
-				'message' => 'Antrian habis / tidak ada yang menunggu',
-			], RestController::HTTP_NOT_FOUND);
+				'message' => 'Tidak ada antrian menunggu untuk layanan ini.',
+			], RestController::HTTP_OK);
 			return;
 		}
 
