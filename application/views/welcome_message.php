@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="<?= base_url('assets/js/jquery.min.js') ?>"></script>
 
-    <link rel="stylesheet" href="<?= base_url('assets/frameworks/domprojects/css/welcome.css') ?>">
+    <?= isset($minified_css) ? $minified_css : '<link rel="stylesheet" href="' . base_url('assets/frameworks/domprojects/css/welcome.css') . '">' ?>
 </head>
 <body>
 
@@ -167,7 +167,7 @@
 
 </div>
 
-<script src="<?= base_url('assets/frameworks/domprojects/js/welcome.js') ?>"></script>
+<?= isset($minified_js) ? $minified_js : '<script src="' . base_url('assets/frameworks/domprojects/js/welcome.js') . '"></script>' ?>
 
 </body>
 </html>

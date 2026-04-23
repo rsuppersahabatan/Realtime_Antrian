@@ -19,6 +19,7 @@ class Welcome extends Public_Controller {
 
     public function index()
     {
+        $this->_init_minify();
         $this->data['mode']    = 'pilih';
         $this->data['layanan'] = $this->Layanan_model->get_all();
         $this->data['loket']   = $this->Loket_model->get_loket_buka();
@@ -101,10 +102,27 @@ class Welcome extends Public_Controller {
         $this->db->where('nomor_urut <', $tiket['nomor_urut']);
         $tiket['antrian_di_depan'] = $this->db->count_all_results('antrian');
 
+        $this->_init_minify();
         $this->data['mode']  = 'tiket';
         $this->data['tiket'] = $tiket;
         $this->data['loket'] = $this->Loket_model->get_loket_buka();
         $this->load->view('welcome_message', $this->data);
+    }
+
+    private function _init_minify()
+    {
+        $this->load->library('minify');
+        $this->minify->css_dir = 'assets/frameworks/domprojects/css';
+        $this->minify->js_dir = 'assets/frameworks/domprojects/js';
+        $this->minify->assets_dir_css = 'assets/frameworks/domprojects/css';
+        $this->minify->assets_dir_js = 'assets/frameworks/domprojects/js';
+        $this->minify->compression_engine = array('css' => 'minify', 'js' => 'jsmin');
+        
+        $this->minify->css('welcome.css');
+        $this->minify->js('welcome.js');
+
+        $this->data['minified_css'] = $this->minify->deploy_css(TRUE, 'welcome.min.css');
+        $this->data['minified_js'] = $this->minify->deploy_js(TRUE, 'welcome.min.js');
     }
 }
 
