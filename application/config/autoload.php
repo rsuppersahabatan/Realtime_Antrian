@@ -58,7 +58,7 @@ $autoload['packages'] = array(APPPATH.'third_party/ion_auth');
 |
 |	$autoload['libraries'] = array('user_agent' => 'ua');
 */
-$autoload['libraries'] = array('database', 'app_redis' => 'redis', 'form_validation', 'ion_auth', 'template', 'common/mobile_detect');
+$autoload['libraries'] = array('database', 'app_redis' => 'redis', 'form_validation', 'ion_auth', 'template', 'common/mobile_detect', 'CI_Minifier');
 
 /*
 | -------------------------------------------------------------------
