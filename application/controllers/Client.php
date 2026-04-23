@@ -10,6 +10,9 @@ class Client extends Public_Controller {
 
     public function index()
     {
+        // chmod -R 775 /www/wwwroot/antrian/public/assets/frameworks/domprojects/
+        // chown -R www:www /www/wwwroot/antrian/public/assets/frameworks/domprojects/
+
         $this->load->library('minify');
         $this->minify->css_dir = 'assets/frameworks/domprojects/css';
         $this->minify->js_dir = 'assets/frameworks/domprojects/js';
