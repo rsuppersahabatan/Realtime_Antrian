@@ -17,6 +17,22 @@ if (! function_exists('putenv')) {
 }
 // --- AKHIR KODE TAMBAHAN ---
 
+/*
+ * --------------------------------------------------------------------
+ * LOAD .env VIA vlucas/phpdotenv
+ * --------------------------------------------------------------------
+ * Harus dimuat SEBELUM define('ENVIRONMENT', ...) di bawah, agar
+ * $_SERVER['CI_ENV'] dari file .env sudah tersedia saat dibaca.
+ */
+$__autoload = __DIR__ . '/../vendor/autoload.php';
+if (is_file($__autoload)) {
+    require_once $__autoload;
+    if (class_exists('Dotenv\\Dotenv')) {
+        Dotenv\Dotenv::createUnsafeImmutable(dirname(__DIR__))->safeLoad();
+    }
+}
+unset($__autoload);
+
 /**
  * CodeIgniter
  *
@@ -322,22 +338,6 @@ switch (ENVIRONMENT)
 	}
 
 	define('VIEWPATH', $view_folder.DIRECTORY_SEPARATOR);
-
-/*
- * --------------------------------------------------------------------
- * LOAD .env VIA vlucas/phpdotenv
- * --------------------------------------------------------------------
- * Dimuat sekali di sini sebelum CI boot, sehingga getenv() siap dipakai
- * di semua config file (database.php, redis.php, rta_config.php, dll).
- */
-$__autoload = __DIR__ . '/../vendor/autoload.php';
-if (is_file($__autoload)) {
-    require_once $__autoload;
-    if (class_exists('Dotenv\\Dotenv')) {
-        Dotenv\Dotenv::createUnsafeImmutable(dirname(__DIR__))->safeLoad();
-    }
-}
-unset($__autoload);
 
 /*
  * --------------------------------------------------------------------
