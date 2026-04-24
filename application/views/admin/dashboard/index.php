@@ -196,7 +196,7 @@ foreach ($antrian_by_loket as $lk)
     $loket_selesai[] = (int) $lk['total_selesai'];
 }
 ?>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
 <script>
 (function () {
     if (typeof Chart === 'undefined') { return; }
