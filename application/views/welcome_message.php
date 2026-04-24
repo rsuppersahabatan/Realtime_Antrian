@@ -19,7 +19,7 @@
              style="height:64px;width:auto;display:block;">
         <div style="text-align:left;">
             <h1>ANTRIAN ONLINE</h1>
-            <small>RS PERSAHABATAN</small>
+            <small>UNIT PENGELOLA DARAH RS PERSAHABATAN</small>
         </div>
     </div>
 </div>
