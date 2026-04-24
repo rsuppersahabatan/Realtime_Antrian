@@ -71,8 +71,8 @@
       <!-- ====== HEADER ====== -->
       <div class="display-header">
         <div class="header-brand">
-          <div class="header-logo">
-            <img src="https://cdn.jsdelivr.net/gh/rsuppersahabatan/website-assets@0.0.3/img/logokemkes512.png" alt="Logo Kemkes" />
+          <div class="header-logo" style="background:transparent;border:none;overflow:visible;padding:0;flex:0 0 52px;">
+            <img src="https://cdn.jsdelivr.net/gh/rsuppersahabatan/website-assets@0.0.3/img/logokemkes512.png" alt="Logo Kemkes" style="width:52px;height:52px;object-fit:contain;display:block;" />
           </div>
           <div class="header-title">
             <h1>ANTRIAN UPDRS</h1>
