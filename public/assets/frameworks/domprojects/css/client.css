@@ -64,6 +64,14 @@ body {
   font-weight: 900;
   color: #fff;
   border: 2px solid rgba(255,255,255,0.4);
+  overflow: hidden;
+}
+
+.header-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .header-title {

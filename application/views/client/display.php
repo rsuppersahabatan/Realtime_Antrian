@@ -71,7 +71,9 @@
       <!-- ====== HEADER ====== -->
       <div class="display-header">
         <div class="header-brand">
-          <div class="header-logo">RS</div>
+          <div class="header-logo">
+            <img src="https://cdn.jsdelivr.net/gh/rsuppersahabatan/website-assets@0.0.3/img/logokemkes512.png" alt="Logo Kemkes" />
+          </div>
           <div class="header-title">
             <h1>ANTRIAN UPDRS</h1>
             <small>RS PERSAHABATAN</small>
