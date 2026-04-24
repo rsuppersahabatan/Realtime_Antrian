@@ -13,9 +13,14 @@
 <body>
 
 <div class="header-blue no-print">
-    <div class="container">
-        <h1>ANTRIAN ONLINE</h1>
-        <small>RS PERSAHABATAN</small>
+    <div class="container" style="display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;">
+        <img src="https://cdn.jsdelivr.net/gh/rsuppersahabatan/website-assets@0.0.3/img/logoRS.png"
+             alt="Logo RS Persahabatan"
+             style="height:64px;width:auto;display:block;">
+        <div style="text-align:left;">
+            <h1>ANTRIAN ONLINE</h1>
+            <small>RS PERSAHABATAN</small>
+        </div>
     </div>
 </div>
 
