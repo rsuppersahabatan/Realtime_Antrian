@@ -138,6 +138,9 @@ Atau, jika ingin menjalankan tanpa Docker:
    # Copy this file to .env and adjust values as needed
    # cp .env.example .env
 
+   # ----- CODEIGNITER 3 ----
+   CI_ENV=production
+
    # ----- Redis -----
    REDIS_HOST=127.0.0.1
    REDIS_PORT=6379
@@ -187,12 +190,12 @@ Atau, jika ingin menjalankan tanpa Docker:
 
 5. **Akses aplikasi**
 
-   | Halaman | URL |
-   |---|---|
-   | Landing / ambil antrian | <http://localhost:8080/> |
-   | Display antrian publik | <http://localhost:8080/client> |
-   | Panel admin | <http://localhost:8080/auth/login> |
-   | Socket.IO gateway | `ws://localhost:8085` |
+   | Halaman                 | URL                                |
+   | ----------------------- | ---------------------------------- |
+   | Landing / ambil antrian | <http://localhost:8080/>           |
+   | Display antrian publik  | <http://localhost:8080/client>     |
+   | Panel admin             | <http://localhost:8080/auth/login> |
+   | Socket.IO gateway       | `ws://localhost:8085`              |
 
    **Login default:** `admin@admin.com` / `password` (ubah segera setelah login pertama).
 
@@ -202,6 +205,12 @@ Atau, jika ingin menjalankan tanpa Docker:
 2. Import `database/schema.sql` ke MySQL.
 3. Sesuaikan koneksi DB di `application/config/database.php` dan Redis di `application/config/redis.php`.
 4. Arahkan document root web server ke folder `public/`.
+
+   ```bash
+   # jika mode development/localhost
+   bin/server.sh
+   ```
+
 5. Jalankan Node.js realtime gateway:
 
    ```bash
@@ -211,6 +220,7 @@ Atau, jika ingin menjalankan tanpa Docker:
    # atau via PM2
    pm2 start server.js --name "antrian-socket" --watch --ignore-watch "node_modules"
    ```
+
 6. Tambahkan Konfigurasi untuk Nginx Server
 
    ```bash
@@ -232,7 +242,7 @@ Atau, jika ingin menjalankan tanpa Docker:
 ## Skema Database (ringkas)
 
 - `layanan` — kategori antrian + prefix huruf (A/B/C/…)
-- `loket` — meja petugas, status buka/tutup, terkait ke `layanan`
+- `loket` — meja petugas, status buka/tutup, terkait ke `layanan` dan siapa petugas yang menjaga
 - `antrian` — transaksi tiket harian (`nomor_antrian`, `nomor_urut`, `status`, `id_loket`, NIK, timestamp)
 - `users`, `groups`, `users_groups`, `login_attempts` — **Ion Auth** untuk autentikasi admin
 - `admin_preferences` — preferensi tampilan AdminLTE
@@ -241,16 +251,16 @@ Detail lengkap & seeder contoh lihat [database/schema.sql](database/schema.sql).
 
 ## Channel Redis
 
-| Channel | Dipakai untuk |
-|---|---|
+| Channel    | Dipakai untuk                                                                                 |
+| ---------- | --------------------------------------------------------------------------------------------- |
 | `realtime` | Broadcast event tiket: antrian baru terbit, antrian dipanggil, panggil ulang, selesai, batal. |
-| `loop` | Pesan carousel/ticker pada display publik (opsional). |
+| `loop`     | Pesan carousel/ticker pada display publik (opsional).                                         |
 
 Format pesan mengikuti konvensi string sederhana (mis. `antrian-baru-A12`, `panggil-A12-loket-1`) agar mudah di-parse oleh frontend display.
 
 ## REST API
 
-Modul **layanan**, **loket**, **antrian**, **users**, dan **groups** diekspos sebagai REST API JSON di bawah prefix `/api/*`, dibangun dengan [chriskacerguis/codeigniter-restserver](https://github.com/chriskacerguis/codeigniter-restserver). Controller ada di [application/controllers/api/](application/controllers/api/) dan konfigurasi server REST di [application/config/rest.php](application/config/rest.php).
+Modul **layanan**, **loket**, **antrian**, **panggilan**, **users**, dan **groups** diekspos sebagai REST API JSON di bawah prefix `/api/*`, dibangun dengan [chriskacerguis/codeigniter-restserver](https://github.com/chriskacerguis/codeigniter-restserver). Controller ada di [application/controllers/api/](application/controllers/api/) dan konfigurasi server REST di [application/config/rest.php](application/config/rest.php), API Json aplikasi realtime ada [di sini](./docs/api.json).
 
 ### Autentikasi
 
@@ -260,6 +270,7 @@ Seluruh endpoint dilindungi **HTTP Basic Auth**. Kredensial default ada di [appl
 $config['rest_valid_logins'] = [
     'admin' => 'antrian2024',
 ];
+# Liat contoh di .env.example dan ganti sesuai dengan kebutuhan
 ```
 
 > **Ganti kredensial default sebelum deploy ke production.** Tambah user baru dengan menambah entry pada array di atas. Untuk memaksa HTTPS, set `$config['force_https'] = true` di file yang sama.
@@ -272,63 +283,63 @@ Base URL (Docker default): `http://localhost:8080/api`
 
 #### Layanan — `/api/layanan`
 
-| Method | URI | Keterangan |
-|---|---|---|
-| `GET` | `/api/layanan` | List semua layanan |
-| `GET` | `/api/layanan/{id}` | Detail satu layanan |
-| `POST` | `/api/layanan` | Tambah layanan. Body: `kode_huruf`, `nama_layanan`, `keterangan?` |
-| `PUT` | `/api/layanan/{id}` | Update partial (`kode_huruf` / `nama_layanan` / `keterangan`) |
-| `DELETE` | `/api/layanan/{id}` | Hapus layanan |
+| Method   | URI                 | Keterangan                                                        |
+| -------- | ------------------- | ----------------------------------------------------------------- |
+| `GET`    | `/api/layanan`      | List semua layanan                                                |
+| `GET`    | `/api/layanan/{id}` | Detail satu layanan                                               |
+| `POST`   | `/api/layanan`      | Tambah layanan. Body: `kode_huruf`, `nama_layanan`, `keterangan?` |
+| `PUT`    | `/api/layanan/{id}` | Update partial (`kode_huruf` / `nama_layanan` / `keterangan`)     |
+| `DELETE` | `/api/layanan/{id}` | Hapus layanan                                                     |
 
 #### Loket — `/api/loket`
 
-| Method | URI | Keterangan |
-|---|---|---|
-| `GET` | `/api/loket` | List semua loket |
-| `GET` | `/api/loket/{id}` | Detail satu loket |
-| `GET` | `/api/loket/buka` | Loket yang sedang buka. Query: `?with_last=1&tanggal=YYYY-MM-DD` untuk sertakan nomor antrian terakhir hari tersebut per loket |
-| `POST` | `/api/loket` | Tambah loket. Body: `id_layanan`, `nama_loket`, `status_buka?` (`buka`\|`tutup`) |
-| `PUT` | `/api/loket/status/{id}` | Update status. Body: `status_buka` (`buka`\|`tutup`) |
-| `DELETE` | `/api/loket/{id}` | Hapus loket |
+| Method   | URI                      | Keterangan                                                                                                                     |
+| -------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `GET`    | `/api/loket`             | List semua loket                                                                                                               |
+| `GET`    | `/api/loket/{id}`        | Detail satu loket                                                                                                              |
+| `GET`    | `/api/loket/buka`        | Loket yang sedang buka. Query: `?with_last=1&tanggal=YYYY-MM-DD` untuk sertakan nomor antrian terakhir hari tersebut per loket |
+| `POST`   | `/api/loket`             | Tambah loket. Body: `id_layanan`, `nama_loket`, `status_buka?` (`buka`\|`tutup`)                                               |
+| `PUT`    | `/api/loket/status/{id}` | Update status. Body: `status_buka` (`buka`\|`tutup`)                                                                           |
+| `DELETE` | `/api/loket/{id}`        | Hapus loket                                                                                                                    |
 
 #### Antrian — `/api/antrian`
 
-| Method | URI | Keterangan |
-|---|---|---|
-| `GET` | `/api/antrian` | Daftar antrian + rekap per status. Query: `?tanggal=YYYY-MM-DD` (default hari ini) |
-| `POST` | `/api/antrian` | Generate nomor antrian baru. Body: `id_layanan`, `nik?` (16 digit) |
-| `POST` | `/api/antrian/call` | Panggil antrian berikutnya untuk sebuah loket. Body: `id_loket` |
-| `POST` | `/api/antrian/panggilansimpan` | Simpan panggilan manual / panggil ulang tiket tertentu. Body: `id_antrian`, `id_loket`. Validasi: layanan loket harus cocok dengan layanan antrian; tiket `selesai`/`batal` ditolak. Response memuat flag `is_ulang` bila tiket sudah berstatus `dipanggil` sebelumnya |
-| `PUT` | `/api/antrian/selesai/{id}` | Tandai antrian selesai (isi `waktu_selesai`) |
-| `PUT` | `/api/antrian/batal/{id}` | Tandai antrian batal |
-| `DELETE` | `/api/antrian/{id}` | Hapus record antrian |
+| Method   | URI                            | Keterangan                                                                                                                                                                                                                                                             |
+| -------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/antrian`                 | Daftar antrian + rekap per status. Query: `?tanggal=YYYY-MM-DD` (default hari ini)                                                                                                                                                                                     |
+| `POST`   | `/api/antrian`                 | Generate nomor antrian baru. Body: `id_layanan`, `nik?` (16 digit)                                                                                                                                                                                                     |
+| `POST`   | `/api/antrian/call`            | Panggil antrian berikutnya untuk sebuah loket. Body: `id_loket`                                                                                                                                                                                                        |
+| `POST`   | `/api/antrian/panggilansimpan` | Simpan panggilan manual / panggil ulang tiket tertentu. Body: `id_antrian`, `id_loket`. Validasi: layanan loket harus cocok dengan layanan antrian; tiket `selesai`/`batal` ditolak. Response memuat flag `is_ulang` bila tiket sudah berstatus `dipanggil` sebelumnya |
+| `PUT`    | `/api/antrian/selesai/{id}`    | Tandai antrian selesai (isi `waktu_selesai`)                                                                                                                                                                                                                           |
+| `PUT`    | `/api/antrian/batal/{id}`      | Tandai antrian batal                                                                                                                                                                                                                                                   |
+| `DELETE` | `/api/antrian/{id}`            | Hapus record antrian                                                                                                                                                                                                                                                   |
 
 #### Users — `/api/users`
 
 Wrapper REST atas **Ion Auth**. Semua response user sudah memfilter field sensitif (`password`, `salt`, `remember_code`, `forgotten_password_code`, `activation_code`).
 
-| Method | URI | Keterangan |
-|---|---|---|
-| `GET` | `/api/users` | List semua user beserta daftar `groups` masing-masing |
-| `GET` | `/api/users/{id}` | Detail satu user + `groups` |
-| `POST` | `/api/users` | Tambah user baru. Body: `email` (required), `password` (required, min sesuai `ion_auth.min_password_length`), `first_name?`, `last_name?`, `phone?`, `company?`, `username?` (default: gabungan first+last, fallback local-part email), `groups[]?` (array id group) |
-| `PUT` | `/api/users/{id}` | Update partial. Body: `first_name?`, `last_name?`, `phone?`, `company?`, `password?`, `groups[]?` (jika dikirim, **replace** seluruh keanggotaan group user) |
-| `PUT` | `/api/users/activate/{id}` | Aktifkan user (`active=1`) |
-| `PUT` | `/api/users/deactivate/{id}` | Nonaktifkan user (`active=0`) |
-| `DELETE` | `/api/users/{id}` | Hapus user |
+| Method   | URI                          | Keterangan                                                                                                                                                                                                                                                           |
+| -------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/users`                 | List semua user beserta daftar `groups` masing-masing                                                                                                                                                                                                                |
+| `GET`    | `/api/users/{id}`            | Detail satu user + `groups`                                                                                                                                                                                                                                          |
+| `POST`   | `/api/users`                 | Tambah user baru. Body: `email` (required), `password` (required, min sesuai `ion_auth.min_password_length`), `first_name?`, `last_name?`, `phone?`, `company?`, `username?` (default: gabungan first+last, fallback local-part email), `groups[]?` (array id group) |
+| `PUT`    | `/api/users/{id}`            | Update partial. Body: `first_name?`, `last_name?`, `phone?`, `company?`, `password?`, `groups[]?` (jika dikirim, **replace** seluruh keanggotaan group user)                                                                                                         |
+| `PUT`    | `/api/users/activate/{id}`   | Aktifkan user (`active=1`)                                                                                                                                                                                                                                           |
+| `PUT`    | `/api/users/deactivate/{id}` | Nonaktifkan user (`active=0`)                                                                                                                                                                                                                                        |
+| `DELETE` | `/api/users/{id}`            | Hapus user                                                                                                                                                                                                                                                           |
 
 #### Groups — `/api/groups`
 
 CRUD role/group via **Ion Auth**, plus kolom `bgcolor` untuk label AdminLTE. Group `admin` (sesuai `ion_auth.admin_group`) dilindungi — tidak dapat di-rename maupun dihapus.
 
-| Method | URI | Keterangan |
-|---|---|---|
-| `GET` | `/api/groups` | List semua group |
-| `GET` | `/api/groups/{id}` | Detail satu group |
-| `GET` | `/api/groups/users/{id}` | List user yang menjadi anggota group {id} |
-| `POST` | `/api/groups` | Tambah group. Body: `name` (required, regex `^[A-Za-z0-9_-]+$`), `description?`, `bgcolor?` (hex, mis. `#2196F3`) |
-| `PUT` | `/api/groups/{id}` | Update partial. Body: `name?`, `description?`, `bgcolor?`. Rename group `admin` ditolak (`403 Forbidden`) |
-| `DELETE` | `/api/groups/{id}` | Hapus group. Menghapus group `admin` ditolak (`403 Forbidden`) |
+| Method   | URI                      | Keterangan                                                                                                        |
+| -------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/groups`            | List semua group                                                                                                  |
+| `GET`    | `/api/groups/{id}`       | Detail satu group                                                                                                 |
+| `GET`    | `/api/groups/users/{id}` | List user yang menjadi anggota group {id}                                                                         |
+| `POST`   | `/api/groups`            | Tambah group. Body: `name` (required, regex `^[A-Za-z0-9_-]+$`), `description?`, `bgcolor?` (hex, mis. `#2196F3`) |
+| `PUT`    | `/api/groups/{id}`       | Update partial. Body: `name?`, `description?`, `bgcolor?`. Rename group `admin` ditolak (`403 Forbidden`)         |
+| `DELETE` | `/api/groups/{id}`       | Hapus group. Menghapus group `admin` ditolak (`403 Forbidden`)                                                    |
 
 ### Format Response
 
@@ -338,7 +349,12 @@ Semua response menggunakan `Content-Type: application/json` dengan struktur umum
 {
   "status": true,
   "message": "Layanan berhasil ditambahkan",
-  "data": { "id": 4, "kode_huruf": "D", "nama_layanan": "Rekam Medis", "keterangan": null }
+  "data": {
+    "id": 4,
+    "kode_huruf": "D",
+    "nama_layanan": "Rekam Medis",
+    "keterangan": null
+  }
 }
 ```
 
@@ -445,7 +461,8 @@ Authorization: Basic YWRtaW46YW50cmlhbjIwMjQ=
       sudo chown www:www .env
       sudo chmod 644 .env
    ```
-   Kalau mau lebih ketat (recommended): ```sudo chmod 640 .env    # owner rw, group r, other none```
+
+   Kalau mau lebih ketat (recommended): `sudo chmod 640 .env    # owner rw, group r, other none`
 
 3. Cek parent directory executable
 
@@ -461,16 +478,16 @@ Authorization: Basic YWRtaW46YW50cmlhbjIwMjQ=
 
 5. Verifikasi
 
-   ``` sudo -u www cat /www/wwwroot/antrian/.env ```
+   `sudo -u www cat /www/wwwroot/antrian/.env`
    Kalau bisa tampil isinya → permission beres. Reload PHP-FPM:
 
-   ``` sudo /etc/init.d/php-fpm-* reload    # sesuai versi PHP ```
-   Setelah itu refresh halaman 
+   `sudo /etc/init.d/php-fpm-* reload    # sesuai versi PHP`
+   Setelah itu refresh halaman
 
 ## Credits & Referensi
 
-- [CodeIgniter 3](https://github.com/bcit-ci/CodeIgniter)
-- [Ion Auth](https://github.com/benedmunds/CodeIgniter-Ion-Auth)
+- [CodeIgniter 3](https://github.com/bcit-ci/CodeIgniter) untuk Otak dari Aplikasi
+- [Ion Auth](https://github.com/benedmunds/CodeIgniter-Ion-Auth) untuk Authuntifikasi user
 - [chriskacerguis/codeigniter-restserver](https://github.com/chriskacerguis/codeigniter-restserver) untuk REST API
 - [AdminLTE](https://adminlte.io/) untuk template panel admin
 - [Socket.IO](https://socket.io/) & [node-redis](https://github.com/redis/node-redis) untuk realtime gateway
