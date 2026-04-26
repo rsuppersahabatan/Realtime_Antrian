@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /nodejs/
+Disallow: /assets/
+Disallow: /upload/
+Disallow: /docs/
+Disallow: /database/
+Disallow: /docker/
+Disallow: /bin/
