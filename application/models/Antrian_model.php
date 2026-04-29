@@ -25,9 +25,10 @@ class Antrian_model extends CI_Model {
      * Otomatis memberikan nomor urut lanjutan (misal: A10 -> A11)
      *
      * @param int    $id_layanan
-     * @param string $nik  NIK pengunjung (opsional — kolom nullable di DB).
+     * @param string $nik         NIK pengunjung (opsional — kolom nullable di DB).
+     * @param string $keterangan  Keterangan tambahan (opsional — kolom nullable di DB).
      */
-    public function generate_nomor_baru($id_layanan, $nik = null) {
+    public function generate_nomor_baru($id_layanan, $nik = null, $keterangan = null) {
         $tanggal = date('Y-m-d');
 
         // 1. Ambil data layanan (untuk dapat prefix hurufnya, ex: "A")
@@ -52,6 +53,7 @@ class Antrian_model extends CI_Model {
             'tanggal'       => $tanggal,
             'id_layanan'    => $id_layanan,
             'nik'           => ($nik !== null && $nik !== '') ? $nik : null,
+            'keterangan'    => ($keterangan !== null && $keterangan !== '') ? $keterangan : null,
             'nomor_antrian' => $nomor_antrian_gabungan,
             'nomor_urut'    => $nomor_urut_baru,
             'status'        => 'menunggu',

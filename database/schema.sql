@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS `antrian` (
   `tanggal` DATE NOT NULL COMMENT 'Tanggal antrian terjadi (untuk reset harian)',
   `id_layanan` INT NOT NULL,
   `nik` VARCHAR(16) NULL COMMENT 'NIK pengunjung pengambil antrian (opsional untuk legacy)',
+  `keterangan` TEXT NULL,
   `nomor_antrian` VARCHAR(20) NOT NULL COMMENT 'Nomor urut gabungan (Misal: A12)',
   `nomor_urut` INT NOT NULL COMMENT 'Angka murninya saja (Misal: 12)',
   `status` ENUM('menunggu', 'dipanggil', 'selesai', 'batal') DEFAULT 'menunggu',

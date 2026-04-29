@@ -10,7 +10,7 @@ use chriskacerguis\RestServer\RestController;
  *   GET    api/antrian                    -> daftar antrian hari ini
  *                                            ?tanggal=YYYY-MM-DD untuk filter tanggal
  *   POST   api/antrian                    -> generate nomor antrian baru
- *                                            Body: id_layanan (required), nik (optional)
+ *                                            Body: id_layanan (required), nik (optional), keterangan (optional)
  *   POST   api/antrian/call               -> panggil antrian berikutnya di sebuah loket
  *                                            Body: id_loket (required)
  *   POST   api/antrian/panggilansimpan    -> simpan panggilan (manual / panggil ulang)
@@ -64,12 +64,13 @@ class Antrian extends RestController {
 
 	/**
 	 * POST api/antrian
-	 * Body: id_layanan (required), nik (optional)
+	 * Body: id_layanan (required), nik (optional), keterangan (optional)
 	 */
 	public function index_post()
 	{
 		$id_layanan = (int) $this->post('id_layanan');
 		$nik        = $this->post('nik');
+		$keterangan = $this->post('keterangan');
 
 		if ($id_layanan <= 0)
 		{
@@ -89,7 +90,7 @@ class Antrian extends RestController {
 			return;
 		}
 
-		$tiket = $this->Antrian_model->generate_nomor_baru($id_layanan, $nik);
+		$tiket = $this->Antrian_model->generate_nomor_baru($id_layanan, $nik, $keterangan);
 
 		if ( ! $tiket)
 		{
