@@ -30,6 +30,34 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 											</div>
 										</div>
 										<div class="form-group">
+											<?php echo lang('antrian_nik', 'nik', array('class' => 'col-sm-4 control-label')); ?>
+											<div class="col-sm-8">
+												<?php echo form_input(array(
+													'name'        => 'nik',
+													'id'          => 'nik',
+													'value'       => $selected_nik,
+													'class'       => 'form-control',
+													'maxlength'   => 16,
+													'pattern'     => '\d{16}',
+													'inputmode'   => 'numeric',
+													'placeholder' => '16 digit (opsional)',
+												)); ?>
+											</div>
+										</div>
+										<div class="form-group">
+											<?php echo lang('antrian_keterangan', 'keterangan', array('class' => 'col-sm-4 control-label')); ?>
+											<div class="col-sm-8">
+												<?php echo form_textarea(array(
+													'name'        => 'keterangan',
+													'id'          => 'keterangan',
+													'value'       => $selected_keterangan,
+													'class'       => 'form-control',
+													'rows'        => 3,
+													'placeholder' => 'Keterangan tambahan (opsional)',
+												)); ?>
+											</div>
+										</div>
+										<div class="form-group">
 											<div class="col-sm-offset-4 col-sm-8">
 												<div class="btn-group">
 													<?php echo form_button(array('type' => 'submit', 'class' => 'btn btn-primary btn-flat', 'content' => '<i class="fa fa-ticket"></i> '.lang('actions_submit'))); ?>

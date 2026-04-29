@@ -97,11 +97,15 @@ class Antrian extends Admin_Controller {
 
 		/* Validate form input */
 		$this->form_validation->set_rules('id_layanan', 'lang:antrian_layanan', 'required|is_natural_no_zero');
+		$this->form_validation->set_rules('nik', 'lang:antrian_nik', 'trim|regex_match[/^(\d{16})?$/]');
+		$this->form_validation->set_rules('keterangan', 'lang:antrian_keterangan', 'trim|max_length[1000]');
 
 		if ($this->form_validation->run() == TRUE)
 		{
 			$id_layanan = (int) $this->input->post('id_layanan');
-			$tiket = $this->Antrian_model->generate_nomor_baru($id_layanan);
+			$nik        = $this->input->post('nik');
+			$keterangan = $this->input->post('keterangan');
+			$tiket = $this->Antrian_model->generate_nomor_baru($id_layanan, $nik, $keterangan);
 
 			if ($tiket)
 			{
@@ -127,7 +131,9 @@ class Antrian extends Admin_Controller {
 			{
 				$this->data['layanan_options'][$l['id']] = $l['kode_huruf'].' - '.$l['nama_layanan'];
 			}
-			$this->data['selected_layanan'] = $this->form_validation->set_value('id_layanan');
+			$this->data['selected_layanan']    = $this->form_validation->set_value('id_layanan');
+			$this->data['selected_nik']        = $this->form_validation->set_value('nik');
+			$this->data['selected_keterangan'] = $this->form_validation->set_value('keterangan');
 
 			/* Load Template */
 			$this->template->admin_render('admin/antrian/create', $this->data);
