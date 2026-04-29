@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /nodejs/
+Disallow: /assets/
+Disallow: /upload/
+Disallow: /docs/
+Disallow: /database/
+Disallow: /docker/
+Disallow: /bin/
+
+Sitemap: https://antrian.persahabatan.co.id/sitemap.xml

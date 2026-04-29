@@ -1,4 +1,9 @@
 <?php
+// --- SECURITY HEADERS ---
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header("Content-Security-Policy: default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; object-src 'none'; base-uri 'self'; frame-src *; frame-ancestors 'self';");
+
 // --- MULAI KODE TAMBAHAN (SOLUSI PUTENV) ---
 if (! function_exists('putenv')) {
     function putenv($str) {
