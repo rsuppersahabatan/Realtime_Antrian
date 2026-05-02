@@ -22,12 +22,16 @@ class Antrian_model extends CI_Model {
     
     /**
      * GENERATE NOMOR ANTRIAN BARU UNTUK PENGUNJUNG
-     * Otomatis memberikan nomor urut lanjutan (misal: A10 -> A11)
+     * Otomatis memberikan nomor urut lanjutan (misal: A10 -> A11),
+     * atau memakai nomor tiket manual bila $nomor_antrian_manual diisi.
      *
      * @param int    $id_layanan
-     * @param string $nik  NIK pengunjung (opsional — kolom nullable di DB).
+     * @param string $nik                  NIK pengunjung (opsional — kolom nullable di DB).
+     * @param string $keterangan           Keterangan tambahan (opsional — kolom nullable di DB).
+     * @param string $nomor_antrian_manual Tiket manual (opsional). Jika diisi, dipakai apa adanya;
+     *                                     digit di dalamnya dipakai sebagai nomor_urut.
      */
-    public function generate_nomor_baru($id_layanan, $nik = null) {
+    public function generate_nomor_baru($id_layanan, $nik = null, $keterangan = null, $nomor_antrian_manual = null) {
         $tanggal = date('Y-m-d');
 
         // 1. Ambil data layanan (untuk dapat prefix hurufnya, ex: "A")
@@ -47,11 +51,21 @@ class Antrian_model extends CI_Model {
         $nomor_urut_baru = ($antrian_terakhir) ? (int)$antrian_terakhir['nomor_urut'] + 1 : 1;
         $nomor_antrian_gabungan = $layanan['kode_huruf'] . $nomor_urut_baru; // Jadinya: "A1"
 
+        // 3b. Jika tiket manual diberikan, override nomor antrian.
+        //     Ambil digit di dalamnya sebagai nomor_urut agar urutan panggilan tetap konsisten.
+        if ($nomor_antrian_manual !== null && $nomor_antrian_manual !== '') {
+            $nomor_antrian_gabungan = (string) $nomor_antrian_manual;
+            if (preg_match('/(\d+)/', $nomor_antrian_gabungan, $m)) {
+                $nomor_urut_baru = (int) $m[1];
+            }
+        }
+
         // 4. Masukkan tiket baru ke Database
         $data_insert = [
             'tanggal'       => $tanggal,
             'id_layanan'    => $id_layanan,
             'nik'           => ($nik !== null && $nik !== '') ? $nik : null,
+            'keterangan'    => ($keterangan !== null && $keterangan !== '') ? $keterangan : null,
             'nomor_antrian' => $nomor_antrian_gabungan,
             'nomor_urut'    => $nomor_urut_baru,
             'status'        => 'menunggu',

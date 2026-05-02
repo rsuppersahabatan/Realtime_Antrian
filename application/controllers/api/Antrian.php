@@ -10,7 +10,8 @@ use chriskacerguis\RestServer\RestController;
  *   GET    api/antrian                    -> daftar antrian hari ini
  *                                            ?tanggal=YYYY-MM-DD untuk filter tanggal
  *   POST   api/antrian                    -> generate nomor antrian baru
- *                                            Body: id_layanan (required), nik (optional)
+ *                                            Body: id_layanan (required), nik (optional), keterangan (optional),
+ *                                                  nomor_antrian (optional — override nomor tiket manual)
  *   POST   api/antrian/call               -> panggil antrian berikutnya di sebuah loket
  *                                            Body: id_loket (required)
  *   POST   api/antrian/panggilansimpan    -> simpan panggilan (manual / panggil ulang)
@@ -64,12 +65,15 @@ class Antrian extends RestController {
 
 	/**
 	 * POST api/antrian
-	 * Body: id_layanan (required), nik (optional)
+	 * Body: id_layanan (required), nik (optional), keterangan (optional),
+	 *       nomor_antrian (optional — override tiket manual)
 	 */
 	public function index_post()
 	{
-		$id_layanan = (int) $this->post('id_layanan');
-		$nik        = $this->post('nik');
+		$id_layanan    = (int) $this->post('id_layanan');
+		$nik           = $this->post('nik');
+		$keterangan    = $this->post('keterangan');
+		$nomor_antrian = $this->post('nomor_antrian');
 
 		if ($id_layanan <= 0)
 		{
@@ -89,7 +93,13 @@ class Antrian extends RestController {
 			return;
 		}
 
-		$tiket = $this->Antrian_model->generate_nomor_baru($id_layanan, $nik);
+		if (is_string($nomor_antrian))
+		{
+			$nomor_antrian = trim($nomor_antrian);
+			if ($nomor_antrian === '') $nomor_antrian = NULL;
+		}
+
+		$tiket = $this->Antrian_model->generate_nomor_baru($id_layanan, $nik, $keterangan, $nomor_antrian);
 
 		if ( ! $tiket)
 		{

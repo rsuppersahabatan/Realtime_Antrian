@@ -22,6 +22,8 @@ $lang['antrian_waktu_selesai'] = 'Waktu Selesai';
 $lang['antrian_action']      = 'Aksi';
 $lang['antrian_tanggal']     = 'Tanggal';
 $lang['antrian_confirm']     = 'Konfirmasi';
+$lang['antrian_nik']         = 'NIK';
+$lang['antrian_keterangan']  = 'Keterangan';
 
 /* Status */
 $lang['antrian_status_menunggu']  = 'Menunggu';
