@@ -56,21 +56,24 @@ class Panggilan extends Admin_Controller {
 			return $this->_json(['status' => 'error', 'message' => lang('panggilan_loket_invalid')]);
 		}
 
-		$nomor = $this->Antrian_model->call_next_antrian($id_loket);
+		$tiket = $this->Antrian_model->call_next_antrian($id_loket);
 
-		if ( ! $nomor)
+		if ( ! $tiket)
 		{
 			return $this->_json(['status' => 'kosong', 'message' => lang('panggilan_antrian_habis')]);
 		}
 
-		$channel = $this->_channel($id_loket);
-		$this->redis->command('publish realtime '.$channel.'-'.$nomor);
+		$nomor      = $tiket['nomor_antrian'];
+		$keterangan = isset($tiket['keterangan']) ? $tiket['keterangan'] : '';
+		$channel    = $this->_channel($id_loket);
+		$this->_publish($channel, $nomor, $keterangan);
 
 		return $this->_json([
-			'status'  => 'ok',
-			'nomor'   => $nomor,
-			'loket'   => $loket['nama_loket'],
-			'channel' => $channel,
+			'status'     => 'ok',
+			'nomor'      => $nomor,
+			'keterangan' => $keterangan,
+			'loket'      => $loket['nama_loket'],
+			'channel'    => $channel,
 		]);
 	}
 
@@ -95,14 +98,19 @@ class Panggilan extends Admin_Controller {
 			return $this->_json(['status' => 'error', 'message' => lang('panggilan_error')]);
 		}
 
+		// Cari tiket asli untuk dapat keterangan-nya (recall = broadcast ulang).
+		$tiket      = $this->Antrian_model->get_by_nomor_today($nomor, $id_loket);
+		$keterangan = ($tiket && isset($tiket['keterangan'])) ? $tiket['keterangan'] : '';
+
 		$channel = $this->_channel($id_loket);
-		$this->redis->command('publish realtime '.$channel.'-'.$nomor);
+		$this->_publish($channel, $nomor, $keterangan);
 
 		return $this->_json([
-			'status'  => 'ok',
-			'nomor'   => $nomor,
-			'loket'   => $loket['nama_loket'],
-			'channel' => $channel,
+			'status'     => 'ok',
+			'nomor'      => $nomor,
+			'keterangan' => $keterangan,
+			'loket'      => $loket['nama_loket'],
+			'channel'    => $channel,
 		]);
 	}
 
@@ -110,6 +118,35 @@ class Panggilan extends Admin_Controller {
 	private function _channel($id_loket)
 	{
 		return 'loket'.str_pad((int) $id_loket, 2, '0', STR_PAD_LEFT);
+	}
+
+
+	/**
+	 * Publish ke channel realtime dengan format:
+	 *   loketXX-NOMOR              (tanpa keterangan)
+	 *   loketXX-NOMOR|KETERANGAN   (dengan keterangan)
+	 *
+	 * Karakter pemisah `|` dan baris baru pada keterangan dibersihkan.
+	 */
+	private function _publish($channel, $nomor, $keterangan = '')
+	{
+		$payload = $channel.'-'.$nomor;
+		$ket     = $this->_sanitize_keterangan($keterangan);
+		if ($ket !== '')
+		{
+			$payload .= '|'.$ket;
+		}
+		$this->redis->command('publish realtime '.$payload);
+	}
+
+
+	private function _sanitize_keterangan($keterangan)
+	{
+		$ket = (string) $keterangan;
+		// Hilangkan pipe (separator), CR/LF, dan whitespace berlebih.
+		$ket = str_replace(['|', "\r", "\n"], ' ', $ket);
+		$ket = preg_replace('/\s+/', ' ', $ket);
+		return trim($ket);
 	}
 
 

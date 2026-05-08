@@ -81,15 +81,17 @@ class Antrian_model extends CI_Model {
     
     /**
      * PANGGIL ANTRIAN (Sisi Petugas/Loket)
-     * Mengubah tiket yang 'menunggu' menjadi 'dipanggil'
+     * Mengubah tiket yang 'menunggu' menjadi 'dipanggil'.
+     *
+     * @return array|null  Tiket lengkap (termasuk nomor_antrian & keterangan) atau null bila kosong/loket invalid.
      */
     public function call_next_antrian($id_loket) {
         // Ambil info loket (untuk tahu dia memanggil antrian kategori layanan apa)
         $loket = $this->db->get_where('loket', ['id' => $id_loket])->row_array();
-        if(!$loket) return false;
-        
+        if(!$loket) return null;
+
         $tanggal = date('Y-m-d');
-        
+
         // Cari 1 antrian yang paling lama 'menunggu' untuk id_layanan tersebut hari ini
         $this->db->where('id_layanan', $loket['id_layanan']);
         $this->db->where('tanggal', $tanggal);
@@ -97,22 +99,41 @@ class Antrian_model extends CI_Model {
         $this->db->order_by('nomor_urut', 'ASC'); // Yang urutannya terkecil dipanggil duluan
         $this->db->limit(1);
         $tiket_menunggu = $this->db->get($this->table)->row_array();
-        
+
         if ($tiket_menunggu) {
-            // Update tiket tersebut
+            $waktu_panggil = date('Y-m-d H:i:s');
             $this->db->where('id', $tiket_menunggu['id']);
             $this->db->update($this->table, [
                 'status' => 'dipanggil',
                 'id_loket' => $id_loket,
-                'waktu_panggil' => date('Y-m-d H:i:s')
+                'waktu_panggil' => $waktu_panggil
             ]);
-            
-            // Kembalikan nomor tiketnya (misal "A12") agar bisa dipublish via Socket/Redis
-            return $tiket_menunggu['nomor_antrian'];
+
+            // Kembalikan tiket lengkap supaya controller bisa pakai keterangan, dsb.
+            return array_merge($tiket_menunggu, [
+                'status'        => 'dipanggil',
+                'id_loket'      => (int) $id_loket,
+                'waktu_panggil' => $waktu_panggil,
+            ]);
         }
-        
+
         // Return null jika antrian sudah habis / tidak ada yang menunggu
-        return null; 
+        return null;
+    }
+
+    /**
+     * Ambil tiket berdasarkan nomor_antrian + tanggal hari ini (untuk panggil ulang).
+     * Optional: filter id_loket untuk memastikan tiket memang milik loket tsb.
+     */
+    public function get_by_nomor_today($nomor_antrian, $id_loket = null) {
+        $this->db->where('nomor_antrian', $nomor_antrian);
+        $this->db->where('tanggal', date('Y-m-d'));
+        if ($id_loket !== null) {
+            $this->db->where('id_loket', (int) $id_loket);
+        }
+        $this->db->order_by('id', 'DESC');
+        $this->db->limit(1);
+        return $this->db->get($this->table)->row_array();
     }
     
     /**

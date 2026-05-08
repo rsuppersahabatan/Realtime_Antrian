@@ -78,8 +78,8 @@ class Panggilan extends RestController {
 			return;
 		}
 
-		$nomor = $this->Antrian_model->call_next_antrian($id_loket);
-		if ( ! $nomor)
+		$tiket = $this->Antrian_model->call_next_antrian($id_loket);
+		if ( ! $tiket)
 		{
 			$this->response([
 				'status'  => FALSE,
@@ -88,8 +88,10 @@ class Panggilan extends RestController {
 			return;
 		}
 
-		$channel = $this->_channel($id_loket);
-		$this->_publish($channel, $nomor);
+		$nomor      = $tiket['nomor_antrian'];
+		$keterangan = isset($tiket['keterangan']) ? $tiket['keterangan'] : '';
+		$channel    = $this->_channel($id_loket);
+		$this->_publish($channel, $nomor, $keterangan);
 
 		$this->response([
 			'status'        => TRUE,
@@ -98,8 +100,9 @@ class Panggilan extends RestController {
 				'id_loket'      => $id_loket,
 				'nama_loket'    => $loket['nama_loket'],
 				'nomor_antrian' => $nomor,
+				'keterangan'    => $keterangan,
 				'channel'       => $channel,
-				'waktu_panggil' => date('Y-m-d H:i:s'),
+				'waktu_panggil' => $tiket['waktu_panggil'],
 			],
 		], RestController::HTTP_OK);
 	}
@@ -143,8 +146,11 @@ class Panggilan extends RestController {
 			return;
 		}
 
+		$tiket      = $this->Antrian_model->get_by_nomor_today($nomor, $id_loket);
+		$keterangan = ($tiket && isset($tiket['keterangan'])) ? $tiket['keterangan'] : '';
+
 		$channel = $this->_channel($id_loket);
-		$this->_publish($channel, $nomor);
+		$this->_publish($channel, $nomor, $keterangan);
 
 		$this->response([
 			'status'  => TRUE,
@@ -153,6 +159,7 @@ class Panggilan extends RestController {
 				'id_loket'      => $id_loket,
 				'nama_loket'    => $loket['nama_loket'],
 				'nomor_antrian' => $nomor,
+				'keterangan'    => $keterangan,
 				'channel'       => $channel,
 				'waktu_panggil' => date('Y-m-d H:i:s'),
 			],
@@ -213,9 +220,10 @@ class Panggilan extends RestController {
 				return;
 		}
 
-		$data    = $result['data'];
-		$channel = $this->_channel($id_loket);
-		$this->_publish($channel, $data['nomor_antrian']);
+		$data       = $result['data'];
+		$keterangan = isset($data['keterangan']) ? $data['keterangan'] : '';
+		$channel    = $this->_channel($id_loket);
+		$this->_publish($channel, $data['nomor_antrian'], $keterangan);
 
 		$this->response([
 			'status'  => TRUE,
@@ -225,6 +233,7 @@ class Panggilan extends RestController {
 			'data'    => [
 				'id_antrian'    => (int) $data['id'],
 				'nomor_antrian' => $data['nomor_antrian'],
+				'keterangan'    => $keterangan,
 				'id_loket'      => (int) $data['id_loket'],
 				'nama_loket'    => $data['nama_loket'],
 				'waktu_panggil' => $data['waktu_panggil'],
@@ -245,8 +254,28 @@ class Panggilan extends RestController {
 	}
 
 
-	private function _publish($channel, $nomor)
+	/**
+	 * Publish ke channel realtime dengan format:
+	 *   loketXX-NOMOR              (tanpa keterangan)
+	 *   loketXX-NOMOR|KETERANGAN   (dengan keterangan)
+	 */
+	private function _publish($channel, $nomor, $keterangan = '')
 	{
-		$this->redis->command('publish realtime '.$channel.'-'.$nomor);
+		$payload = $channel.'-'.$nomor;
+		$ket     = $this->_sanitize_keterangan($keterangan);
+		if ($ket !== '')
+		{
+			$payload .= '|'.$ket;
+		}
+		$this->redis->command('publish realtime '.$payload);
+	}
+
+
+	private function _sanitize_keterangan($keterangan)
+	{
+		$ket = (string) $keterangan;
+		$ket = str_replace(['|', "\r", "\n"], ' ', $ket);
+		$ket = preg_replace('/\s+/', ' ', $ket);
+		return trim($ket);
 	}
 }

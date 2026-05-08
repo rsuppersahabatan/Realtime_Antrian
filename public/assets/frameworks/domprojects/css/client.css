@@ -206,6 +206,26 @@ body {
   text-align: center;
 }
 
+.main-keterangan {
+  margin: 8px 0 4px;
+  padding: 6px 24px;
+  max-width: 90%;
+  font-size: clamp(16px, 1.6vw, 22px);
+  font-weight: 600;
+  color: var(--dp-primary-dark);
+  letter-spacing: 0.5px;
+  text-align: center;
+  line-height: 1.3;
+  z-index: 2;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.main-keterangan:empty,
+.main-keterangan.is-empty {
+  display: none;
+}
+
 /* --- Panel Samping (kanan) --- */
 .side-panel {
   flex: 1;

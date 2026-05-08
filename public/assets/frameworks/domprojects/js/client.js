@@ -53,7 +53,20 @@ function putarSuara(daftarSuara) {
 
 function addMessage(data) {
   if (!data) return;
-  var vdt = data.toString().split("-");
+  var raw = data.toString();
+
+  // Format payload: "loketXX-NOMOR" atau "loketXX-NOMOR|KETERANGAN"
+  // Pisahkan keterangan terlebih dulu (separator "|") agar nomor antrian
+  // tetap bersih dari teks keterangan.
+  var pipeIdx = raw.indexOf("|");
+  var keterangan = "";
+  var head = raw;
+  if (pipeIdx >= 0) {
+    head = raw.substring(0, pipeIdx);
+    keterangan = raw.substring(pipeIdx + 1).trim();
+  }
+
+  var vdt = head.split("-");
 
   if (vdt.length > 1) {
     var loket_raw = vdt[0].toLowerCase();
@@ -65,6 +78,13 @@ function addMessage(data) {
     mainNum.classList.remove("call-flash");
     void mainNum.offsetWidth; // reflow untuk trigger ulang animasi
     mainNum.classList.add("call-flash");
+
+    // Update keterangan di bawah nomor antrian
+    var ketEl = document.getElementById("keterangan_text");
+    if (ketEl) {
+      ketEl.textContent = keterangan;
+      ketEl.classList.toggle("is-empty", keterangan === "");
+    }
 
     // Flash border pada main panel
     var mainPanel = document.querySelector(".main-panel");
@@ -117,8 +137,13 @@ function addMessage(data) {
 
     putarSuara(buatDaftarSuara(nomor_antrian));
   } else {
-    document.getElementById("online").textContent = data;
-    putarSuara(buatDaftarSuara(String(data)));
+    document.getElementById("online").textContent = head;
+    var ketElFallback = document.getElementById("keterangan_text");
+    if (ketElFallback) {
+      ketElFallback.textContent = keterangan;
+      ketElFallback.classList.toggle("is-empty", keterangan === "");
+    }
+    putarSuara(buatDaftarSuara(String(head)));
   }
 }
 

@@ -93,6 +93,7 @@
           <div class="main-loket-label" id="loket_display">MENUNGGU</div>
           <div class="main-queue-label">NOMOR ANTRIAN</div>
           <div class="main-number" id="online">---</div>
+          <div class="main-keterangan" id="keterangan_text"></div>
           <div class="main-direction" id="direction_text">MENUNGGU PANGGILAN</div>
         </div>
 
