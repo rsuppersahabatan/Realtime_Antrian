@@ -99,6 +99,7 @@ function antrian_status_badge($status) {
 											<tr>
 												<th width="50">#</th>
 												<th><?php echo lang('antrian_nomor'); ?></th>
+												<th><?php echo lang('antrian_nama'); ?></th>
 												<th><?php echo lang('antrian_layanan'); ?></th>
 												<th><?php echo lang('antrian_loket'); ?></th>
 												<th><?php echo lang('antrian_status'); ?></th>

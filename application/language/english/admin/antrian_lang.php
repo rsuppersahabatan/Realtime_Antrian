@@ -13,6 +13,7 @@ $lang['menu_antrian_reset']  = 'Reset Queue';
 /* Fields */
 $lang['antrian_no']          = 'No';
 $lang['antrian_nomor']       = 'Number';
+$lang['antrian_nama']        = 'Nama';
 $lang['antrian_layanan']     = 'Service';
 $lang['antrian_loket']       = 'Counter';
 $lang['antrian_status']      = 'Status';
