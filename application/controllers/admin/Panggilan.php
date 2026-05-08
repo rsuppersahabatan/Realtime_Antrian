@@ -136,7 +136,9 @@ class Panggilan extends Admin_Controller {
 		{
 			$payload .= '|'.$ket;
 		}
-		$this->redis->command('publish realtime '.$payload);
+		// Pakai magic __call agar payload (yang bisa berisi spasi) di-encode
+		// sebagai single Redis bulk-string, bukan dipecah lewat explode(' ').
+		$this->redis->publish('realtime', $payload);
 	}
 
 
