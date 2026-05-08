@@ -38,6 +38,8 @@ $lang['menu_search'] = 'Search';
 /* *********** */$lang['menu_antrian_delete']   = 'Delete';
 /* *********** */$lang['menu_antrian_reset']    = 'Reset';
 
+/* ****** */$lang['menu_display_setting']       = 'Display Setting';
+
 /* ****** */$lang['menu_panggilan']             = 'Calling';
 
 

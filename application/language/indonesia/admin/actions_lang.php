@@ -14,6 +14,7 @@ $lang['actions_cancel']         = 'Batal';
 $lang['actions_create']         = 'Tambah';
 $lang['actions_default_values'] = 'Nilai default';
 $lang['actions_edit']           = 'Ubah';
+$lang['actions_display']        = 'Display';
 $lang['actions_ok']             = 'Oke';
 $lang['actions_no']             = 'Tidak';
 $lang['actions_reset']          = 'Reset';

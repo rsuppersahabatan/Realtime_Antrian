@@ -62,6 +62,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                 <i class="fa fa-desktop"></i> <span><?php echo lang('menu_client'); ?></span>
                             </a>
                         </li>
+                        <li class="<?=active_link_controller('display')?>">
+                            <a href="<?php echo site_url('admin/display'); ?>">
+                                <i class="fa fa-tv"></i> <span><?php echo lang('menu_display_setting'); ?></span>
+                            </a>
+                        </li>
                         <li class="<?=active_link_controller('antrian')?>">
                             <a href="<?php echo site_url('admin/antrian'); ?>">
                                 <i class="fa fa-ticket"></i> <span><?php echo lang('menu_antrian'); ?></span>

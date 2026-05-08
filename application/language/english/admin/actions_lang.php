@@ -14,6 +14,7 @@ $lang['actions_cancel']         = 'Cancel';
 $lang['actions_create']         = 'Create';
 $lang['actions_default_values'] = 'Default values';
 $lang['actions_edit']           = 'Edit';
+$lang['actions_display']        = 'Display';
 $lang['actions_ok']             = 'Ok';
 $lang['actions_no']             = 'No';
 $lang['actions_reset']          = 'Reset';
