@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <script defer src="https://umami.persahabatan.co.id/script.js" data-website-id="084ea29a-39c4-44d7-ba5a-534fb2daacb6"></script>
+    
     <title>Display Antrian - UPDRS RS PERSAHABATAN</title>
     <!-- jQuery harus diload sebelum script lokal jika ingin menggunakan global $ -->
     <script src="<?= base_url('assets/js/jquery.min.js') ?>"></script>
