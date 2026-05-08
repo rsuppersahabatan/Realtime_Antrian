@@ -123,6 +123,7 @@ function antrian_status_badge($status) {
 											?>">
 												<td><?php echo $i + 1; ?></td>
 												<td><strong><?php echo htmlspecialchars($row['nomor_antrian'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
+												<td><?php echo htmlspecialchars($row['keterangan'], ENT_QUOTES, 'UTF-8'); ?></td>
 												<td>
 													<span class="label label-primary"><?php echo htmlspecialchars($row['kode_huruf'], ENT_QUOTES, 'UTF-8'); ?></span>
 													<?php echo htmlspecialchars($row['nama_layanan'], ENT_QUOTES, 'UTF-8'); ?>
