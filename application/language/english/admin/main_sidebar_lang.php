@@ -28,6 +28,11 @@ $lang['menu_search'] = 'Search';
 /* *********** */$lang['menu_loket_edit']       = 'Edit';
 /* *********** */$lang['menu_loket_delete']     = 'Delete';
 
+/* ****** */$lang['menu_client']                = 'Client Display';
+/* *********** */$lang['menu_client_create']    = 'Add';
+/* *********** */$lang['menu_client_edit']      = 'Edit';
+/* *********** */$lang['menu_client_delete']    = 'Delete';
+
 /* ****** */$lang['menu_antrian']               = 'Queue';
 /* *********** */$lang['menu_antrian_create']   = 'Add';
 /* *********** */$lang['menu_antrian_delete']   = 'Delete';

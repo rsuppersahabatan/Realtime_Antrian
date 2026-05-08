@@ -186,3 +186,46 @@ CREATE TABLE IF NOT EXISTS `loket_user` (
   CONSTRAINT `fk_loket_user_loket` FOREIGN KEY (`id_loket`) REFERENCES `loket`(`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_loket_user_user` FOREIGN KEY (`id_user`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- 5. Tabel Client (Pengaturan Client/ Display)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `client` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `nama_client` VARCHAR(50) NOT NULL,
+  `is_active` ENUM('ya', 'tidak') DEFAULT 'tidak',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- 6. Tabel Client Loket (Pengaturan Client Loket)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `client_loket` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `id_client` INT NOT NULL,
+  `id_loket` INT NOT NULL,
+  UNIQUE KEY `unique_client_loket` (`id_client`, `id_loket`), -- Mencegah duplikasi user di loket yang sama
+  KEY `idx_client_loket_loket` (`id_loket`),
+  CONSTRAINT `fk_client_loket_loket` FOREIGN KEY (`id_loket`) REFERENCES `loket`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_client_loket_client` FOREIGN KEY (`id_client`) REFERENCES `client`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- 7. Tabel Display Settings (Pengaturan Display)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `client_display_settings` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `id_client` INT NOT NULL,
+  `color_scheme` VARCHAR(7) DEFAULT '#4e73df', -- Menyimpan kode HEX warna
+  `video_source` ENUM('youtube', 'local') DEFAULT 'youtube',
+  `video_link` VARCHAR(255),
+  `footer_text` TEXT,
+  `footer_mode` ENUM('statis', 'running') DEFAULT 'statis',
+  `font_family` VARCHAR(50) DEFAULT 'Poppins',
+  `font_size` INT DEFAULT 100,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  -- Relasi ke tabel client yang Anda miliki
+  CONSTRAINT `fk_display_client` FOREIGN KEY (`id_client`) REFERENCES `client`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

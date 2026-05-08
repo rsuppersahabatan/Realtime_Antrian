@@ -28,6 +28,11 @@ $lang['menu_search'] = 'Cari';
 /* *********** */$lang['menu_loket_edit']       = 'Ubah';
 /* *********** */$lang['menu_loket_delete']     = 'Hapus';
 
+/* ****** */$lang['menu_client']                = 'Client Display';
+/* *********** */$lang['menu_client_create']    = 'Tambah';
+/* *********** */$lang['menu_client_edit']      = 'Ubah';
+/* *********** */$lang['menu_client_delete']    = 'Hapus';
+
 /* ****** */$lang['menu_antrian']               = 'Antrian';
 /* *********** */$lang['menu_antrian_create']   = 'Tambah';
 /* *********** */$lang['menu_antrian_delete']   = 'Hapus';
