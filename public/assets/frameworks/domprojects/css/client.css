@@ -330,6 +330,23 @@ body {
   letter-spacing: 2px;
 }
 
+.footer-loket-keterangan {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.footer-loket-keterangan:empty,
+.footer-loket-keterangan.is-empty {
+  display: none;
+}
+
 /* =========================================
    RUNNING TEXT
    ========================================= */

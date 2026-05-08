@@ -106,6 +106,13 @@ function addMessage(data) {
       footerNum.textContent = nomor_antrian;
     }
 
+    // Update keterangan di footer loket (di bawah nomor)
+    var footerKet = document.getElementById("footer-ket-" + loket_raw);
+    if (footerKet) {
+      footerKet.textContent = keterangan;
+      footerKet.classList.toggle("is-empty", keterangan === "");
+    }
+
     // Highlight footer item yang aktif
     var footerItems = document.querySelectorAll(".footer-loket-item");
     footerItems.forEach(function(item) { item.classList.remove("highlight"); });

@@ -72,13 +72,19 @@ class Loket_model extends CI_Model {
             $tanggal = date('Y-m-d');
         }
 
-        $subquery = '(SELECT a.nomor_antrian FROM antrian a '
+        $subquery_nomor = '(SELECT a.nomor_antrian FROM antrian a '
             . 'WHERE a.id_loket = loket.id '
             . 'AND a.tanggal = ' . $this->db->escape($tanggal) . ' '
             . 'AND a.waktu_panggil IS NOT NULL '
             . 'ORDER BY a.waktu_panggil DESC LIMIT 1) AS nomor_terakhir';
 
-        $this->db->select('loket.*, layanan.nama_layanan, layanan.kode_huruf, ' . $subquery, FALSE);
+        $subquery_ket = '(SELECT a.keterangan FROM antrian a '
+            . 'WHERE a.id_loket = loket.id '
+            . 'AND a.tanggal = ' . $this->db->escape($tanggal) . ' '
+            . 'AND a.waktu_panggil IS NOT NULL '
+            . 'ORDER BY a.waktu_panggil DESC LIMIT 1) AS keterangan_terakhir';
+
+        $this->db->select('loket.*, layanan.nama_layanan, layanan.kode_huruf, ' . $subquery_nomor . ', ' . $subquery_ket, FALSE);
         $this->db->from($this->table);
         $this->db->join('layanan', 'layanan.id = loket.id_layanan', 'left');
         $this->db->where('loket.status_buka', 'buka');

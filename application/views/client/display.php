@@ -145,11 +145,16 @@
               $nama_loket = !empty($lk['nama_loket']) ? $lk['nama_loket'] : ('LOKET ' . $lk['id']);
               $channel_id = 'loket' . str_pad((int) $lk['id'], 2, '0', STR_PAD_LEFT);
               $nomor_terakhir = !empty($lk['nomor_terakhir']) ? $lk['nomor_terakhir'] : '---';
+              $ket_terakhir = !empty($lk['keterangan_terakhir']) ? $lk['keterangan_terakhir'] : '';
+              $ket_class = $ket_terakhir === '' ? 'footer-loket-keterangan is-empty' : 'footer-loket-keterangan';
             ?>
             <div class="footer-loket-item" id="footer-item-<?= $channel_id ?>">
               <div class="footer-loket-name"><?= strtoupper($nama_loket) ?></div>
               <div class="footer-loket-number" id="footer-<?= $channel_id ?>">
                 <?= htmlspecialchars($nomor_terakhir, ENT_QUOTES, 'UTF-8') ?>
+              </div>
+              <div class="<?= $ket_class ?>" id="footer-ket-<?= $channel_id ?>">
+                <?= htmlspecialchars($ket_terakhir, ENT_QUOTES, 'UTF-8') ?>
               </div>
             </div>
           <?php endforeach; ?>
