@@ -17,7 +17,8 @@ class Client extends Public_Controller {
         $client = $id ? $this->Client_model->get_by_id($id) : null; //echo "<pre>"; print_r($client); exit;
         if ( ! $client)
         {
-            show_404();
+            $this->_allView();
+            return;
         }
 
         $this->data['client'] = $client;
@@ -70,5 +71,11 @@ class Client extends Public_Controller {
         }
         $row['font_size'] = (int) $row['font_size'];
         return $row;
+    }
+    
+    private function _allView()
+    {
+        $this->data['clients'] = $this->Client_model->get_all();
+        $this->load->view('client/all', $this->data);
     }
 }

@@ -72,6 +72,14 @@ function addMessage(data) {
     var loket_raw = vdt[0].toLowerCase();
     var nomor_antrian = vdt[1];
 
+    // Filter: hanya proses panggilan dari loket yang ter-assign ke client ini.
+    // `loketLabels` di-render server-side berisi loket milik client/display ini saja,
+    // jadi dipakai sebagai allowlist agar display tidak ikut bunyi/flash untuk
+    // panggilan dari client lain yang di-broadcast lewat channel realtime yang sama.
+    if (!loketLabels || !Object.prototype.hasOwnProperty.call(loketLabels, loket_raw)) {
+      return;
+    }
+
     // Update nomor antrian utama
     var mainNum = document.getElementById("online");
     mainNum.textContent = nomor_antrian;
