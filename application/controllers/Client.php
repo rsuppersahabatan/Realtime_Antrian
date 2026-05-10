@@ -47,8 +47,10 @@ class Client extends Public_Controller {
     {
         $row = $this->db->get_where('client_display_settings', array('id_client' => (int) $id_client))->row_array();
 
+        // Default selaras dengan client.css (teal + chartreuse) supaya tampilan tetap rapih
+        // walau record client_display_settings belum dibuat.
         $defaults = array(
-            'color_scheme' => '#4e73df',
+            'color_scheme' => '#00baae',
             'video_source' => 'youtube',
             'video_link'   => 'ebZwRzwEpT8',
             'footer_text'  => 'Selamat datang. Mohon menunggu nomor antrian Anda dipanggil.',

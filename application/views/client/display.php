@@ -8,7 +8,7 @@
 
     <?php
       $client_name = !empty($client['nama_client']) ? $client['nama_client'] : 'Display Antrian';
-      $accent      = !empty($display['color_scheme']) ? $display['color_scheme'] : '#4e73df';
+      $accent      = !empty($display['color_scheme']) ? $display['color_scheme'] : '#00baae';
       $font_family = !empty($display['font_family']) ? $display['font_family'] : 'Inter';
       $font_size   = !empty($display['font_size']) ? (int) $display['font_size'] : 100;
       $video_src   = !empty($display['video_source']) ? $display['video_source'] : 'youtube';
@@ -28,14 +28,6 @@
     ?>
 
     <title>Display Antrian - <?= htmlspecialchars($client_name, ENT_QUOTES, 'UTF-8') ?></title>
-    <style>
-      :root {
-        --dp-accent: <?= htmlspecialchars($accent, ENT_QUOTES, 'UTF-8') ?>;
-        --dp-primary: <?= htmlspecialchars($accent, ENT_QUOTES, 'UTF-8') ?>;
-      }
-      body { font-family: '<?= htmlspecialchars($font_family, ENT_QUOTES, 'UTF-8') ?>', 'Inter', 'Helvetica Neue', Arial, sans-serif; }
-      .main-number { font-size: <?= $font_size * 2 ?>px; }
-    </style>
     <!-- jQuery harus diload sebelum script lokal jika ingin menggunakan global $ -->
     <script src="<?= base_url('assets/js/jquery.min.js') ?>"></script>
     <script src="<?= base_url('assets/script/soundmanager2-nodebug-jsmin.js') ?>"></script>
@@ -50,6 +42,46 @@
     />
 
     <?= isset($minified_css) ? $minified_css : '<link rel="stylesheet" href="' . base_url('assets/frameworks/domprojects/css/client.css') . '" />' ?>
+
+    <!-- Override dinamis HARUS setelah client.css agar selector dengan specificity sama menang. -->
+    <style>
+      :root {
+        /* color_scheme HANYA mengganti --dp-primary (warna brand utama).
+           --dp-accent sengaja TIDAK dioverride supaya button "MENUNGGU PANGGILAN"
+           dan border header tetap chartreuse default — kontras & readable. */
+        --dp-primary: <?= htmlspecialchars($accent, ENT_QUOTES, 'UTF-8') ?>;
+        --dp-primary-dark: <?= htmlspecialchars($accent, ENT_QUOTES, 'UTF-8') ?>;
+        --dp-font-scale: <?= number_format($font_size / 100, 4, '.', '') ?>;
+      }
+      body { font-family: '<?= htmlspecialchars($font_family, ENT_QUOTES, 'UTF-8') ?>', 'Inter', 'Helvetica Neue', Arial, sans-serif; }
+
+      /* Skala ukuran nomor antrian mengikuti font_size (100 = default = sama dengan client.css).
+         Floor 96px supaya tetap dominan walau scale kecil; ceiling 220px sesuai default. */
+      .main-number {
+        font-size: clamp(96px, calc(18vw * var(--dp-font-scale)), calc(220px * var(--dp-font-scale)));
+        line-height: 1;
+        margin: 0;
+      }
+
+      /* Beri ruang internal panel: padding generous supaya badge & button tidak mepet ke border. */
+      .display-body { padding: 20px 24px; gap: 24px; }
+      .main-panel {
+        padding: 48px 32px;
+        gap: 14px;
+        justify-content: center;          /* tetap center, bukan space-between, agar simetris */
+        overflow: hidden;
+      }
+      .main-panel > * { flex-shrink: 0; }
+      .main-loket-label { line-height: 1.15; margin-bottom: 4px; }
+      .main-direction   { margin-top: 8px; line-height: 1.2; }
+      /* Kecilkan tinggi visual dashes placeholder & angka pendek agar tidak "ngambang" */
+      .main-number { letter-spacing: 2px; }
+
+      /* Label pendukung — skala lebih halus, tidak ikut menyusut ekstrim saat font_size kecil. */
+      .main-loket-label { font-size: clamp(20px, calc(1.4vw * var(--dp-font-scale) + 16px), 30px); }
+      .main-queue-label { font-size: clamp(15px, calc(1.0vw * var(--dp-font-scale) + 13px), 22px); }
+      .main-direction   { font-size: clamp(16px, calc(1.0vw * var(--dp-font-scale) + 14px), 24px); }
+    </style>
 
     <script type="text/javascript">
       var socketUrl = <?php $__s = $this->config->item('socket_url'); echo $__s ? json_encode($__s) : "window.location.protocol + '//' + window.location.host"; ?>;
