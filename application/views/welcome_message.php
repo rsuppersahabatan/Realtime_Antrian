@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Antrian Online - RS Persahabatan</title>
     <script defer src="https://umami.persahabatan.co.id/script.js" data-website-id="084ea29a-39c4-44d7-ba5a-534fb2daacb6"></script>
-    
+
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="<?= base_url('assets/js/jquery.min.js') ?>"></script>
 
@@ -20,7 +20,7 @@
              style="height:64px;width:auto;display:block;">
         <div style="text-align:left;">
             <h1>ANTRIAN ONLINE</h1>
-            <small>UNIT PENGELOLA DARAH RS PERSAHABATAN</small>
+            <small>ONLINE REALTIME ANTRIAN RS PERSAHABATAN</small>
         </div>
     </div>
 </div>
@@ -114,13 +114,88 @@
                 <input type="hidden" name="id_layanan" id="idLayanan" value="">
 
                 <?php if ( ! empty($layanan)): ?>
-                    <?php foreach ($layanan as $ly): ?>
-                        <div class="layanan-card clearfix">
-                            <span class="layanan-kode"><?= htmlspecialchars($ly['kode_huruf'], ENT_QUOTES, 'UTF-8') ?></span>
-                            <span class="layanan-nama"><?= htmlspecialchars($ly['nama_layanan'], ENT_QUOTES, 'UTF-8') ?></span>
-                            <button type="button" data-id="<?= (int) $ly['id'] ?>" class="btn-ambil btn-pilih-layanan">AMBIL NOMOR</button>
+                    <?php $vh = 320; ?>
+                    <div
+                        id="layananRunning"
+                        class="layanan-running"
+                        style="height:<?= $vh ?>px;overflow-y:auto;position:relative;scroll-behavior:auto;mask-image:linear-gradient(180deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);-webkit-mask-image:linear-gradient(180deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);">
+                        <div class="layanan-running-track">
+                            <?php for ($pass = 0; $pass < 2; $pass++): ?>
+                                <?php foreach ($layanan as $ly): ?>
+                                    <div class="layanan-card clearfix"<?= $pass === 1 ? ' aria-hidden="true"' : '' ?>>
+                                        <span class="layanan-kode"><?= htmlspecialchars($ly['kode_huruf'], ENT_QUOTES, 'UTF-8') ?></span>
+                                        <span class="layanan-nama"><?= htmlspecialchars($ly['nama_layanan'], ENT_QUOTES, 'UTF-8') ?></span>
+                                        <button type="button" data-id="<?= (int) $ly['id'] ?>" class="btn-ambil btn-pilih-layanan"<?= $pass === 1 ? ' tabindex="-1"' : '' ?>>AMBIL NOMOR</button>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endfor; ?>
                         </div>
-                    <?php endforeach; ?>
+                    </div>
+                    <small class="text-muted" style="display:block;margin-top:6px;">
+                        Arahkan kursor (atau scroll) ke daftar layanan untuk menjeda gerakan, lalu klik <strong>AMBIL NOMOR</strong>.
+                    </small>
+                    <style>
+                        /* Sembunyikan scrollbar default tapi tetap bisa di-scroll dengan mouse wheel/touch. */
+                        .layanan-running { scrollbar-width: thin; scrollbar-color: rgba(0,186,174,0.5) transparent; }
+                        .layanan-running::-webkit-scrollbar { width: 8px; }
+                        .layanan-running::-webkit-scrollbar-track { background: transparent; }
+                        .layanan-running::-webkit-scrollbar-thumb { background: rgba(0,186,174,0.45); border-radius: 4px; }
+                        .layanan-running::-webkit-scrollbar-thumb:hover { background: rgba(0,186,174,0.75); }
+                    </style>
+                    <script>
+                    (function () {
+                        var box = document.getElementById('layananRunning');
+                        if ( ! box) return;
+
+                        var track = box.querySelector('.layanan-running-track');
+                        if ( ! track) return;
+
+                        var paused      = false;
+                        var pausedManual = false;
+                        var pixelsPerSec = 30;     // kecepatan auto-scroll (px / detik)
+                        var lastTs       = null;
+                        var manualTimer  = null;
+
+                        function step(ts) {
+                            if (lastTs === null) lastTs = ts;
+                            var dt = ts - lastTs;
+                            lastTs = ts;
+
+                            if ( ! paused && ! pausedManual) {
+                                var half = track.scrollHeight / 2;
+                                box.scrollTop += (pixelsPerSec * dt) / 1000;
+                                // Loop seamless: saat lewat setengah track (akhir set pertama),
+                                // mundur tepat sebanyak half — visual tetap kontinyu.
+                                if (box.scrollTop >= half) {
+                                    box.scrollTop -= half;
+                                }
+                            }
+                            requestAnimationFrame(step);
+                        }
+                        requestAnimationFrame(step);
+
+                        // Hover & focus = pause supaya user bisa klik tombol.
+                        box.addEventListener('mouseenter', function () { paused = true; });
+                        box.addEventListener('mouseleave', function () { paused = false; });
+                        box.addEventListener('focusin',    function () { paused = true; });
+                        box.addEventListener('focusout',   function () { paused = false; });
+
+                        // Scroll manual (wheel / drag scrollbar / touch) = pause sementara,
+                        // resume otomatis 1.5 detik setelah aktivitas terakhir berhenti.
+                        function bumpManual() {
+                            pausedManual = true;
+                            if (manualTimer) clearTimeout(manualTimer);
+                            manualTimer = setTimeout(function () { pausedManual = false; }, 1500);
+                        }
+                        box.addEventListener('wheel',     bumpManual, { passive: true });
+                        box.addEventListener('touchmove', bumpManual, { passive: true });
+                        box.addEventListener('scroll', function () {
+                            // scroll juga di-trigger oleh auto-scroll; bumpManual hanya kalau
+                            // sedang pause (misal hover) — artinya user yang scroll.
+                            if (paused) bumpManual();
+                        });
+                    })();
+                    </script>
                 <?php else: ?>
                     <div class="alert alert-warning">Belum ada layanan yang tersedia. Silakan hubungi petugas.</div>
                 <?php endif; ?>
@@ -129,7 +204,7 @@
         </div>
 
         <div class="col-md-4">
-            
+
             <div class="video-wrap" style="position:relative;width:100%;padding-top:56.25%;overflow:hidden;border-radius:12px;">
                 <iframe
                     src="https://www.youtube.com/embed/ebZwRzwEpT8?autoplay=1&mute=1&loop=1&playlist=ebZwRzwEpT8&controls=0&showinfo=0&rel=0"
