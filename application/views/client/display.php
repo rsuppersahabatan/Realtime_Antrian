@@ -5,8 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <script defer src="https://umami.persahabatan.co.id/script.js" data-website-id="084ea29a-39c4-44d7-ba5a-534fb2daacb6"></script>
-    
-    <title>Display Antrian - UPDRS RS PERSAHABATAN</title>
+
+    <?php
+      $client_name = !empty($client['nama_client']) ? $client['nama_client'] : 'Display Antrian';
+      $accent      = !empty($display['color_scheme']) ? $display['color_scheme'] : '#4e73df';
+      $font_family = !empty($display['font_family']) ? $display['font_family'] : 'Inter';
+      $font_size   = !empty($display['font_size']) ? (int) $display['font_size'] : 100;
+      $video_src   = !empty($display['video_source']) ? $display['video_source'] : 'youtube';
+      $video_link  = isset($display['video_link']) ? trim($display['video_link']) : '';
+      $footer_text = isset($display['footer_text']) ? $display['footer_text'] : '';
+      $footer_mode = !empty($display['footer_mode']) ? $display['footer_mode'] : 'running';
+
+      // Ekstrak YouTube ID dari URL apa pun (youtu.be / watch?v= / embed/)
+      $youtube_id = '';
+      if ($video_src === 'youtube' && $video_link !== '') {
+        if (preg_match('~(?:youtu\.be/|youtube\.com/(?:watch\?v=|embed/|v/))([A-Za-z0-9_-]{6,})~', $video_link, $m)) {
+          $youtube_id = $m[1];
+        } else {
+          $youtube_id = preg_replace('/[^A-Za-z0-9_-]/', '', $video_link);
+        }
+      }
+    ?>
+
+    <title>Display Antrian - <?= htmlspecialchars($client_name, ENT_QUOTES, 'UTF-8') ?></title>
+    <style>
+      :root {
+        --dp-accent: <?= htmlspecialchars($accent, ENT_QUOTES, 'UTF-8') ?>;
+        --dp-primary: <?= htmlspecialchars($accent, ENT_QUOTES, 'UTF-8') ?>;
+      }
+      body { font-family: '<?= htmlspecialchars($font_family, ENT_QUOTES, 'UTF-8') ?>', 'Inter', 'Helvetica Neue', Arial, sans-serif; }
+      .main-number { font-size: <?= $font_size * 2 ?>px; }
+    </style>
     <!-- jQuery harus diload sebelum script lokal jika ingin menggunakan global $ -->
     <script src="<?= base_url('assets/js/jquery.min.js') ?>"></script>
     <script src="<?= base_url('assets/script/soundmanager2-nodebug-jsmin.js') ?>"></script>
@@ -17,7 +46,7 @@
     />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=<?= rawurlencode($font_family) ?>:wght@400;600;700;900&family=Inter:wght@400;600;700;900&display=swap"
     />
 
     <?= isset($minified_css) ? $minified_css : '<link rel="stylesheet" href="' . base_url('assets/frameworks/domprojects/css/client.css') . '" />' ?>
@@ -78,8 +107,8 @@
             <img src="https://cdn.jsdelivr.net/gh/rsuppersahabatan/website-assets@0.0.3/img/logokemkes512.png" alt="Logo Kemkes" style="width:52px;height:52px;object-fit:contain;display:block;" />
           </div>
           <div class="header-title">
-            <h1>ANTRIAN UPDRS</h1>
-            <small>RS PERSAHABATAN</small>
+            <h1>ANTRIAN ONLINE</h1>
+            <small><?= htmlspecialchars(strtoupper($client_name), ENT_QUOTES, 'UTF-8') ?></small>
           </div>
         </div>
         <div class="header-clock">
@@ -100,17 +129,34 @@
           <div class="main-direction" id="direction_text">MENUNGGU PANGGILAN</div>
         </div>
 
-        <!-- Panel Samping — Video YouTube -->
+        <!-- Panel Samping — Video (YouTube / Local) -->
         <div class="side-panel" style="padding:0;overflow:hidden;">
-          <iframe
-            width="100%"
-            height="100%"
-            src="https://www.youtube.com/embed/ebZwRzwEpT8?autoplay=1&mute=1&loop=1&playlist=ebZwRzwEpT8&controls=0&showinfo=0&rel=0"
-            frameborder="0"
-            allow="autoplay; encrypted-media"
-            allowfullscreen
-            style="display:block;border:none;border-radius:18px;"
-          ></iframe>
+          <?php if ($video_src === 'youtube' && $youtube_id !== ''): ?>
+            <iframe
+              width="100%"
+              height="100%"
+              src="https://www.youtube.com/embed/<?= htmlspecialchars($youtube_id, ENT_QUOTES, 'UTF-8') ?>?autoplay=1&mute=1&loop=1&playlist=<?= htmlspecialchars($youtube_id, ENT_QUOTES, 'UTF-8') ?>&controls=0&showinfo=0&rel=0"
+              frameborder="0"
+              allow="autoplay; encrypted-media"
+              allowfullscreen
+              style="display:block;border:none;border-radius:18px;"
+            ></iframe>
+          <?php elseif ($video_src === 'local' && $video_link !== ''): ?>
+            <video
+              width="100%"
+              height="100%"
+              autoplay
+              muted
+              loop
+              playsinline
+              style="display:block;border:none;border-radius:18px;object-fit:cover;background:#000;"
+              src="<?= htmlspecialchars($video_link, ENT_QUOTES, 'UTF-8') ?>"
+            ></video>
+          <?php else: ?>
+            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-weight:600;">
+              VIDEO BELUM DIATUR
+            </div>
+          <?php endif; ?>
         </div>
 
               <!-- <div class="side-panel">
@@ -161,19 +207,28 @@
               </div>
             </div>
           <?php endforeach; ?>
+        <?php else: ?>
+          <div class="footer-loket-item" style="flex:1;justify-content:center;color:rgba(255,255,255,0.5);font-weight:600;">
+            BELUM ADA LOKET YANG DI-ASSIGN UNTUK CLIENT INI
+          </div>
         <?php endif; ?>
       </div>
 
-      <!-- ====== RUNNING TEXT ====== -->
-      <div class="footer-news">
-        <div class="running-text">
-          <strong>PENGUMUMAN:</strong>
-          Jam operasional : 12:00 - 19:00 WIB. &nbsp;|&nbsp;
-          Gunakan selalu masker di lingkungan rumah sakit. &nbsp;|&nbsp;
-          Selamat datang di UPDRS RS Persahabatan. &nbsp;|&nbsp;
-          Mohon menunggu nomor antrian Anda dipanggil.
+      <!-- ====== FOOTER TEXT (statis / running) ====== -->
+      <?php if (trim((string) $footer_text) !== ''): ?>
+        <div class="footer-news">
+          <?php if ($footer_mode === 'running'): ?>
+            <div class="running-text">
+              <strong>PENGUMUMAN:</strong>
+              <?= htmlspecialchars($footer_text, ENT_QUOTES, 'UTF-8') ?>
+            </div>
+          <?php else: ?>
+            <div class="static-text" style="text-align:center;padding:8px 16px;font-weight:600;">
+              <?= htmlspecialchars($footer_text, ENT_QUOTES, 'UTF-8') ?>
+            </div>
+          <?php endif; ?>
         </div>
-      </div>
+      <?php endif; ?>
 
     </div>
 

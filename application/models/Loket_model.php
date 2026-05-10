@@ -92,6 +92,36 @@ class Loket_model extends CI_Model {
         return $this->db->get()->result_array();
     }
     
+    // Ambil daftar loket berdasarkan id (apapun statusnya) + nomor antrian terakhir hari ini
+    public function get_by_ids_with_last_nomor(array $ids, $tanggal = null) {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if (empty($ids)) {
+            return array();
+        }
+        if ($tanggal === null) {
+            $tanggal = date('Y-m-d');
+        }
+
+        $subquery_nomor = '(SELECT a.nomor_antrian FROM antrian a '
+            . 'WHERE a.id_loket = loket.id '
+            . 'AND a.tanggal = ' . $this->db->escape($tanggal) . ' '
+            . 'AND a.waktu_panggil IS NOT NULL '
+            . 'ORDER BY a.waktu_panggil DESC LIMIT 1) AS nomor_terakhir';
+
+        $subquery_ket = '(SELECT a.keterangan FROM antrian a '
+            . 'WHERE a.id_loket = loket.id '
+            . 'AND a.tanggal = ' . $this->db->escape($tanggal) . ' '
+            . 'AND a.waktu_panggil IS NOT NULL '
+            . 'ORDER BY a.waktu_panggil DESC LIMIT 1) AS keterangan_terakhir';
+
+        $this->db->select('loket.*, layanan.nama_layanan, layanan.kode_huruf, ' . $subquery_nomor . ', ' . $subquery_ket, FALSE);
+        $this->db->from($this->table);
+        $this->db->join('layanan', 'layanan.id = loket.id_layanan', 'left');
+        $this->db->where_in('loket.id', $ids);
+        $this->db->order_by('loket.id', 'ASC');
+        return $this->db->get()->result_array();
+    }
+
     // Mengubah status buka/tutup loket
     public function update_status($id, $status) {
         $this->db->where('id', $id);

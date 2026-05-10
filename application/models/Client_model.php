@@ -35,19 +35,23 @@ class Client_model extends CI_Model {
         return $rows;
     }
     
-    // Ambil detail satu client spesifik (+ daftar loket)
+    // Ambil detail satu client spesifik (+ daftar loket + setting display)
     public function get_by_id($id) {
         $this->db->where('id', $id);
         $row = $this->db->get($this->table)->row_array();
 
         if ($row)
         {
+            // Daftar loket (1 baris per loket)
             $this->db->select('l.id, l.nama_loket');
             $this->db->from('client_loket cl');
             $this->db->join('loket l', 'l.id = cl.id_loket', 'inner');
             $this->db->where('cl.id_client', (int) $id);
             $this->db->order_by('l.nama_loket', 'ASC');
             $row['lokets'] = $this->db->get()->result_array();
+
+            // Setting display (0 atau 1 baris) — query terpisah agar tidak men-cross-join lokets
+            $row['display_settings'] = $this->db->get_where('client_display_settings', array('id_client' => (int) $id))->row_array();
         }
 
         return $row;
