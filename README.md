@@ -7,20 +7,24 @@ Klik link dibawah untuk mendukung pengembangan
 
 # Realtime Antrian
 
-Sistem antrian realtime berbasis web untuk rumah sakit/klinik/instansi pelayanan publik. Pengunjung mengambil nomor antrian secara mandiri dengan input NIK, petugas loket memanggil antrian dari panel admin, dan layar publik memperbarui nomor yang sedang dipanggil secara realtime melalui Redis Pub/Sub + Socket.IO — tanpa refresh.
+Sistem antrian realtime berbasis web untuk rumah sakit/klinik/instansi pelayanan publik. Pengunjung mengambil nomor antrian secara mandiri (di halaman publik **NIK wajib**), petugas loket memanggil antrian dari panel admin atau via API yang mem-publish ke Redis, dan layar publik (`/client/{id}`) memperbarui nomor yang dipanggil melalui **Redis Pub/Sub + Socket.IO** — tanpa refresh.
 
-Dibangun di atas **CodeIgniter 3** (backend & admin panel), **Node.js + Socket.IO** (realtime gateway), **Redis** (pub/sub & cache), dan **MySQL** (data antrian). Seluruh stack siap dijalankan via **Docker Compose**.
+Dibangun di atas **CodeIgniter 3** (backend & admin panel), **Node.js + Socket.IO** (realtime gateway), **Redis** (pub/sub), dan **MySQL** (data antrian). Seluruh stack siap dijalankan via **Docker Compose**.
 
 ## Fitur
 
-- **Pengambilan tiket mandiri** — pengunjung pilih layanan dan input NIK (16 digit) untuk mencetak nomor antrian.
-- **Panel petugas (loket)** — panggil berikutnya, panggil ulang, tandai selesai/batal, pindah antrian.
-- **Layar display publik** — menampilkan nomor yang sedang dipanggil di masing-masing loket, update realtime tanpa refresh.
-- **Realtime push** — perubahan status antrian langsung dikirim ke display & halaman petugas via Socket.IO, dipantik oleh Redis `PUBLISH` dari sisi PHP.
-- **Manajemen master data** — CRUD layanan, loket, pengguna, dan grup (role) berbasis Ion Auth.
-- **Reset harian otomatis** — nomor urut direset per tanggal, riwayat tetap tersimpan.
-- **Multi-layanan** — setiap layanan punya prefix huruf sendiri (A, B, C, …) dan bisa dilayani lebih dari satu loket.
-- **REST API** — endpoint JSON untuk modul **layanan**, **loket**, **antrian**, **users**, dan **groups** (list, create, update, delete, panggil antrian, simpan panggilan/panggil ulang, aktivasi user, dsb.) yang dilindungi **HTTP Basic Auth** via [chriskacerguis/codeigniter-restserver](https://github.com/chriskacerguis/codeigniter-restserver). Lihat [REST API](#rest-api).
+- **Pengambilan tiket mandiri** (`Welcome`) — pengunjung pilih layanan dan input **NIK 16 digit** untuk mencetak nomor; PHP mem-publish event **`antrian-baru-{nomor}`** ke Redis (berguna bagi subscriber lain; **`POST /api/antrian`** membuat tiket tanpa publish event ini).
+- **Panel petugas (admin/panggilan)** — panggil berikutnya, panggil ulang (broadcast saja), memanggil tiket tertentu lewat flow admin; pembaruan loket dapat diatur di master loket (`buka` / `tutup`).
+- **Manajemen antrian (admin)** — daftar antrian harian beserta status; operasi **selesai** / **batal** seperti yang tersedia di UI admin.
+- **Multi-display TV** — entitas **client** (profil layar): setiap layar dipetakan ke beberapa loket; URL publik **`/client`** memilih layar aktif, **`/client/{id}`** membuka layar untuk `client` tersebut.
+- **Pengaturan tampilan display** (`admin/display`) — skema warna, konten/video (mis. YouTube atau lokal), teks footer, mode footer statis/jalan.
+- **Layar display publik** — menampilkan nomor yang sedang dipanggil per loket yang di-assign ke client tersebut; menyaring pesan realtime agar hanya loket milik layar tersebut yang mengubah tampilan.
+- **Realtime push** — panel memanggil & endpoint **`/api/panggilan/*`** mem-publish pesan **`loketXX-NOMOR`** (opsional sufiks `|KETERANGAN`) ke channel Redis `realtime`; gateway Node membroadcast via Socket.IO. Endpoint **`POST /api/antrian/call`** hanya mengubah basis data **tanpa** publish ke display (gunakan **`POST /api/panggilan/call`** bila layar harus ikut berubah).
+- **Master data** — CRUD layanan, loket (termasuk assign user ke loket melalui relasi **`loket_user`**), pengguna, grup (**Ion Auth**), dan **client** (profil layar + loket via **`client_loket`**).
+- **Reset harian otomatis** — nomor urut per kombinasi **tanggal** + layanan (`tanggal` di tabel antrian).
+- **Multi-layanan** — tiap layanan punya **`kode_huruf`** (A, B, C, …) dan dapat dilayani oleh lebih dari satu loket.
+- **REST API** — modul **`layanan`**, **`loket`**, **`antrian`**, **`panggilan`** (panggilan + broadcast seperti admin), **`dashboard`** (statistik ringkas/server), **`users`**, **`groups`**; dilindungi **HTTP Basic Auth** via [chriskacerguis/codeigniter-restserver](https://github.com/chriskacerguis/codeigniter-restserver). Spesifikasi tambahan ada di [docs/api.json](docs/api.json). Detail di [REST API](#rest-api).
+- **Legacy / uji cepat** — controller **`Call_Legacy`** untuk skenario uji Redis/panggilan lama (tidak digunakan alur utama).
 - **Deploy sekali jalan** — `docker-compose up -d` menyiapkan PHP+Apache, Node.js, Redis, dan MySQL.
 
 ## Tampilan Aplikasi
@@ -57,9 +61,13 @@ Dibangun di atas **CodeIgniter 3** (backend & admin panel), **Node.js + Socket.I
 
 ![Master Layanan](ss/dashboard-layanan.png)
 
-**Master loket — CRUD loket/meja petugas, status buka/tutup, dan layanan yang dilayani**
+**Master loket — CRUD loket/meja petugas, status buka/tutup, assign user ke loket, dan layanan yang dilayani**
 
 ![Master Loket](ss/dashboard-loket.png)
+
+**Profil layar TV (client) — mapping loket per layar display**
+
+Gunakan tautan **`/client`** dan **`/client/{id}`** di browser untuk daftar pemilih layar dan layar publik aktual.
 
 **Manajemen pengguna — CRUD akun petugas**
 
@@ -74,44 +82,47 @@ Dibangun di atas **CodeIgniter 3** (backend & admin panel), **Node.js + Socket.I
 ```
 [Pengunjung]  --HTTP-->  [CodeIgniter / Welcome]  --INSERT-->  [MySQL]
                                      |
-                                     +--PUBLISH "realtime"-->  [Redis]
-                                                                  |
-                                                                  v
-[Petugas / Panel]  <--HTTP-->  [CodeIgniter / admin]         [Node.js + Socket.IO]
-                                     |                            ^
-                                     +--PUBLISH "realtime"---------+
-                                                                  |
-[Layar Display]  <======= WebSocket (Socket.IO) =================+
+                                     +--PUBLISH "realtime" (antrian-baru-…) -->  [Redis]
+                                                                                    |
+                                                                                    v
+[Petugas / Panel]  <--HTTP-->  [CodeIgniter / admin + api/panggilan]         [Node.js + Socket.IO]
+                                     |                                               ^
+                                     +--PUBLISH "realtime" (loketXX-NOMOR…)-------+
+                                     |                                               |
+[Layar Display /client/id]  <======== WebSocket (Socket.IO) ========================+
 ```
 
 Alur realtime:
 
-1. Aksi tiket (ambil / panggil / selesai) dijalankan oleh PHP dan menulis ke MySQL.
-2. PHP memanggil `PUBLISH realtime <pesan>` ke Redis.
-3. Node.js (`public/nodejs/server.js`) berlangganan channel `realtime` & `loop`, lalu mem-broadcast ke semua klien Socket.IO.
-4. Halaman display/petugas menerima pesan dan memperbarui tampilan.
+1. Tiket baru dari halaman publik menyimpan row di MySQL lalu **`PUBLISH realtime antrian-baru-{nomor_antrian}`** (lihat `Welcome::ambil`).
+2. Panggilan dari **panel admin** atau **`POST /api/panggilan/*`** memperbarui data bila diperlukan, lalu **`PUBLISH realtime`** dengan pola **`loketXX-{nomor}`** atau **`loketXX-{nomor}|{keterangan}`** (`XX` = id loket **dua digit**, diisi nol di depan bila perlu, mis. loket `3` → `loket03`).
+3. Node.js (`public/nodejs/server.js`) berlangganan channel **`realtime`** dan **`loop`**, lalu meneruskan string pesan ke klien Socket.IO.
+4. Halaman **`/client/{id}`** mem-parse payload dan hanya mengubah UI untuk loket yang termasuk profil **client** tersebut; panel admin dapat memakai Socket.IO untuk indikator realtime bila diimplementasikan di view.
 
 ## Struktur Folder
 
 ```
 Realtime_Antrian/
-├── application/          # Kode CodeIgniter (controller, model, view)
-│   ├── controllers/      # Welcome, Client, Auth, admin/*, api/*
-│   │   └── api/          # REST controllers: Layanan, Loket, Antrian, Users, Groups
+├── application/              # CodeIgniter (controller, model, view)
+│   ├── controllers/          # Welcome, Client, Auth, Call_Legacy, admin/*, api/*
+│   │   └── api/              # REST: Layanan, Loket, Antrian, Panggilan, Dashboard, Users, Groups
 │   ├── config/
-│   │   └── rest.php      # Konfigurasi REST server (basic auth, dll.)
-│   └── views/            # welcome_message, client/display, admin/*
-├── bin/                  # Helper CLI (install.php, server.sh, dll.)
+│   │   └── rest.php          # REST server + basic auth (username/password bisa dari env)
+│   └── views/                # welcome_message, client/display|all, admin/*, dll.
+├── bin/                      # install.php, router.php, server.sh, my-codeigniter.sh, check-diff.sh
 ├── database/
-│   └── schema.sql        # Skema + seeder awal (layanan, loket, users)
+│   └── schema.sql            # Skema + seeder awal (+ client, loket_user, dll.)
+├── docs/
+│   └── api.json              # Ringkasan OpenAPI/OpenAPI-style untuk REST
 ├── public/
-│   ├── index.php         # Front controller
-│   ├── assets/           # CSS/JS/image admin
-│   └── nodejs/           # Gateway realtime (Express + Socket.IO + Redis)
-├── ss/                   # Screenshot untuk README
-├── Dockerfile            # Image PHP 7.4 + Apache
-├── Dockerfile.node       # Image Node.js 18 (Socket.IO gateway)
-├── docker-compose.yml    # PHP, Node.js, Redis, MySQL
+│   ├── index.php             # Front controller
+│   ├── assets/               # CSS/JS (mis. frameworks/domprojects untuk publik/admin)
+│   └── nodejs/               # Gateway Socket.IO + subscriber Redis
+├── ss/                       # Screenshot README
+├── .env.example              # Contoh variabel lingkungan
+├── Dockerfile
+├── Dockerfile.node
+├── docker-compose.yml
 └── composer.json
 ```
 
@@ -136,48 +147,41 @@ Atau, jika ingin menjalankan tanpa Docker:
    cd Realtime_Antrian
    ```
 
-2. **(Opsional) buat file `.env`** di root untuk meng-override default:
+2. **(Opsional) salin `.env.example` → `.env`** di root dan sesuaikan (nilai di bawah selaras dengan default **`docker-compose.yml`** bila tidak di-override):
 
    ```env
-   # ====================================
-   # Realtime Antrian - Environment Config
-   # ====================================
-   # Copy this file to .env and adjust values as needed
    # cp .env.example .env
 
-   # ----- CODEIGNITER 3 ----
    CI_ENV=production
 
-   # ----- Redis -----
-   REDIS_HOST=127.0.0.1
+   # Redis (service compose bernama `redis`; dari host Windows pakai localhost + port map)
+   REDIS_HOST=redis
    REDIS_PORT=6379
-   REDIS_PASSWORD=Y5HZk8u07*fY
+   REDIS_PASSWORD=
 
-   # ----- MySQL -----
+   # MySQL — default aplikasi di compose: user `antrian`, password `antrian123`, DB `antrian_db`
    DB_HOST=mysql
-   DB_USER=root
-   DB_PASS=toor
+   DB_USER=antrian
+   DB_PASS=antrian123
    DB_NAME=antrian_db
    MYSQL_ROOT_PASSWORD=root123
 
-   # ----- Ports -----
    PHP_PORT=8080
    NODEJS_PORT=8085
    MYSQL_PORT=3306
-   REDIS_EXT_PORT=6379
+   # Port Redis di host: default compose memetakan host:(container) = 6380:6379
+   REDIS_EXT_PORT=6380
 
-   # ----- Socket.IO -----
-   # URL absolut ke service Socket.IO. Kosongkan di produksi (agar view pakai
-   # same-origin via reverse proxy Nginx/Apache). Untuk dev Windows tanpa proxy,
-   # isi dengan endpoint Node.js langsung, misal:
+   # Socket.IO — kosongkan di produksi bila di-proxy same-origin; dev lokal contoh:
    # SOCKET_URL=http://127.0.0.1:8085
    SOCKET_URL=
 
-
-   # ---- API BASIC AUTH ----
+   # REST Basic Auth — jika kosong, fallback di rest.php: admin / antrian2024
    USER_API=
    PASS_API=
    ```
+
+   Lihat juga [`.env.example`](.env.example) untuk contoh lain (port dev alternatif, dll.).
 
 3. **Build & jalankan stack**
 
@@ -195,14 +199,16 @@ Atau, jika ingin menjalankan tanpa Docker:
    docker exec -i antrian_mysql mysql -uroot -proot123 < database/schema.sql
    ```
 
-5. **Akses aplikasi**
+5. **Akses aplikasi** (ganti port jika `PHP_PORT` / `NODEJS_PORT` diubah)
 
-   | Halaman                 | URL                                |
-   | ----------------------- | ---------------------------------- |
-   | Landing / ambil antrian | <http://localhost:8080/>           |
-   | Display antrian publik  | <http://localhost:8080/client>     |
-   | Panel admin             | <http://localhost:8080/auth/login> |
-   | Socket.IO gateway       | `ws://localhost:8085`              |
+   | Halaman                           | URL                                              |
+   | --------------------------------- | ------------------------------------------------ |
+   | Landing / ambil antrian           | <http://localhost:8080/>                         |
+   | Daftar layar display (client)     | <http://localhost:8080/client>                   |
+   | Display publik untuk client `{id}` | <http://localhost:8080/client/1> (contoh `id=1`) |
+   | Panel admin (redirect ke dashboard) | <http://localhost:8080/admin>                  |
+   | Login admin (Ion Auth)            | <http://localhost:8080/auth/login>               |
+   | Socket.IO gateway                 | `http://localhost:8085` (WebSocket + polling)    |
 
    **Login default:** `admin@admin.com` / `password` (ubah segera setelah login pertama).
 
@@ -248,41 +254,48 @@ Atau, jika ingin menjalankan tanpa Docker:
 
 ## Skema Database (ringkas)
 
-- `layanan` — kategori antrian + prefix huruf (A/B/C/…)
-- `loket` — meja petugas, status buka/tutup, terkait ke `layanan` dan siapa petugas yang menjaga
-- `antrian` — transaksi tiket harian (`nomor_antrian`, `nomor_urut`, `status`, `id_loket`, NIK, timestamp)
-- `users`, `groups`, `users_groups`, `login_attempts` — **Ion Auth** untuk autentikasi admin
-- `admin_preferences` — preferensi tampilan AdminLTE
+- `layanan` — kategori antrian + `kode_huruf` (A/B/C/…)
+- `loket` — meja petugas, `status_buka`, terkait ke `id_layanan`
+- `loket_user` — banyak-ke-banyak: user (petugas Ion Auth) yang di-assign ke loket
+- `antrian` — transaksi harian (`tanggal`, `nomor_antrian`, `nomor_urut`, `status`, `id_loket`, `nik`, `keterangan`, waktu-waktu)
+- `client` — profil layar TV / display
+- `client_loket` — loket mana saja yang ditampilkan pada suatu `client`
+- `client_display_settings` — preferensi tampilan per client (warna, video, footer, font)
+- `users`, `groups`, `users_groups`, `login_attempts` — **Ion Auth**
+- `admin_preferences` — preferensi AdminLTE
 
-Detail lengkap & seeder contoh lihat [database/schema.sql](database/schema.sql).
+Detail & seeder: [database/schema.sql](database/schema.sql).
 
 ## Channel Redis
 
-| Channel    | Dipakai untuk                                                                                 |
-| ---------- | --------------------------------------------------------------------------------------------- |
-| `realtime` | Broadcast event tiket: antrian baru terbit, antrian dipanggil, panggil ulang, selesai, batal. |
-| `loop`     | Pesan carousel/ticker pada display publik (opsional).                                         |
+| Channel    | Dipakai untuk                                                                                                                                 |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `realtime` | **Event tiket baru (halaman Welcome):** `antrian-baru-{nomor_antrian}`. **Panggilan ke TV / display:** `loketXX-{nomor}` atau `loketXX-{nomor}\|{keterangan}` dari admin atau **`/api/panggilan/*`**. |
+| `loop`     | Pesan tambahan untuk ticker/carousel pada display publik (opsional).                                                                        |
 
-Format pesan mengikuti konvensi string sederhana (mis. `antrian-baru-A12`, `panggil-A12-loket-1`) agar mudah di-parse oleh frontend display.
+View display saat ini (`public/assets/frameworks/domprojects/js/client.js`) **utamanya memproses** payload **`loketXX-…`** untuk memperbarui nomor yang dipanggil; string lain di channel yang sama bisa diabaikan oleh klien tersebut.
 
 ## REST API
 
-Modul **layanan**, **loket**, **antrian**, **panggilan**, **users**, dan **groups** diekspos sebagai REST API JSON di bawah prefix `/api/*`, dibangun dengan [chriskacerguis/codeigniter-restserver](https://github.com/chriskacerguis/codeigniter-restserver). Controller ada di [application/controllers/api/](application/controllers/api/) dan konfigurasi server REST di [application/config/rest.php](application/config/rest.php), API Json aplikasi realtime ada [di sini](./docs/api.json).
+Modul **layanan**, **loket**, **antrian**, **panggilan**, **dashboard**, **users**, dan **groups** diekspos sebagai REST JSON di bawah prefix **`/api/*`** ([chriskacerguis/codeigniter-restserver](https://github.com/chriskacerguis/codeigniter-restserver)).
+
+- Controller: [application/controllers/api/](application/controllers/api/)
+- Konfigurasi: [application/config/rest.php](application/config/rest.php)
+- Ringkasan permukaan API: [docs/api.json](docs/api.json)
 
 ### Autentikasi
 
-Seluruh endpoint dilindungi **HTTP Basic Auth**. Kredensial default ada di [application/config/rest.php](application/config/rest.php) pada array `$config['rest_valid_logins']`:
+Seluruh endpoint dilindungi **HTTP Basic Auth**. Username/password dibaca dari environment **`USER_API`** / **`PASS_API`**; jika kosong dipakai fallback di **`rest_valid_logins`** (default aplikasi **`admin`** / **`antrian2024`**):
 
 ```php
 $config['rest_valid_logins'] = [
-    'admin' => 'antrian2024',
+    (getenv('USER_API') ?: 'admin') => (getenv('PASS_API') ?: 'antrian2024'),
 ];
-# Liat contoh di .env.example dan ganti sesuai dengan kebutuhan
 ```
 
-> **Ganti kredensial default sebelum deploy ke production.** Tambah user baru dengan menambah entry pada array di atas. Untuk memaksa HTTPS, set `$config['force_https'] = true` di file yang sama.
+> **Produksi:** isi **`USER_API` / `PASS_API`** di `.env` atau ubah fallback di file di atas. Untuk HTTPS wajib, set `$config['force_https'] = true` di [application/config/rest.php](application/config/rest.php).
 
-Request tanpa header `Authorization` akan menerima response `401 Unauthorized` beserta header `WWW-Authenticate: Basic realm="Realtime Antrian REST API"`.
+Request tanpa header `Authorization` mendapat `401 Unauthorized` dan header `WWW-Authenticate: Basic realm="Realtime Antrian REST API"`.
 
 ### Daftar Endpoint
 
@@ -300,26 +313,54 @@ Base URL (Docker default): `http://localhost:8080/api`
 
 #### Loket — `/api/loket`
 
-| Method   | URI                      | Keterangan                                                                                                                     |
-| -------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| `GET`    | `/api/loket`             | List semua loket                                                                                                               |
-| `GET`    | `/api/loket/{id}`        | Detail satu loket                                                                                                              |
-| `GET`    | `/api/loket/buka`        | Loket yang sedang buka. Query: `?with_last=1&tanggal=YYYY-MM-DD` untuk sertakan nomor antrian terakhir hari tersebut per loket |
-| `POST`   | `/api/loket`             | Tambah loket. Body: `id_layanan`, `nama_loket`, `status_buka?` (`buka`\|`tutup`)                                               |
-| `PUT`    | `/api/loket/status/{id}` | Update status. Body: `status_buka` (`buka`\|`tutup`)                                                                           |
-| `DELETE` | `/api/loket/{id}`        | Hapus loket                                                                                                                    |
+| Method   | URI                      | Keterangan                                                                                                                                 |
+| -------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/loket`             | List semua loket (response detail biasanya menyertakan user ter-assign)                                                                     |
+| `GET`    | `/api/loket/{id}`        | Detail satu loket                                                                                                                          |
+| `GET`    | `/api/loket/buka`        | Loket buka. Query **`?with_last=1`** + opsional **`&tanggal=YYYY-MM-DD`** untuk menyertakan nomor antrian terakhir per loket pada tanggal itu |
+| `GET`    | `/api/loket/users/{id}`  | Daftar user yang ter-assign ke loket `{id}`                                                                                                |
+| `POST`   | `/api/loket`             | Tambah loket. Body: `id_layanan`, `nama_loket`, `status_buka?` (`buka`\|`tutup`), `id_users?` (array id user)                              |
+| `PUT`    | `/api/loket/status/{id}` | Update status buka/tutup. Body: `status_buka`                                                                                                |
+| `PUT`    | `/api/loket/users/{id}`  | Sinkron assign user (replace-all). Body: `id_users` (array; boleh kosong untuk mengosongkan assign)                                         |
+| `DELETE` | `/api/loket/{id}`        | Hapus loket                                                                                                                                |
 
 #### Antrian — `/api/antrian`
+
+Operasi di bawah ini mengubah data di MySQL. Hanya **`POST /api/panggilan/*`** yang sekaligus **mem-publish ke Redis** agar display Socket.IO ikut berubah (sama seperti panel admin).
 
 | Method   | URI                            | Keterangan                                                                                                                                                                                                                                                             |
 | -------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GET`    | `/api/antrian`                 | Daftar antrian + rekap per status. Query: `?tanggal=YYYY-MM-DD` (default hari ini)                                                                                                                                                                                     |
-| `POST`   | `/api/antrian`                 | Generate nomor antrian baru. Body: `id_layanan`, `nik?` (16 digit)                                                                                                                                                                                                     |
-| `POST`   | `/api/antrian/call`            | Panggil antrian berikutnya untuk sebuah loket. Body: `id_loket`                                                                                                                                                                                                        |
-| `POST`   | `/api/antrian/panggilansimpan` | Simpan panggilan manual / panggil ulang tiket tertentu. Body: `id_antrian`, `id_loket`. Validasi: layanan loket harus cocok dengan layanan antrian; tiket `selesai`/`batal` ditolak. Response memuat flag `is_ulang` bila tiket sudah berstatus `dipanggil` sebelumnya |
-| `PUT`    | `/api/antrian/selesai/{id}`    | Tandai antrian selesai (isi `waktu_selesai`)                                                                                                                                                                                                                           |
-| `PUT`    | `/api/antrian/batal/{id}`      | Tandai antrian batal                                                                                                                                                                                                                                                   |
-| `DELETE` | `/api/antrian/{id}`            | Hapus record antrian                                                                                                                                                                                                                                                   |
+| `POST`   | `/api/antrian`                 | Buat nomor baru. Body: **`id_layanan`** (wajib), **`nik?`** (jika diisi harus 16 digit), **`keterangan?`**, **`nomor_antrian?`** (override manual). **Tidak** sama dengan halaman Welcome: **tidak** mem-publish **`antrian-baru-`** ke Redis                                                                  |
+| `POST`   | `/api/antrian/call`            | Panggil berikutnya untuk loket. Body: `id_loket`. **Tidak** broadcast Redis (untuk integrasi “diam” / hanya DB)                                                                                                                                                        |
+| `POST`   | `/api/antrian/panggilansimpan` | Simpan panggilan manual / panggil ulang. Body: `id_antrian`, `id_loket`. Validasi layanan; tiket `selesai`/`batal` ditolak. Response berisi `is_ulang` bila sudah pernah `dipanggil`                                                                                  |
+| `PUT`    | `/api/antrian/selesai/{id}`    | Tandai selesai                                                                                                                                                                                                                                                          |
+| `PUT`    | `/api/antrian/batal/{id}`      | Tandai batal                                                                                                                                                                                                                                                           |
+| `DELETE` | `/api/antrian/{id}`            | Hapus record                                                                                                                                                                                                                                                           |
+
+#### Panggilan — `/api/panggilan`
+
+Setara perilaku **broadcast** dengan **admin/panggilan**: setelah logika panggilan, PHP **`PUBLISH`** ke Redis (`loketXX-…`).
+
+| Method | URI                      | Keterangan                                                                                          |
+| ------ | ------------------------ | --------------------------------------------------------------------------------------------------- |
+| `GET`  | `/api/panggilan/loket`   | Loket yang sedang buka                                                                              |
+| `POST` | `/api/panggilan/call`    | Panggil antrian berikutnya + broadcast. Body: `id_loket`                                            |
+| `POST` | `/api/panggilan/recall`  | Panggil ulang (hanya broadcast). Body: `id_loket`, `nomor` (nomor antrian, mis. `A12`)            |
+| `POST` | `/api/panggilan/simpan`  | Panggil tiket tertentu / panggil ulang + broadcast. Body: `id_antrian`, `id_loket`                  |
+
+#### Dashboard — `/api/dashboard`
+
+Statistik ringkas untuk monitoring (juga memakai model dashboard admin).
+
+| Method | URI                            | Keterangan                                                                                |
+| ------ | ------------------------------ | ----------------------------------------------------------------------------------------- |
+| `GET`  | `/api/dashboard`               | Gabungan: count users/groups/loket, disk/memory, rekap antrian & loket. Query: `?tanggal=` |
+| `GET`  | `/api/dashboard/summary`       | Count users, groups, loket                                                                |
+| `GET`  | `/api/dashboard/system`        | Pemakaian disk & memory                                                                   |
+| `GET`  | `/api/dashboard/antrian_status` | Rekap antrian per status. Query: `?tanggal=`                                            |
+| `GET`  | `/api/dashboard/antrian_loket`  | Rekap antrian per loket. Query: `?tanggal=`                                           |
+| `GET`  | `/api/dashboard/loket_status`   | Jumlah loket buka vs tutup                                                              |
 
 #### Users — `/api/users`
 
@@ -384,7 +425,7 @@ curl -u admin:antrian2024 \
      http://localhost:8080/api/antrian
 ```
 
-**cURL — panggil antrian berikutnya untuk loket 1**
+**cURL — panggil antrian berikutnya (hanya DB, tanpa update display Socket.IO)**
 
 ```bash
 curl -u admin:antrian2024 \
@@ -393,13 +434,31 @@ curl -u admin:antrian2024 \
      http://localhost:8080/api/antrian/call
 ```
 
-**cURL — simpan panggilan manual / panggil ulang tiket tertentu**
+**cURL — panggil berikutnya + broadcast ke display (disarankan untuk TV)**
+
+```bash
+curl -u admin:antrian2024 \
+     -X POST \
+     -d "id_loket=1" \
+     http://localhost:8080/api/panggilan/call
+```
+
+**cURL — simpan panggilan manual / panggil ulang (DB saja, tanpa broadcast)**
 
 ```bash
 curl -u admin:antrian2024 \
      -X POST \
      -d "id_antrian=12&id_loket=1" \
      http://localhost:8080/api/antrian/panggilansimpan
+```
+
+**cURL — simpan panggilan + broadcast (setara perilaku admin untuk TV)**
+
+```bash
+curl -u admin:antrian2024 \
+     -X POST \
+     -d "id_antrian=12&id_loket=1" \
+     http://localhost:8080/api/panggilan/simpan
 ```
 
 **cURL — tandai antrian selesai**
@@ -444,14 +503,15 @@ Authorization: Basic YWRtaW46YW50cmlhbjIwMjQ=
 
 ## Troubleshooting
 
-- **Display tidak update** — cek container `antrian_nodejs` berjalan dan port `8085` terbuka. Pastikan browser tidak diblokir CORS/mixed-content.
+- **Display tidak berubah setelah hit API** — pastikan pemanggilan memakai **`/api/panggilan/*`** atau panel admin, bukan hanya **`/api/antrian/call`** (yang sengaja **tidak** mem-publish Redis). Pastikan loket ada di **`client_loket`** untuk **`/client/{id}`** yang dibuka browser.
+- **Display tidak update** — cek container `antrian_nodejs` berjalan dan **`NODEJS_PORT`** (default `8085`) terbuka; **`SOCKET_URL`** di `.env`/view mengarah ke gateway bila akses frontend beda origin. Redis **dengan password**: pastikan PHP **dan** proses Node memakai kredensial yang sama (`REDIS_PASSWORD`); di `docker-compose.yml` layanan **`nodejs`** perlu juga menerima variabel tersebut jika Redis dijaga password.
 - **`redis` connection refused** — pastikan service `redis` up (`docker-compose ps`) dan `REDIS_HOST`/`REDIS_PORT` konsisten antara PHP dan Node.js.
 - **Nomor antrian tidak reset** — reset dilakukan per tanggal (`tanggal = CURDATE()` di tabel `antrian`). Pastikan timezone server sesuai.
 - **`server.js` tidak ketemu** di container Node.js — rebuild tanpa cache: `docker-compose up --build -d`.
 - **REST API selalu 401** — pastikan header `Authorization: Basic ...` terkirim (Apache `mod_php` biasanya aman, beberapa setup FastCGI perlu menambahkan `SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1` di `.htaccess`). Cek juga password di [application/config/rest.php](application/config/rest.php) sesuai dengan yang dikirim.
 - **REST API 404 padahal URL benar** — pastikan `mod_rewrite` aktif dan `public/.htaccess` terbaca; tanpa itu URL harus berbentuk `http://host/index.php/api/layanan`.
 
-## aaPanel Users by Cloude
+## aaPanel Users (Cloud)
 
 1. Cek user PHP-FPM
 
@@ -500,7 +560,7 @@ Authorization: Basic YWRtaW46YW50cmlhbjIwMjQ=
 - [Socket.IO](https://socket.io/) & [node-redis](https://github.com/redis/node-redis) untuk realtime gateway
 - Pola dasar realtime gateway terinspirasi dari [vanuganti/realtime](http://github.com/vanuganti/realtime)
 
-## Unknowledge & Disclaimer
+## Acknowledgements & Disclaimer
 
 - [Forked From Realtime Antrian Bank](https://github.com/siagung/CI_Redis_Realtime_Antrian_Bank)
 - [Clone and Modification From CI AdminLTE](https://github.com/domProjects/CI-AdminLTE)
