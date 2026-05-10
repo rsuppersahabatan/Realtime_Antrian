@@ -33,11 +33,15 @@ Dibangun di atas **CodeIgniter 3** (backend & admin panel), **Node.js + Socket.I
 
 **Landing page — pengambilan nomor antrian oleh pengunjung**
 
-![Landing Page](ss/landing-page.png)
+![Landing Page](ss/client-welcome.png)
 
 **Display antrian — layar publik yang menampilkan nomor yang sedang dipanggil**
 
-![Display Antrian](ss/display.png)
+![Display Antrian](ss/client-display-landing.png)
+
+**Display antrian — tampilan detail saat nomor dipanggil**
+
+![Display Antrian Detail](ss/client-display-landing-detail.png)
 
 ### Panel Admin
 
@@ -47,35 +51,41 @@ Dibangun di atas **CodeIgniter 3** (backend & admin panel), **Node.js + Socket.I
 
 **Dashboard utama — ringkasan antrian hari ini**
 
-![Dashboard](ss/dashboard-1.png)
+![Dashboard](ss/admin-dashboard.png)
 
 **Manajemen antrian — daftar seluruh tiket hari ini beserta statusnya**
 
-![Manajemen Antrian](ss/dashboard-antrian.png)
+![Manajemen Antrian](ss/admin-antrian.png)
 
 **Panel panggilan — dipakai petugas loket untuk memanggil antrian**
 
-![Panel Panggilan](ss/dashboard-panggilan.png)
+![Panel Panggilan](ss/admin-panggilan.png)
 
 **Master layanan — CRUD jenis layanan dan prefix hurufnya**
 
-![Master Layanan](ss/dashboard-layanan.png)
+![Master Layanan](ss/admin-layanan.png)
 
 **Master loket — CRUD loket/meja petugas, status buka/tutup, assign user ke loket, dan layanan yang dilayani**
 
-![Master Loket](ss/dashboard-loket.png)
+![Master Loket](ss/admin-loket.png)
 
 **Profil layar TV (client) — mapping loket per layar display**
+
+![Profil Layar TV](ss/admin-display-antrian.png)
+
+**Pengaturan tampilan display — skema warna, konten/video, footer, dan font per client**
+
+![Pengaturan Display](ss/admin-display-antrian-setting.png)
 
 Gunakan tautan **`/client`** dan **`/client/{id}`** di browser untuk daftar pemilih layar dan layar publik aktual.
 
 **Manajemen pengguna — CRUD akun petugas**
 
-![Pengguna](ss/dashboard-users.png)
+![Pengguna](ss/admin-pengguna.png)
 
 **Manajemen grup/role**
 
-![Grup](ss/dashboard-groups.png)
+![Grup](ss/admin-group.png)
 
 ## Arsitektur Singkat
 
