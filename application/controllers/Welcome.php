@@ -21,7 +21,7 @@ class Welcome extends Public_Controller {
     {
         $this->_init_minify();
         $this->data['mode']    = 'pilih';
-        $this->data['layanan'] = $this->Layanan_model->get_all();
+        $this->data['layanan'] = $this->Layanan_model->get_all_show_welcome();
         $this->data['loket']   = $this->Loket_model->get_loket_buka();
         $this->data['error']   = $this->session->flashdata('error');
         $this->data['nik_old'] = (string) $this->session->flashdata('nik');

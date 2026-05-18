@@ -63,6 +63,7 @@ class Loket_model extends CI_Model {
         $this->db->from($this->table);
         $this->db->join('layanan', 'layanan.id = loket.id_layanan', 'left');
         $this->db->where('loket.status_buka', 'buka');
+        $this->db->where('layanan.show_welcome', 'ya');
         return $this->db->get()->result_array();
     }
 
@@ -88,6 +89,7 @@ class Loket_model extends CI_Model {
         $this->db->from($this->table);
         $this->db->join('layanan', 'layanan.id = loket.id_layanan', 'left');
         $this->db->where('loket.status_buka', 'buka');
+        $this->db->where('layanan.show_welcome', 'ya');
         $this->db->order_by('loket.id', 'ASC');
         return $this->db->get()->result_array();
     }

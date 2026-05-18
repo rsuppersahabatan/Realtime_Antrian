@@ -120,7 +120,7 @@
                         class="layanan-running"
                         style="height:<?= $vh ?>px;overflow-y:auto;position:relative;scroll-behavior:auto;mask-image:linear-gradient(180deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);-webkit-mask-image:linear-gradient(180deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);">
                         <div class="layanan-running-track">
-                            <?php for ($pass = 0; $pass < 2; $pass++): ?>
+                            <?php for ($pass = 0; $pass < 1; $pass++): ?>
                                 <?php foreach ($layanan as $ly): ?>
                                     <div class="layanan-card clearfix"<?= $pass === 1 ? ' aria-hidden="true"' : '' ?>>
                                         <span class="layanan-kode"><?= htmlspecialchars($ly['kode_huruf'], ENT_QUOTES, 'UTF-8') ?></span>
