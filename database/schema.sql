@@ -15,9 +15,11 @@ CREATE TABLE IF NOT EXISTS `layanan` (
   `kode_huruf` VARCHAR(5) NOT NULL UNIQUE COMMENT 'Misal: A, B, CS',
   `nama_layanan` VARCHAR(100) NOT NULL COMMENT 'Misal: Poli Umum, Kasir',
   `keterangan` TEXT NULL,
+  `show_welcome` enum('ya','tidak') NOT NULL DEFAULT 'tidak',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 -- --------------------------------------------------------
 -- 2. Tabel Loket (Meja Petugas)
