@@ -10,7 +10,7 @@
 // ====== KONFIGURASI EDGE-TTS ======
 // Semua bisa dioverride dari display.php dengan men-set window.tts* SEBELUM
 // file ini di-load, mis. `<script>window.ttsApiBase='https://tts.example';</script>`
-var ttsApiBase   = (typeof window !== 'undefined' && window.ttsApiBase)   || 'http://localhost:8021';
+var ttsApiBase   = (typeof window !== 'undefined' && window.ttsApiBase)   || 'http://localhost:8085';
 var ttsApiKey    = (typeof window !== 'undefined' && window.ttsApiKey)    || '';
 var ttsVoice     = (typeof window !== 'undefined' && window.ttsVoice)     || 'female';
 var ttsRate      = (typeof window !== 'undefined' && window.ttsRate)      || '+0%';

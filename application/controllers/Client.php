@@ -24,6 +24,12 @@ class Client extends Public_Controller {
         $this->data['client'] = $client;
         $this->data['display'] = $this->_get_display_settings($id);
 
+        // Endpoint TTS dipakai view untuk mengeset window.ttsApiBase sebelum tts.js
+        // memuat. Tts.js akan POST {nomor antrian, nama, loket} (sebagai 1 kalimat
+        // hasil buatTeksPanggilan) ke `${tts_api_base}/tts` untuk men-generate suara.
+        $tts_api_base = (string) $this->config->item('tts_api_base');
+        $this->data['tts_api_base'] = $tts_api_base !== '' ? rtrim($tts_api_base, '/') : 'http://localhost:8085';
+
         $this->load->library('minify');
         $this->minify->css_dir = 'assets/frameworks/domprojects/css';
         $this->minify->js_dir = 'assets/frameworks/domprojects/js';
@@ -32,7 +38,7 @@ class Client extends Public_Controller {
         $this->minify->compression_engine = array('css' => 'minify', 'js' => 'jsmin');
 
         $this->minify->css('client.css');
-        $this->minify->js('client.js');
+        $this->minify->js('tts.js');
 
         $this->data['minified_css'] = $this->minify->deploy_css(TRUE, 'client.min.css');
         $this->data['minified_js'] = $this->minify->deploy_js(TRUE, 'client.min.js');

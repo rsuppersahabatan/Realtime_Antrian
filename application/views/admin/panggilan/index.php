@@ -79,17 +79,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 				</section>
 			</div>
 
-<script type="text/javascript" src="<?php echo base_url('assets/script/soundmanager2-nodebug-jsmin.js'); ?>"></script>
-<script type="text/javascript" src="<?php echo base_url('assets/script/terbilang.js'); ?>"></script>
 <script type="text/javascript">
-/* soundManager boleh dikonfigurasi lebih awal (tidak butuh jQuery). */
-soundManager.url           = '<?php echo base_url('assets/swf/'); ?>';
-soundManager.preferFlash   = false;
-soundManager.useHTML5Audio = true;
+/* Pemutaran audio dilakukan di display via TTS (server.js + tts.js).
+   Admin panel cukup mem-broadcast event panggilan via Redis — tidak memutar
+   suara lokal supaya tidak terdengar dobel kalau operator & display berada
+   di mesin/speaker yang sama. */
 
-/* Tunggu DOMContentLoaded agar jQuery (dimuat di footer template) sudah siap. */
 document.addEventListener('DOMContentLoaded', function () {
-	var audioBase = '<?php echo base_url('assets/audio/'); ?>';
 	var callUrl   = '<?php echo site_url('admin/panggilan/call'); ?>';
 	var recallUrl = '<?php echo site_url('admin/panggilan/recall'); ?>';
 	var sockUrl   = <?php $__s = $this->config->item('socket_url'); echo $__s ? json_encode($__s) : "window.location.protocol + '//' + window.location.host"; ?>;
@@ -100,51 +96,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		disconnected: '<?php echo lang('panggilan_disconnected'); ?>',
 		reconnecting: '<?php echo lang('panggilan_reconnecting'); ?>'
 	};
-
-	/* ---------- Audio ---------- */
-	function buildSoundList(nomor) {
-		var list  = [];
-		var match = String(nomor).match(/^([a-zA-Z]+)(\d+)$/);
-
-		if (match) {
-			var prefix = match[1].toUpperCase();
-			var angka  = match[2];
-
-			for (var h = 0; h < prefix.length; h++) {
-				list.push('huruf/' + prefix[h].toLowerCase());
-			}
-
-			if (parseInt(angka, 10) > 0) {
-				var spoken = terbilang(angka).trim().replace(/\s+/g, '-');
-				list = list.concat(spoken.split('-'));
-			}
-		} else {
-			var spoken = terbilang(nomor).trim().replace(/\s+/g, '-');
-			list = spoken.split('-');
-		}
-
-		return list;
-	}
-
-	function playAntrian(nomor) {
-		var list = buildSoundList(nomor);
-		if ( ! list.length) return;
-
-		var sounds = [];
-		list.forEach(function (name, i) {
-			sounds[i] = soundManager.createSound({
-				id      : 'snd-' + Date.now() + '-' + i,
-				volume  : 100,
-				url     : audioBase + name + '.wav',
-				onfinish: function () {
-					this.destruct();
-					if (sounds[i + 1]) sounds[i + 1].play();
-				}
-			});
-		});
-
-		if (sounds[0]) sounds[0].play();
-	}
 
 	/* ---------- AJAX ---------- */
 	function toggleBusy($card, busy) {
@@ -162,7 +113,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		}).done(function (res) {
 			if (res.status === 'ok') {
 				$card.find('.loket-nomor').text(res.nomor);
-				playAntrian(res.nomor);
 			} else {
 				alert(res.message || LABEL.error);
 			}
@@ -185,9 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			type    : 'POST',
 			dataType: 'json'
 		}).done(function (res) {
-			if (res.status === 'ok') {
-				playAntrian(res.nomor);
-			} else {
+			if (res.status !== 'ok') {
 				alert(res.message || LABEL.error);
 			}
 		}).fail(function () {

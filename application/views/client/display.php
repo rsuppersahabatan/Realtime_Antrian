@@ -86,6 +86,12 @@
     <script type="text/javascript">
       var socketUrl = <?php $__s = $this->config->item('socket_url'); echo $__s ? json_encode($__s) : "window.location.protocol + '//' + window.location.host"; ?>;
 
+      // Override default ttsApiBase di tts.js. HARUS diset sebelum tts.js / client.min.js
+      // di-load (di akhir <body>) agar `var ttsApiBase = window.ttsApiBase || '<default>'`
+      // membaca nilai ini. Panggilan TTS: POST `${ttsApiBase}/tts` dengan kalimat berisi
+      // nomor antrian + nama (keterangan) + loket — lihat buatTeksPanggilan() di tts.js.
+      window.ttsApiBase = <?= json_encode(isset($tts_api_base) ? $tts_api_base : 'http://localhost:8085') ?>;
+
       var audioBase = "<?= base_url('assets/audio/') ?>";
       var soundManagerReady = false;
 
@@ -288,7 +294,7 @@
       </div>
     </div>
 
-    <?= isset($minified_js) ? $minified_js : '<script src="' . base_url('assets/frameworks/domprojects/js/client.js') . '"></script>' ?>
+    <?= isset($minified_js) ? $minified_js : '<script src="' . base_url('assets/frameworks/domprojects/js/tts.js') . '"></script>' ?>
 
     <!-- Fallback jQuery if not loaded from relative path, keep Bootstrap js functioning -->
     <script>

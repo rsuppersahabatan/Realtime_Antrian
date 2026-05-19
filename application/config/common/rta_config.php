@@ -30,3 +30,15 @@ $config['avatar_dir']     = $config['upload_dir'] . '/avatar';
 | di .env.
 */
 $config['socket_url']     = getenv('SOCKET_URL') ?: '';
+
+/*
+|--------------------------------------------------------------------------
+| TTS (Edge-TTS gateway)
+|--------------------------------------------------------------------------
+| Base URL service TTS yang dipakai display antrian untuk men-generate
+| suara panggilan (nomor antrian + nama + loket). View menyetel
+| `window.ttsApiBase` dari nilai ini SEBELUM tts.js di-load, sehingga
+| override per-deployment cukup via env TTS_API_BASE tanpa mengedit JS.
+| Jangan diberi trailing slash — kode JS menggabungkan dengan '/tts'.
+*/
+$config['tts_api_base']   = getenv('TTS_API_BASE') ?: 'http://localhost:8085';
