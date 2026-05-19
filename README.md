@@ -576,6 +576,7 @@ Authorization: Basic YWRtaW46YW50cmlhbjIwMjQ=
 - [Clone and Modification From CI AdminLTE](https://github.com/domProjects/CI-AdminLTE)
 - [Use Composer Style to Use Codeigniter](https://github.com/kenjis/codeigniter-composer-installer.git)
 - [Codeigniter 3 Full PHP 8 Supports](https://github.com/pocketarc/codeigniter.git)
+- [EDGE TTS For Audio Indonesian](https://github.com/rsuppersahabatan/Edge-TTS-API)
 - [Use AI ~ AntiGravity and Cloude For Task List](https://topidesta.my.id/era-ai-untuk-programmer-30an/)
 
 ## Lisensi
