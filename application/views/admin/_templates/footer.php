@@ -28,6 +28,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
         <script src="<?php echo base_url($plugins_dir . '/colorpickersliders/colorpickersliders.min.js'); ?>"></script>
 <?php endif; ?>
         <script src="<?php echo base_url($frameworks_dir . '/adminlte/js/adminlte.min.js'); ?>"></script>
+        <script>
+            if ($.AdminLTE && $.AdminLTE.options) {
+                $.AdminLTE.options.navbarMenuHeight = '70px';
+            }
+        </script>
         <script src="<?php echo base_url($frameworks_dir . '/domprojects/js/dp.min.js'); ?>"></script>
     </body>
 </html>

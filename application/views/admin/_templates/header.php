@@ -42,6 +42,61 @@ defined('BASEPATH') OR exit('No direct script access allowed');
         <link rel="stylesheet" href="<?php echo base_url($plugins_dir . '/colorpickersliders/colorpickersliders.min.css'); ?>">
 <?php endif; ?>
         <link rel="stylesheet" href="<?php echo base_url($frameworks_dir . '/domprojects/css/dp.min.css'); ?>">
+        <style>
+            .navbar-nav > .language-menu > .dropdown-menu {
+                width: auto !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                height: auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                padding: 5px 0 !important;
+                margin: 0 !important;
+            }
+            .navbar-nav > .language-menu > .dropdown-menu > li {
+                height: auto !important;
+                min-height: 0 !important;
+            }
+            .navbar-nav > .language-menu > .dropdown-menu > li.header {
+                padding: 7px 15px !important;
+                white-space: nowrap;
+                background-color: #ffffff;
+                border-bottom: 1px solid #f4f4f4;
+                color: #444;
+                font-size: 13px;
+            }
+            .navbar-nav > .language-menu > .dropdown-menu .menu {
+                list-style: none;
+                margin: 0 !important;
+                padding: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            .navbar-nav > .language-menu > .dropdown-menu .menu > li {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .navbar-nav > .language-menu > .dropdown-menu .menu > li > a {
+                display: block;
+                padding: 6px 15px !important;
+                white-space: nowrap;
+                border-bottom: 0 !important;
+            }
+            .navbar-nav > .language-menu > .dropdown-menu .menu > li > a:hover {
+                background: #f4f4f4;
+                text-decoration: none;
+            }
+            .navbar-nav > .language-menu > .dropdown-menu .menu > li > a > .fa {
+                margin-right: 5px;
+            }
+
+            .slimScrollDiv {
+                position: relative;
+                overflow: hidden;
+                width: auto;
+                height: 70px;
+            }
+        </style>
 <?php if ($mobile === FALSE): ?>
         <!--[if lt IE 9]>
             <script src="<?php echo base_url($plugins_dir . '/html5shiv/html5shiv.min.js'); ?>"></script>
