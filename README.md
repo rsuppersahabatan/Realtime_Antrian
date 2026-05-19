@@ -283,7 +283,7 @@ Detail & seeder: [database/schema.sql](database/schema.sql).
 | `realtime` | **Event tiket baru (halaman Welcome):** `antrian-baru-{nomor_antrian}`. **Panggilan ke TV / display:** `loketXX-{nomor}` atau `loketXX-{nomor}\|{keterangan}` dari admin atau **`/api/panggilan/*`**. |
 | `loop`     | Pesan tambahan untuk ticker/carousel pada display publik (opsional).                                                                        |
 
-View display saat ini (`public/assets/frameworks/domprojects/js/client.js`) **utamanya memproses** payload **`loketXX-…`** untuk memperbarui nomor yang dipanggil; string lain di channel yang sama bisa diabaikan oleh klien tersebut.
+View display saat ini (`public/assets/frameworks/domprojects/js/tts.js`) **utamanya memproses** payload **`loketXX-…`** untuk memperbarui nomor yang dipanggil; string lain di channel yang sama bisa diabaikan oleh klien tersebut.
 
 ## REST API
 
