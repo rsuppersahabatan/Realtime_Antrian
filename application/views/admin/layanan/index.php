@@ -42,7 +42,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 												<td><span class="label label-primary"><?php echo htmlspecialchars($row['kode_huruf'], ENT_QUOTES, 'UTF-8'); ?></span></td>
 												<td><?php echo htmlspecialchars($row['nama_layanan'], ENT_QUOTES, 'UTF-8'); ?></td>
 												<td><?php echo htmlspecialchars($row['keterangan'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></td>
-												<td><?php echo htmlspecialchars($row['show_welcome'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></td>
+												<td>
+													<?php if ($row['show_welcome'] == 'ya'): ?>
+														<span class="label label-success"><i class="fa fa-check"></i> <?php echo lang('layanan_ya'); ?></span>
+													<?php else: ?>
+														<span class="label label-default"><i class="fa fa-times"></i> <?php echo lang('layanan_tidak'); ?></span>
+													<?php endif; ?>
+												</td>
 												<td><?php echo $row['created_at']; ?></td>
 												<td>
 													<?php echo anchor('admin/layanan/edit/'.$row['id'], lang('actions_edit'), array('class' => 'btn btn-xs btn-warning btn-flat')); ?>

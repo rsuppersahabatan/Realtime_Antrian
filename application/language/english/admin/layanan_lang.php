@@ -24,6 +24,9 @@ $lang['layanan_edit']         = 'Edit Service';
 $lang['layanan_delete']       = 'Delete Service';
 $lang['layanan_confirm']      = 'Confirmation';
 
+$lang['layanan_ya']           = 'Yes';
+$lang['layanan_tidak']        = 'No';
+
 /* Messages */
 $lang['layanan_created_success'] = 'Service successfully added.';
 $lang['layanan_created_error']   = 'Failed to add service.';

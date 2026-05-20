@@ -24,6 +24,10 @@ $lang['layanan_edit']         = 'Edit Layanan';
 $lang['layanan_delete']       = 'Hapus Layanan';
 $lang['layanan_confirm']      = 'Konfirmasi';
 
+$lang['layanan_ya']           = 'Ya';
+$lang['layanan_tidak']        = 'Tidak';
+
+
 /* Messages */
 $lang['layanan_created_success'] = 'Layanan berhasil ditambahkan.';
 $lang['layanan_created_error']   = 'Gagal menambahkan layanan.';
