@@ -207,7 +207,7 @@
 
             <div class="video-wrap" style="position:relative;width:100%;padding-top:56.25%;overflow:hidden;border-radius:12px;">
                 <iframe
-                    src="https://www.youtube.com/embed/ebZwRzwEpT8?autoplay=1&mute=1&loop=1&playlist=ebZwRzwEpT8&controls=0&showinfo=0&rel=0"
+                    src="https://www.youtube-nocookie.com/embed/ebZwRzwEpT8?autoplay=1&mute=1&loop=1&playlist=ebZwRzwEpT8&controls=0&showinfo=0&rel=0"
                     frameborder="0"
                     allow="autoplay; encrypted-media"
                     allowfullscreen

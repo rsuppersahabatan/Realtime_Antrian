@@ -11,6 +11,11 @@
       $accent      = !empty($display['color_scheme']) ? $display['color_scheme'] : '#00baae';
       $font_family = !empty($display['font_family']) ? $display['font_family'] : 'Inter';
       $font_size   = !empty($display['font_size']) ? (int) $display['font_size'] : 100;
+      // Hanya font yang benar-benar tersedia di Google Fonts yang boleh diload dari CDN.
+      // Font sistem (Arial, Tahoma, dll.) tidak ada di Google Fonts -> jangan di-request
+      // karena Google akan mengembalikan halaman HTML error (MIME mismatch).
+      $google_fonts   = array('Poppins', 'Inter', 'Roboto', 'Open Sans');
+      $is_google_font = in_array($font_family, $google_fonts, true);
       $video_src   = !empty($display['video_source']) ? $display['video_source'] : 'youtube';
       $video_link  = isset($display['video_link']) ? trim($display['video_link']) : '';
       $footer_text = isset($display['footer_text']) ? $display['footer_text'] : '';
@@ -36,10 +41,17 @@
       rel="stylesheet"
       href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
     />
+    <?php if ($is_google_font && $font_family !== 'Inter'): ?>
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=<?= rawurlencode($font_family) ?>:wght@400;600;700;900&family=Inter:wght@400;600;700;900&display=swap"
     />
+    <?php else: ?>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap"
+    />
+    <?php endif; ?>
 
     <?= isset($minified_css) ? $minified_css : '<link rel="stylesheet" href="' . base_url('assets/frameworks/domprojects/css/client.css') . '" />' ?>
 
@@ -173,7 +185,7 @@
             <iframe
               width="100%"
               height="100%"
-              src="https://www.youtube.com/embed/<?= htmlspecialchars($youtube_id, ENT_QUOTES, 'UTF-8') ?>?autoplay=1&mute=1&loop=1&playlist=<?= htmlspecialchars($youtube_id, ENT_QUOTES, 'UTF-8') ?>&controls=0&showinfo=0&rel=0"
+              src="https://www.youtube-nocookie.com/embed/<?= htmlspecialchars($youtube_id, ENT_QUOTES, 'UTF-8') ?>?autoplay=1&mute=1&loop=1&playlist=<?= htmlspecialchars($youtube_id, ENT_QUOTES, 'UTF-8') ?>&controls=0&showinfo=0&rel=0"
               frameborder="0"
               allow="autoplay; encrypted-media"
               allowfullscreen
