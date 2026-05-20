@@ -12,7 +12,7 @@ $lang['menu_client_delete'] = 'Hapus Display Antrian';
 
 /* Fields */
 $lang['client_nama_client'] = 'Nama Display';
-$lang['client_is_active']  = 'Status Display';
+$lang['client_is_active']   = 'Status Display';
 $lang['client_created_at']  = 'Dibuat';
 $lang['client_action']      = 'Aksi';
 $lang['client_lokets']      = 'Loket';
