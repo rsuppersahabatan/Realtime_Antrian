@@ -13,6 +13,7 @@ $lang['menu_layanan_delete'] = 'Hapus Layanan';
 /* Fields */
 $lang['layanan_kode_huruf']   = 'Kode Huruf';
 $lang['layanan_nama_layanan'] = 'Nama Layanan';
+$lang['layanan_show_welcome'] = 'Tampil Di Welcome?';
 $lang['layanan_keterangan']   = 'Keterangan';
 $lang['layanan_created_at']   = 'Dibuat';
 $lang['layanan_action']       = 'Aksi';

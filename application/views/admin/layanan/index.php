@@ -30,6 +30,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 												<th><?php echo lang('layanan_kode_huruf'); ?></th>
 												<th><?php echo lang('layanan_nama_layanan'); ?></th>
 												<th><?php echo lang('layanan_keterangan'); ?></th>
+												<th><?php echo lang('layanan_show_welcome'); ?></th>
 												<th><?php echo lang('layanan_created_at'); ?></th>
 												<th><?php echo lang('layanan_action'); ?></th>
 											</tr>
@@ -41,6 +42,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 												<td><span class="label label-primary"><?php echo htmlspecialchars($row['kode_huruf'], ENT_QUOTES, 'UTF-8'); ?></span></td>
 												<td><?php echo htmlspecialchars($row['nama_layanan'], ENT_QUOTES, 'UTF-8'); ?></td>
 												<td><?php echo htmlspecialchars($row['keterangan'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></td>
+												<td><?php echo htmlspecialchars($row['show_welcome'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></td>
 												<td><?php echo $row['created_at']; ?></td>
 												<td>
 													<?php echo anchor('admin/layanan/edit/'.$row['id'], lang('actions_edit'), array('class' => 'btn btn-xs btn-warning btn-flat')); ?>
