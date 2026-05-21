@@ -103,6 +103,8 @@
       // membaca nilai ini. Panggilan TTS: POST `${ttsApiBase}/tts` dengan kalimat berisi
       // nomor antrian + nama (keterangan) + loket — lihat buatTeksPanggilan() di tts.js.
       window.ttsApiBase = <?= json_encode(isset($tts_api_base) ? $tts_api_base : 'http://localhost:8085') ?>;
+      window.ttsVoice = <?= json_encode(isset($tts_voice) ? $tts_voice : 'female') ?>;
+      window.ttsRate = <?= json_encode(isset($tts_rate) ? $tts_rate : '-3%') ?>;
 
       var audioBase = "<?= base_url('assets/audio/') ?>";
       var soundManagerReady = false;
