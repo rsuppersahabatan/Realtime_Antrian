@@ -67,32 +67,33 @@
       }
       body { font-family: '<?= htmlspecialchars($font_family, ENT_QUOTES, 'UTF-8') ?>', 'Inter', 'Helvetica Neue', Arial, sans-serif; }
 
-      /* Skala ukuran nomor antrian mengikuti font_size (100 = default = sama dengan client.css).
-         Floor 96px supaya tetap dominan walau scale kecil; ceiling 220px sesuai default. */
+      /* Skala ukuran nomor antrian mengikuti font_size.
+         Pada layout baru main-panel berbagi ruang dengan video di kolom kanan,
+         jadi clamp diturunkan supaya angka tetap muat tanpa overflow. */
       .main-number {
-        font-size: clamp(96px, calc(18vw * var(--dp-font-scale)), calc(220px * var(--dp-font-scale)));
+        font-size: clamp(72px, calc(9vw * var(--dp-font-scale)), calc(150px * var(--dp-font-scale)));
         line-height: 1;
         margin: 0;
       }
 
       /* Beri ruang internal panel: padding generous supaya badge & button tidak mepet ke border. */
-      .display-body { padding: 20px 24px; gap: 24px; }
+      .display-body { padding: 20px 24px; gap: 20px; }
       .main-panel {
-        padding: 48px 32px;
-        gap: 14px;
+        padding: 22px 20px;
+        gap: 10px;
         justify-content: center;          /* tetap center, bukan space-between, agar simetris */
         overflow: hidden;
       }
       .main-panel > * { flex-shrink: 0; }
-      .main-loket-label { line-height: 1.15; margin-bottom: 4px; }
-      .main-direction   { margin-top: 8px; line-height: 1.2; }
+      .main-loket-label { line-height: 1.15; margin-bottom: 2px; padding: 8px 32px; }
+      .main-direction   { margin-top: 6px; line-height: 1.2; padding: 8px 28px; }
       /* Kecilkan tinggi visual dashes placeholder & angka pendek agar tidak "ngambang" */
       .main-number { letter-spacing: 2px; }
 
       /* Label pendukung — skala lebih halus, tidak ikut menyusut ekstrim saat font_size kecil. */
-      .main-loket-label { font-size: clamp(20px, calc(1.4vw * var(--dp-font-scale) + 16px), 30px); }
-      .main-queue-label { font-size: clamp(15px, calc(1.0vw * var(--dp-font-scale) + 13px), 22px); }
-      .main-direction   { font-size: clamp(16px, calc(1.0vw * var(--dp-font-scale) + 14px), 24px); }
+      .main-loket-label { font-size: clamp(16px, calc(1.0vw * var(--dp-font-scale) + 12px), 26px); }
+      .main-queue-label { font-size: clamp(13px, calc(0.8vw * var(--dp-font-scale) + 11px), 18px); }
+      .main-direction   { font-size: clamp(14px, calc(0.8vw * var(--dp-font-scale) + 12px), 20px); }
     </style>
 
     <script type="text/javascript">
@@ -172,69 +173,93 @@
       <!-- ====== BODY ====== -->
       <div class="display-body">
 
-        <!-- Panel Utama — nomor antrian besar -->
-        <div class="main-panel">
-          <div class="main-loket-label" id="loket_display">MENUNGGU</div>
-          <div class="main-queue-label">NOMOR ANTRIAN</div>
-          <div class="main-number" id="online">---</div>
-          <div class="main-keterangan" id="keterangan_text"></div>
-          <div class="main-direction" id="direction_text">MENUNGGU PANGGILAN</div>
-        </div>
+        <!-- Panel Kiri — Daftar Antrian per Loket -->
+        <div class="daftar-antrian-panel">
+          <div class="daftar-antrian-title">Daftar Antrian <?= htmlspecialchars($client_name, ENT_QUOTES, 'UTF-8') ?></div>
 
-        <!-- Panel Samping — Video (YouTube / Local) -->
-        <div class="side-panel" style="padding:0;overflow:hidden;">
-          <?php if ($video_src === 'youtube' && $youtube_id !== ''): ?>
-            <iframe
-              width="100%"
-              height="100%"
-              src="https://www.youtube-nocookie.com/embed/<?= htmlspecialchars($youtube_id, ENT_QUOTES, 'UTF-8') ?>?autoplay=1&mute=1&loop=1&playlist=<?= htmlspecialchars($youtube_id, ENT_QUOTES, 'UTF-8') ?>&controls=0&showinfo=0&rel=0"
-              frameborder="0"
-              allow="autoplay; encrypted-media"
-              allowfullscreen
-              style="display:block;border:none;border-radius:18px;"
-            ></iframe>
-          <?php elseif ($video_src === 'local' && $video_link !== ''): ?>
-            <video
-              width="100%"
-              height="100%"
-              autoplay
-              muted
-              loop
-              playsinline
-              style="display:block;border:none;border-radius:18px;object-fit:cover;background:#000;"
-              src="<?= htmlspecialchars($video_link, ENT_QUOTES, 'UTF-8') ?>"
-            ></video>
-          <?php else: ?>
-            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-weight:600;">
-              VIDEO BELUM DIATUR
-            </div>
-          <?php endif; ?>
-        </div>
-
-              <!-- <div class="side-panel">
-          <div class="side-panel-title">DAFTAR LOKET</div>
-          <?php if (!empty($loket)): ?>
-            <?php foreach ($loket as $lk): ?>
-              <?php
-                $nama_loket = !empty($lk['nama_loket']) ? $lk['nama_loket'] : ('LOKET ' . $lk['id']);
-                $channel_id = 'loket' . str_pad((int) $lk['id'], 2, '0', STR_PAD_LEFT);
-                $nomor_terakhir = !empty($lk['nomor_terakhir']) ? $lk['nomor_terakhir'] : '-';
-              ?>
-              <div class="side-card" id="sidecard-<?= $channel_id ?>">
-                <div class="side-card-label"><?= strtoupper($nama_loket) ?></div>
-                <div class="side-card-number" id="side-<?= $channel_id ?>">
-                  <?= htmlspecialchars($nomor_terakhir, ENT_QUOTES, 'UTF-8') ?>
+          <div class="daftar-antrian-grid">
+            <?php if (!empty($loket)): ?>
+              <?php foreach ($loket as $lk): ?>
+                <?php
+                  $nama_loket = !empty($lk['nama_loket']) ? $lk['nama_loket'] : ('LOKET ' . $lk['id']);
+                  $channel_id = 'loket' . str_pad((int) $lk['id'], 2, '0', STR_PAD_LEFT);
+                  $nomor_terakhir = !empty($lk['nomor_terakhir']) ? $lk['nomor_terakhir'] : '---';
+                  $id_layanan = (int) $lk['id_layanan'];
+                  $list_menunggu = isset($antrian_menunggu[$id_layanan]) ? $antrian_menunggu[$id_layanan] : array();
+                ?>
+                <div class="loket-column" id="col-<?= $channel_id ?>">
+                  <div class="loket-column-label"><?= strtoupper(htmlspecialchars($nama_loket, ENT_QUOTES, 'UTF-8')) ?></div>
+                  <div class="loket-column-list" id="col-list-<?= $id_layanan ?>" data-id-layanan="<?= $id_layanan ?>">
+                    <?php if (empty($list_menunggu)): ?>
+                      <div class="loket-list-empty">Belum ada antrian menunggu</div>
+                    <?php else: ?>
+                      <?php foreach ($list_menunggu as $a): ?>
+                        <div class="loket-list-item" data-nomor="<?= htmlspecialchars($a['nomor_antrian'], ENT_QUOTES, 'UTF-8') ?>">
+                          <span class="li-nomor"><?= htmlspecialchars($a['nomor_antrian'], ENT_QUOTES, 'UTF-8') ?></span>
+                          <?php if (!empty($a['keterangan'])): ?>
+                            <span class="li-sep">-</span>
+                            <span class="li-ket"><?= htmlspecialchars($a['keterangan'], ENT_QUOTES, 'UTF-8') ?></span>
+                          <?php endif; ?>
+                        </div>
+                      <?php endforeach; ?>
+                    <?php endif; ?>
+                  </div>
+                </div>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <div class="loket-column" style="grid-column:1/-1;">
+                <div class="loket-column-label">BELUM ADA LOKET</div>
+                <div class="loket-column-list">
+                  <div class="loket-list-empty">Belum ada loket yang di-assign untuk client ini.</div>
                 </div>
               </div>
-            <?php endforeach; ?>
-          <?php else: ?>
-            <div class="side-card">
-              <div class="side-card-label" style="width:100%;text-align:center;color:rgba(255,255,255,0.5);">
-                BELUM ADA LOKET DIBUKA
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <!-- Panel Kanan — MENUNGGU (atas) + Video (bawah) -->
+        <div class="display-right-stack">
+
+          <!-- Panel Utama — nomor antrian besar -->
+          <div class="main-panel">
+            <div class="main-loket-label" id="loket_display">MENUNGGU</div>
+            <div class="main-queue-label">NOMOR ANTRIAN</div>
+            <div class="main-number" id="online">---</div>
+            <div class="main-keterangan" id="keterangan_text"></div>
+            <div class="main-direction" id="direction_text">MENUNGGU PANGGILAN</div>
+          </div>
+
+          <!-- Panel Samping — Video (YouTube / Local) -->
+          <div class="side-panel" style="padding:0;overflow:hidden;">
+            <?php if ($video_src === 'youtube' && $youtube_id !== ''): ?>
+              <iframe
+                width="100%"
+                height="100%"
+                src="https://www.youtube-nocookie.com/embed/<?= htmlspecialchars($youtube_id, ENT_QUOTES, 'UTF-8') ?>?autoplay=1&mute=1&loop=1&playlist=<?= htmlspecialchars($youtube_id, ENT_QUOTES, 'UTF-8') ?>&controls=0&showinfo=0&rel=0"
+                frameborder="0"
+                allow="autoplay; encrypted-media"
+                allowfullscreen
+                style="display:block;border:none;border-radius:18px;"
+              ></iframe>
+            <?php elseif ($video_src === 'local' && $video_link !== ''): ?>
+              <video
+                width="100%"
+                height="100%"
+                autoplay
+                muted
+                loop
+                playsinline
+                style="display:block;border:none;border-radius:18px;object-fit:cover;background:#000;"
+                src="<?= htmlspecialchars($video_link, ENT_QUOTES, 'UTF-8') ?>"
+              ></video>
+            <?php else: ?>
+              <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.4);font-weight:600;">
+                VIDEO BELUM DIATUR
               </div>
-            </div>
-          <?php endif; ?>
-        </div> -->
+            <?php endif; ?>
+          </div>
+
+        </div>
 
       </div>
 

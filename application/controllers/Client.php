@@ -46,6 +46,11 @@ class Client extends Public_Controller {
         $allowed_ids = array_map('intval', array_column((array) $client['lokets'], 'id'));
         $this->data['loket'] = $this->Loket_model->get_by_ids_with_last_nomor($allowed_ids);
 
+        // Daftar antrian yang masih menunggu per layanan (untuk kolom "Daftar Antrian").
+        // Dikumpulkan berdasar id_layanan loket yang ter-assign ke client ini.
+        $layanan_ids = array_map('intval', array_column((array) $this->data['loket'], 'id_layanan'));
+        $this->data['antrian_menunggu'] = $this->Antrian_model->get_waiting_by_layanan_ids($layanan_ids);
+
         $this->load->view('client/display', $this->data);
     }
 

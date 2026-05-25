@@ -124,6 +124,138 @@ body {
   min-height: 0;
 }
 
+/* =========================================
+   PANEL KIRI - DAFTAR ANTRIAN PER LOKET
+   ========================================= */
+.daftar-antrian-panel {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(145deg, #f8fdf7 0%, #eef5ec 100%);
+  border: 3px solid var(--dp-primary);
+  border-radius: 16px;
+  padding: 18px 20px 20px;
+  min-height: 0;
+  overflow: hidden;
+  box-shadow:
+    0 0 40px rgba(0, 186, 174, 0.15),
+    inset 0 0 60px rgba(0, 186, 174, 0.03);
+}
+
+.daftar-antrian-title {
+  font-size: clamp(18px, 1.6vw, 26px);
+  font-weight: 900;
+  color: var(--dp-primary-dark);
+  letter-spacing: 0.5px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(0, 186, 174, 0.25);
+  flex-shrink: 0;
+}
+
+.daftar-antrian-grid {
+  flex: 1;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 14px;
+  min-height: 0;
+}
+
+.loket-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.loket-column-label {
+  font-size: clamp(11px, 0.9vw, 14px);
+  font-weight: 800;
+  color: var(--dp-primary-dark);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  background: rgba(0, 186, 174, 0.1);
+  border-radius: 6px;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.loket-column-list {
+  flex: 1 1 auto;
+  padding: 12px 8px 12px 12px;
+  border: 2px solid var(--dp-accent);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.65);
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 186, 174, 0.5) transparent;
+}
+
+.loket-column-list::-webkit-scrollbar { width: 8px; }
+.loket-column-list::-webkit-scrollbar-track { background: transparent; }
+.loket-column-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 186, 174, 0.45);
+  border-radius: 4px;
+}
+.loket-column-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 186, 174, 0.75);
+}
+
+.loket-list-item {
+  font-size: clamp(13px, 1.05vw, 17px);
+  font-weight: 700;
+  color: #1f2d00;
+  padding: 4px 6px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  letter-spacing: 0.3px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.loket-list-item:last-child { border-bottom: none; }
+
+.loket-list-item .li-sep { margin: 0 4px; opacity: 0.5; }
+.loket-list-item .li-ket {
+  font-weight: 600;
+  color: #2a3a08;
+}
+
+.loket-list-empty {
+  font-size: 13px;
+  font-style: italic;
+  color: rgba(31, 45, 0, 0.5);
+  text-align: center;
+  padding: 12px 4px;
+}
+
+/* =========================================
+   PANEL KANAN - STACK (MENUNGGU + VIDEO)
+   ========================================= */
+.display-right-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  min-width: 320px;
+}
+
+.display-right-stack .main-panel {
+  flex: 1 1 55%;
+  min-height: 0;
+}
+
+.display-right-stack .side-panel {
+  flex: 1 1 45%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* --- Panel Antrian Utama (kiri besar) --- */
 .main-panel {
   flex: 2;
@@ -514,11 +646,24 @@ body {
 /* =========================================
    RESPONSIVE - layar kecil
    ========================================= */
+@media (max-width: 1024px) {
+  .display-right-stack { min-width: 0; }
+  .daftar-antrian-grid { gap: 10px; }
+}
+
 @media (max-width: 768px) {
   .display-body {
     flex-direction: column;
     padding: 12px;
     gap: 12px;
+  }
+  .daftar-antrian-panel,
+  .display-right-stack { flex: none; width: 100%; }
+  .display-right-stack { flex-direction: column; }
+  .daftar-antrian-grid {
+    grid-auto-flow: row;
+    grid-auto-columns: unset;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   }
   .side-panel {
     flex-direction: row;

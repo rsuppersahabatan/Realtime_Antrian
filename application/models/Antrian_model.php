@@ -4,6 +4,36 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Antrian_model extends CI_Model {
     protected $table = 'antrian';
 
+    /**
+     * Ambil antrian berstatus 'menunggu' hari ini untuk daftar layanan tertentu,
+     * di-group per id_layanan. Dipakai oleh display untuk menampilkan kolom
+     * antrian yang sedang menunggu di setiap loket/layanan.
+     */
+    public function get_waiting_by_layanan_ids(array $layanan_ids, $tanggal = null) {
+        $layanan_ids = array_values(array_unique(array_filter(array_map('intval', $layanan_ids))));
+        if (empty($layanan_ids)) {
+            return array();
+        }
+        if ($tanggal === null) {
+            $tanggal = date('Y-m-d');
+        }
+
+        $this->db->select('id, id_layanan, nomor_antrian, nomor_urut, keterangan');
+        $this->db->from($this->table);
+        $this->db->where('tanggal', $tanggal);
+        $this->db->where('status', 'menunggu');
+        $this->db->where_in('id_layanan', $layanan_ids);
+        $this->db->order_by('id_layanan', 'ASC');
+        $this->db->order_by('nomor_urut', 'ASC');
+        $rows = $this->db->get()->result_array();
+
+        $grouped = array();
+        foreach ($rows as $row) {
+            $grouped[(int) $row['id_layanan']][] = $row;
+        }
+        return $grouped;
+    }
+
     // Ambil daftar seluruh rekap antrian hari ini
     public function get_antrian_hari_ini($tanggal = null) {
         if ($tanggal == null) {

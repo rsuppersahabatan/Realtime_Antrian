@@ -114,6 +114,26 @@ function addMessage(data) {
       footerNum.textContent = nomor_antrian;
     }
 
+    // Update kolom "Daftar Antrian" (panel kiri): hapus item dengan nomor tsb
+    // dari semua list (karena sudah tidak menunggu). Jika list kosong, tampilkan placeholder.
+    var colCard = document.getElementById("col-" + loket_raw);
+    if (colCard) {
+      colCard.classList.remove("call-flash");
+      void colCard.offsetWidth;
+      colCard.classList.add("call-flash");
+    }
+    var waitingItems = document.querySelectorAll('.loket-list-item[data-nomor="' + nomor_antrian + '"]');
+    waitingItems.forEach(function (item) {
+      var parent = item.parentNode;
+      item.parentNode.removeChild(item);
+      if (parent && parent.children.length === 0) {
+        var empty = document.createElement("div");
+        empty.className = "loket-list-empty";
+        empty.textContent = "Belum ada antrian menunggu";
+        parent.appendChild(empty);
+      }
+    });
+
     // Update keterangan di footer loket (di bawah nomor)
     var footerKet = document.getElementById("footer-ket-" + loket_raw);
     if (footerKet) {
