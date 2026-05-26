@@ -136,6 +136,12 @@
         socket.on("connect", function (data) {
           console.log("Socket connected");
         });
+        socket.on("version", function (serverVersion) {
+          console.log("received server version: ", serverVersion);
+          if (typeof checkVersion === "function") {
+            checkVersion(serverVersion);
+          }
+        });
         socket.on("message", function (data) {
           console.log("received a message: ", data);
           addMessage(data);
@@ -328,6 +334,25 @@
           </button>
           <button type="button" class="audio-popup-btn audio-popup-btn-primary" id="audioPopupEnableBtn">
             <span aria-hidden="true">&#10003;</span> Aktifkan Audio + Fullscreen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== POPUP UPDATE VERSI / CACHE ====== -->
+    <div class="audio-popup-backdrop hidden" id="updatePopup" style="z-index:9999;">
+      <div class="audio-popup" role="dialog" aria-modal="true" aria-labelledby="updatePopupText">
+        <div class="audio-popup-body">
+          <div class="audio-popup-icon" style="background:#f0ad4e;color:#fff;">&#9888;</div>
+          <div class="audio-popup-text" id="updatePopupText">
+            <strong style="font-size:16px;color:#d9534f;display:block;margin-bottom:6px;">Pembaruan Sistem Terdeteksi!</strong>
+            Terdapat file cache browser versi lama yang terdeteksi di browser Anda.
+            Silakan tekan tombol di bawah ini atau bersihkan cache browser Anda untuk memuat ulang sistem terbaru.
+          </div>
+        </div>
+        <div class="audio-popup-footer" style="text-align:center;">
+          <button type="button" class="audio-popup-btn audio-popup-btn-primary" id="updatePopupReloadBtn" style="background:#f0ad4e;border:none;box-shadow:none;">
+            Muat Ulang Halaman
           </button>
         </div>
       </div>

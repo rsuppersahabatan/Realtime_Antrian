@@ -22,6 +22,7 @@ const PORT = 8085;
 const HOST = "0.0.0.0";
 const REDIS_HOST = process.env.REDIS_HOST || "localhost";
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
+const APP_VERSION = "1.0.2";
 
 var express = require("express"),
   http = require("http");
@@ -68,6 +69,9 @@ if (!module.parent) {
 
   socket.on("connection", function (socketClient) {
     log("info", "Client connected: " + socketClient.id);
+
+    // Emit current server version to client
+    socketClient.emit("version", APP_VERSION);
 
     // Create subscriber clients but DO NOT await in connection handler
     // to avoid blocking the WebSocket handshake

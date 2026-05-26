@@ -432,3 +432,31 @@ function addMessage(data) {
     hidePopup();
   });
 })();
+
+// ====== VERSION CHECK / CACHE BUSTER ======
+(function () {
+  var CLIENT_VERSION = "1.0.2";
+  window.CLIENT_VERSION = CLIENT_VERSION;
+
+  window.checkVersion = function (serverVersion) {
+    if (serverVersion && serverVersion !== CLIENT_VERSION) {
+      console.warn("Version mismatch! Server: " + serverVersion + ", Client: " + CLIENT_VERSION);
+      var popup = document.getElementById("updatePopup");
+      if (popup) {
+        popup.classList.remove("hidden");
+      }
+      
+      var reloadBtn = document.getElementById("updatePopupReloadBtn");
+      if (reloadBtn) {
+        var newReloadBtn = reloadBtn.cloneNode(true);
+        reloadBtn.parentNode.replaceChild(newReloadBtn, reloadBtn);
+        
+        newReloadBtn.addEventListener("click", function () {
+          var cleanUrl = window.location.href.replace(/[?&]v=[^&]+/g, '');
+          var sep = cleanUrl.indexOf('?') >= 0 ? '&' : '?';
+          window.location.href = cleanUrl + sep + 'v=' + serverVersion;
+        });
+      }
+    }
+  };
+})();
