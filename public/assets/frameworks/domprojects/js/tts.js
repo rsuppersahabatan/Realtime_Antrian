@@ -210,6 +210,27 @@ function addMessage(data) {
 
   var vdt = head.split("-");
 
+  // Handle new queue number created (antrian-baru-<id_layanan>-<nomor_antrian>)
+  if (vdt[0] === 'antrian' && vdt[1] === 'baru') {
+    var id_layanan = vdt[2];
+    var nomor_antrian = vdt[3];
+    var $list = $("#col-list-" + id_layanan);
+    if ($list.length) {
+      $list.find(".loket-list-empty").remove();
+      if ($list.find('.loket-list-item[data-nomor="' + nomor_antrian + '"]').length === 0) {
+        var html = '<div class="loket-list-item" data-nomor="' + nomor_antrian + '">' +
+                   '<span class="li-nomor">' + nomor_antrian + '</span>';
+        if (keterangan) {
+          html += '<span class="li-sep">-</span>' +
+                  '<span class="li-ket">' + keterangan + '</span>';
+        }
+        html += '</div>';
+        $list.append(html);
+      }
+    }
+    return;
+  }
+
   if (vdt.length > 1) {
     var loket_raw = vdt[0].toLowerCase();
     var nomor_antrian = vdt[1];
@@ -255,6 +276,26 @@ function addMessage(data) {
     if (footerNum) {
       footerNum.textContent = nomor_antrian;
     }
+
+    // Update kolom "Daftar Antrian" (panel kiri): hapus item dengan nomor tsb
+    // dari semua list (karena sudah tidak menunggu). Jika list kosong, tampilkan placeholder.
+    var colCard = document.getElementById("col-" + loket_raw);
+    if (colCard) {
+      colCard.classList.remove("call-flash");
+      void colCard.offsetWidth;
+      colCard.classList.add("call-flash");
+    }
+    var waitingItems = document.querySelectorAll('.loket-list-item[data-nomor="' + nomor_antrian + '"]');
+    waitingItems.forEach(function (item) {
+      var parent = item.parentNode;
+      item.parentNode.removeChild(item);
+      if (parent && parent.children.length === 0) {
+        var empty = document.createElement("div");
+        empty.className = "loket-list-empty";
+        empty.textContent = "Belum ada antrian menunggu";
+        parent.appendChild(empty);
+      }
+    });
 
     // Update keterangan di footer loket (di bawah nomor)
     var footerKet = document.getElementById("footer-ket-" + loket_raw);

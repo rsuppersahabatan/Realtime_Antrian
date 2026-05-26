@@ -105,6 +105,22 @@ class Antrian_model extends CI_Model {
         $this->db->insert($this->table, $data_insert);
         $data_insert['id'] = $this->db->insert_id();
 
+        // Broadcast realtime antrian baru
+        $CI =& get_instance();
+        if (isset($CI->redis)) {
+            $payload = 'antrian-baru-' . $id_layanan . '-' . $nomor_antrian_gabungan;
+            if ($data_insert['keterangan'] !== null && $data_insert['keterangan'] !== '') {
+                $ket = str_replace(['|', "\r", "\n"], ' ', $data_insert['keterangan']);
+                $ket = preg_replace('/\s+/', ' ', $ket);
+                $payload .= '|' . trim($ket);
+            }
+            try {
+                $CI->redis->publish('realtime', $payload);
+            } catch (Exception $e) {
+                log_message('error', 'Redis publish failed: ' . $e->getMessage());
+            }
+        }
+
         // Mengembalikan objek tiket antrian yang sukses dicetak
         return $data_insert;
     }

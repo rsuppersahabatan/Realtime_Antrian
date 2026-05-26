@@ -68,6 +68,27 @@ function addMessage(data) {
 
   var vdt = head.split("-");
 
+  // Handle new queue number created (antrian-baru-<id_layanan>-<nomor_antrian>)
+  if (vdt[0] === 'antrian' && vdt[1] === 'baru') {
+    var id_layanan = vdt[2];
+    var nomor_antrian = vdt[3];
+    var $list = $("#col-list-" + id_layanan);
+    if ($list.length) {
+      $list.find(".loket-list-empty").remove();
+      if ($list.find('.loket-list-item[data-nomor="' + nomor_antrian + '"]').length === 0) {
+        var html = '<div class="loket-list-item" data-nomor="' + nomor_antrian + '">' +
+                   '<span class="li-nomor">' + nomor_antrian + '</span>';
+        if (keterangan) {
+          html += '<span class="li-sep">-</span>' +
+                  '<span class="li-ket">' + keterangan + '</span>';
+        }
+        html += '</div>';
+        $list.append(html);
+      }
+    }
+    return;
+  }
+
   if (vdt.length > 1) {
     var loket_raw = vdt[0].toLowerCase();
     var nomor_antrian = vdt[1];

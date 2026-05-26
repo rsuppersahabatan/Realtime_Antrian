@@ -72,8 +72,8 @@ class Welcome extends Public_Controller {
             return;
         }
 
-        // Beri tahu display / admin bahwa ada tiket baru diterbitkan.
-        $this->redis->command('publish realtime antrian-baru-'.$tiket['nomor_antrian']);
+        // Beri tahu display / admin bahwa ada tiket baru diterbitkan. (Sudah di-handle otomatis oleh Antrian_model::generate_nomor_baru)
+        // $this->redis->command('publish realtime antrian-baru-'.$tiket['nomor_antrian']);
 
         $tiket['nama_layanan'] = $layanan['nama_layanan'];
         $tiket['kode_huruf']   = $layanan['kode_huruf'];
