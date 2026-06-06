@@ -579,6 +579,20 @@ Authorization: Basic YWRtaW46YW50cmlhbjIwMjQ=
 - [EDGE TTS For Audio Indonesian](https://github.com/rsuppersahabatan/Edge-TTS-API)
 - [Use AI ~ AntiGravity and Cloude For Task List](https://topidesta.my.id/era-ai-untuk-programmer-30an/)
 
+## Prompt by GitReverse.Com
+
+```bash
+Build me a realtime web based queue system for a clinic or public service office.
+
+Visitors should be able to open a public page, choose a service, enter a required 16 digit NIK, and get a printed queue number. Staff should have an admin login where they can manage today’s queues, call the next number, recall a number, mark tickets done or cancelled, and open or close service counters.
+
+I also need public TV display pages. Each display can be assigned to certain counters only, and when a staff member calls a number the display updates instantly without refreshing. The display should show the called number, counter, optional notes, colors, footer text, and video or content settings.
+
+Please include master data screens for services, counters, users, roles, and display clients. Also add basic REST API endpoints for services, counters, queues, calls, dashboard stats, users, and groups with basic authentication.
+
+Make it runnable with Docker Compose using PHP CodeIgniter 3, MySQL, Redis, and Node Socket.IO for realtime updates.
+```
+
 ## Lisensi
 
 Project ini dirilis di bawah lisensi MIT.
