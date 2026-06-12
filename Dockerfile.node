@@ -2,20 +2,19 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Salin package.json langsung dari folder project nodejs
-COPY public/client-assets/node.js/package*.json ./
+# Salin package.json dari folder nodejs
+COPY public/nodejs/package*.json ./
 
-# Install dependencies (termasuk socket.io dan redis)
-RUN npm install --production
+# Install dependencies (hanya production)
+RUN npm install --production && npm cache clean --force
 
-# Salin isi folder node.js ke direktori kerja (/app)
-# Pastikan ada spasi antara '.' dan '.'
-COPY public/client-assets/node.js/ .
-
-# Cek isi folder untuk memastikan index.js ada di /app/index.js
-RUN ls -la
+# Salin seluruh konten nodejs ke /app
+COPY public/nodejs/ .
 
 EXPOSE 8085
 
-# Jika nama filenya bukan index.js (misal server.js), ganti bagian ini
+# Healthcheck untuk Docker orchestration
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8085/health || exit 1
+
 CMD ["node", "server.js"]

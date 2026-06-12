@@ -3,7 +3,7 @@
     Required node packages: express, redis, socket.io
 
     If Use PM2 Use this
-    > pm2 start public/client-assets/node.js/server.js --name "antrian-socket" --watch --ignore-watch "node_modules"
+    > pm2 start public/nodejs/server.js --name "antrian-socket" --watch --ignore-watch "node_modules"
 */
 const fs = require("fs");
 const path = require("path");
@@ -18,10 +18,10 @@ if (fs.existsSync(envPath)) {
   });
 }
 
-const PORT = 8085;
+const PORT = parseInt(process.env.NODEJS_PORT || "8085", 10);
 const HOST = "0.0.0.0";
 const REDIS_HOST = process.env.REDIS_HOST || "localhost";
-const REDIS_PORT = process.env.REDIS_PORT || 6379;
+const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6379", 10);
 const APP_VERSION = "1.0.2";
 // const APP_NAME = "Antrian Online Realtime - With Socket Power!";
 
@@ -31,19 +31,82 @@ var express = require("express"),
 var app = express();
 var server = http.createServer(app);
 
+// --- Security headers for health-check endpoint ---
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  next();
+});
+
+// Health-check endpoint (useful for Docker healthcheck & load balancer)
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", version: APP_VERSION, uptime: process.uptime() });
+});
+
 const redis = require("redis");
 
 const REDIS_PASSWORD = process.env.REDIS_PASSWORD || "";
 
-let REDIS_URL = `redis://`;
-if (REDIS_PASSWORD) {
-  REDIS_URL += `:${REDIS_PASSWORD}@`;
+// Build Redis URL safely
+function buildRedisUrl() {
+  let url = `redis://`;
+  if (REDIS_PASSWORD) {
+    // Encode password to handle special characters
+    url += `:${encodeURIComponent(REDIS_PASSWORD)}@`;
+  }
+  url += `${REDIS_HOST}:${REDIS_PORT}`;
+  return url;
 }
-REDIS_URL += `${REDIS_HOST}:${REDIS_PORT}`;
+
+const REDIS_URL = buildRedisUrl();
+
+// Graceful shutdown handling
+let shuttingDown = false;
+
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  log("info", `Received ${signal}, shutting down gracefully...`);
+
+  // Close the HTTP server first (stop accepting new connections)
+  server.close(() => {
+    log("info", "HTTP server closed.");
+    // Give pending operations a moment, then exit
+    setTimeout(() => process.exit(0), 1000);
+  });
+
+  // Force exit after 10s if graceful shutdown hangs
+  setTimeout(() => {
+    log("error", "Forced shutdown after timeout.");
+    process.exit(1);
+  }, 10000);
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+// --- Global error handlers to prevent silent crashes ---
+process.on("uncaughtException", (err) => {
+  log("error", "UNCAUGHT EXCEPTION: " + (err && err.stack ? err.stack : err));
+  // In production, you might want to exit and let Docker restart
+  setTimeout(() => process.exit(1), 1000);
+});
+
+process.on("unhandledRejection", (reason) => {
+  log(
+    "error",
+    "UNHANDLED REJECTION: " +
+    (reason && reason.stack ? reason.stack : reason),
+  );
+  // Don't exit on unhandled rejection (recoverable), but log loudly
+});
 
 // Main redis client (for general use)
 const client = redis.createClient({ url: REDIS_URL });
-client.on("error", (err) => log("error", "Redis client error: " + err.message));
+client.on("error", (err) =>
+  log("error", "Redis client error: " + err.message),
+);
 client
   .connect()
   .then(() => {
@@ -62,7 +125,10 @@ if (!module.parent) {
   });
 
   const socket = new Server(server, {
-    cors: { origin: "*" },
+    cors: {
+      origin: process.env.CORS_ORIGIN || "*",
+      methods: ["GET", "POST"],
+    },
     transports: ["websocket", "polling"],
     pingTimeout: 60000,
     pingInterval: 25000,
@@ -87,11 +153,33 @@ if (!module.parent) {
     );
 
     let isConnected = false;
+    let timeoutId;
 
-    // Connect asynchronously without blocking the connection handler
+    // Set a timeout for subscribers to connect (safety net)
+    timeoutId = setTimeout(() => {
+      if (!isConnected) {
+        log(
+          "warn",
+          "Redis subscribers timeout for client: " + socketClient.id,
+        );
+        // Cleanup stale subscribers
+        try {
+          subscribe.disconnect();
+        } catch (e) {
+          /* ignore */
+        }
+        try {
+          subscribe2.disconnect();
+        } catch (e) {
+          /* ignore */
+        }
+      }
+    }, 15000);
+
     Promise.all([subscribe.connect(), subscribe2.connect()])
       .then(() => {
         isConnected = true;
+        clearTimeout(timeoutId);
         log(
           "info",
           "Redis subscribers connected for client: " + socketClient.id,
@@ -101,19 +189,30 @@ if (!module.parent) {
           subscribe.subscribe("realtime", (message, channel) => {
             if (socketClient.connected) {
               socketClient.send(message);
-              log("msg", "received from channel #" + channel + " : " + message);
+              log(
+                "msg",
+                "received from channel #" + channel + " : " + message,
+              );
             }
           }),
           subscribe2.subscribe("loop", (message, channel) => {
             if (socketClient.connected) {
               socketClient.send(message);
-              log("msg", "received from channel #" + channel + " : " + message);
+              log(
+                "msg",
+                "received from channel #" + channel + " : " + message,
+              );
             }
           }),
         ]);
       })
       .catch((err) => {
+        clearTimeout(timeoutId);
         log("error", "Redis subscriber connect failed: " + err.message);
+        // Optionally disconnect the client if Redis is unavailable
+        if (socketClient.connected) {
+          socketClient.disconnect(true);
+        }
       });
 
     socketClient.on("message", function (msg) {
@@ -122,6 +221,7 @@ if (!module.parent) {
 
     socketClient.on("disconnect", async function () {
       log("log", "Client disconnected: " + socketClient.id);
+      clearTimeout(timeoutId);
       if (isConnected) {
         try {
           await subscribe.quit();

@@ -5,12 +5,14 @@ services:
       dockerfile: Dockerfile
     container_name: antrian_php
     ports:
-      - ${PHP_PORT:-8080}:80
+      - "${PHP_PORT:-8080}:80"
     volumes:
       - .:/var/www/html
     depends_on:
-      - redis
-      - mysql
+      redis:
+        condition: service_started
+      mysql:
+        condition: service_started
     environment:
       - REDIS_HOST=${REDIS_HOST:-redis}
       - REDIS_PORT=${REDIS_PORT:-6379}
@@ -19,6 +21,7 @@ services:
       - DB_USER=${DB_USER:-antrian}
       - DB_PASS=${DB_PASS:-antrian123}
       - DB_NAME=${DB_NAME:-antrian_db}
+    restart: unless-stopped
     networks:
       - antrian_net
   nodejs:
@@ -29,28 +32,39 @@ services:
     ports:
       - "${NODEJS_PORT:-8085}:8085"
     depends_on:
-      - redis
+      redis:
+        condition: service_started
     environment:
       - REDIS_HOST=${REDIS_HOST:-redis}
       - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8085/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
     networks:
       - antrian_net
   redis:
     image: redis:7-alpine
     container_name: antrian_redis
-    # Menambahkan password jika ada di .env agar sinkron
     command: >
-      sh -c "redis-server --port
-      ${REDIS_PORT:-6379}  ${REDIS_PASSWORD:+--requirepass $REDIS_PASSWORD}"
+      sh -c "redis-server --port ${REDIS_PORT:-6379}  ${REDIS_PASSWORD:+--requirepass $REDIS_PASSWORD}"
     ports:
-      - ${REDIS_EXT_PORT:-6380}:${REDIS_PORT:-6379}
+      # Hanya expose jika REDIS_EXT_PORT explicitly di-set (kosongkan untuk no-host-expose)
+      - "${REDIS_EXT_PORT:-}:${REDIS_PORT:-6379}"
+    restart: unless-stopped
     networks:
       - antrian_net
   mysql:
     image: mysql:5.7
     container_name: antrian_mysql
     ports:
-      - ${MYSQL_PORT:-3306}:3306
+      # Hanya expose jika MYSQL_PORT explicitly di-set
+      - "${MYSQL_PORT:-}:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
       MYSQL_DATABASE: ${DB_NAME:-antrian_db}
@@ -58,6 +72,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASS:-antrian123}
     volumes:
       - mysql_data:/var/lib/mysql
+    restart: unless-stopped
     networks:
       - antrian_net
 volumes:

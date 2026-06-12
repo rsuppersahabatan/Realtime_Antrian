@@ -1,4 +1,4 @@
-FROM php:7.4-apache
+FROM php:8.4-apache
 
 # Install PHP extensions
 RUN docker-php-ext-install mysqli pdo pdo_mysql
@@ -16,10 +16,15 @@ RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/Allo
 COPY docker/apache/socket-proxy.conf /etc/apache2/conf-available/socket-proxy.conf
 RUN a2enconf socket-proxy
 
-# Copy application files
+# Copy application files (.dockerignore excludes .env, node_modules, dll)
 COPY . /var/www/html/
 
 # Set permissions
-RUN chown -R www-data:www-data /var/www/html
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost/ || exit 1
 
 EXPOSE 80
