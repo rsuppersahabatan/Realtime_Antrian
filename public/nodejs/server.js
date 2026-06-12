@@ -22,7 +22,7 @@ const PORT = parseInt(process.env.NODEJS_PORT || "8085", 10);
 const HOST = "0.0.0.0";
 const REDIS_HOST = process.env.REDIS_HOST || "localhost";
 const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6379", 10);
-const APP_VERSION = "1.0.2";
+const APP_VERSION = "1.0.3";
 // const APP_NAME = "Antrian Online Realtime - With Socket Power!";
 
 var express = require("express"),
