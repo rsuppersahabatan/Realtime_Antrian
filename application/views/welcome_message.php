@@ -224,12 +224,12 @@
                     var form        = document.getElementById('formAmbil');
                     var apiState    = document.getElementById('apiState');
 
-                    // Base URL dikonfigurasi via .env (API_UTDRS_BASE). Default fallback
-                    // di rta_config.php = http://localhost:8081/server/darah
-                    var API_BASE = <?= json_encode(isset($api_utdrs_base) ? $api_utdrs_base : 'http://localhost:8081/server/darah') ?>;
+                    // Panggil proxy server-side (Welcome::self_checkin / self_register)
+                    // agar JWT/kredensial UTDRS tidak terekspos di browser. Backend CI
+                    // yang menambahkan Authorization: Bearer ke API UTDRS.
                     var API_ENDPOINTS = {
-                        checkin: API_BASE + '/self-checkin',
-                        daftar:  API_BASE + '/self-register'
+                        checkin: <?= json_encode(site_url('welcome/self_checkin')) ?>,
+                        daftar:  <?= json_encode(site_url('welcome/self_register')) ?>
                     };
 
                     var apiInflight  = false;

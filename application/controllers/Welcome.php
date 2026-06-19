@@ -112,6 +112,183 @@ class Welcome extends Public_Controller {
         $this->load->view('welcome_message', $this->data);
     }
 
+    /**
+     * Proxy server-side: Check-in mandiri pendonor UTDRS.
+     * Browser cukup POST {nik}; controller ini yang menyimpan JWT & memanggil
+     * API UTDRS (Authorization: Bearer) sehingga kredensial tidak ke klien.
+     */
+    public function self_checkin()
+    {
+        $this->_proxy_utdrs('/self-checkin');
+    }
+
+    /**
+     * Proxy server-side: Pendaftaran mandiri pendonor UTDRS.
+     */
+    public function self_register()
+    {
+        $this->_proxy_utdrs('/self-register');
+    }
+
+    /**
+     * Teruskan permintaan self-service ke API UTDRS dengan JWT Bearer.
+     * Membaca NIK dari body JSON ({"nik":"..."}) atau form, mengelola token
+     * platform (cache file + auto-refresh saat 401), lalu menormalkan respon
+     * agar field di JS view (message / nomor_antrian / nama) konsisten.
+     */
+    private function _proxy_utdrs($path)
+    {
+        $nik = $this->_read_nik();
+
+        if ($nik === '' || ! preg_match('/^\d{16}$/', $nik)) {
+            return $this->_json_out(400, [
+                'status'  => 'Error',
+                'message' => 'NIK harus 16 digit angka.',
+            ]);
+        }
+
+        $base = rtrim((string) $this->config->item('api_utdrs_base'), '/');
+        $url  = $base . $path;
+
+        // Panggil; bila 401 (token kedaluwarsa/invalid) ambil token baru lalu ulangi sekali.
+        $resp = $this->_utdrs_call($url, ['nik' => $nik], false);
+        if ($resp['status'] === 401) {
+            $resp = $this->_utdrs_call($url, ['nik' => $nik], true);
+        }
+
+        if ($resp['status'] === 0) {
+            return $this->_json_out(502, [
+                'status'  => 'Error',
+                'message' => 'Tidak dapat terhubung ke server UTDRS: ' . $resp['error'],
+            ]);
+        }
+
+        // Normalisasi: SIMRS/proxy balas {status, pesan, results:{nomor_antrian, nama_pendonor}}
+        $body    = is_array($resp['body']) ? $resp['body'] : [];
+        $results = isset($body['results']) && is_array($body['results']) ? $body['results'] : [];
+
+        $out = array_merge($body, [
+            'message'       => isset($body['pesan']) ? $body['pesan'] : (isset($body['message']) ? $body['message'] : ''),
+            'nomor_antrian' => isset($results['nomor_antrian']) ? $results['nomor_antrian'] : (isset($body['nomor_antrian']) ? $body['nomor_antrian'] : null),
+            'nama'          => isset($results['nama_pendonor']) ? $results['nama_pendonor'] : (isset($body['nama']) ? $body['nama'] : null),
+        ]);
+
+        return $this->_json_out($resp['status'], $out);
+    }
+
+    /**
+     * Lakukan satu kali HTTP POST ke endpoint UTDRS dengan Bearer token.
+     * $forceFresh = true memaksa ambil token baru (abaikan cache).
+     * Return: ['status' => int http code (0 jika gagal koneksi), 'body' => array|null, 'error' => string]
+     */
+    private function _utdrs_call($url, array $payload, $forceFresh)
+    {
+        $token = $this->_utdrs_token($forceFresh);
+        if ($token === '') {
+            return ['status' => 0, 'body' => null, 'error' => 'Token UTDRS tidak tersedia (cek kredensial platform).'];
+        }
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => [
+                'Authorization: Bearer ' . $token,
+                'Content-Type: application/json',
+                'Accept: application/json',
+            ],
+            CURLOPT_TIMEOUT        => 20,
+            CURLOPT_CONNECTTIMEOUT => 8,
+        ]);
+        $raw  = curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err  = curl_error($ch);
+        curl_close($ch);
+
+        if ($raw === false) {
+            return ['status' => 0, 'body' => null, 'error' => $err ?: 'koneksi gagal'];
+        }
+
+        return ['status' => $code, 'body' => json_decode($raw, true), 'error' => ''];
+    }
+
+    /**
+     * Ambil JWT platform; cache di file. $forceFresh menghapus cache lalu login ulang.
+     */
+    private function _utdrs_token($forceFresh = false)
+    {
+        $cacheFile = APPPATH . 'cache/utdrs_token.txt';
+
+        if (! $forceFresh && is_file($cacheFile)) {
+            $cached = trim((string) @file_get_contents($cacheFile));
+            if ($cached !== '') {
+                return $cached;
+            }
+        }
+
+        $nip      = (string) $this->config->item('utdrs_platform_nip');
+        $password = (string) $this->config->item('utdrs_platform_password');
+        if ($nip === '' || $password === '') {
+            return '';
+        }
+
+        // login/platform berada di root host, bukan di bawah /server/darah
+        $base      = rtrim((string) $this->config->item('api_utdrs_base'), '/');
+        $rootHost  = preg_replace('#/server/darah/?$#', '', $base);
+        $loginUrl  = $rootHost . '/login/platform';
+
+        $ch = curl_init($loginUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => http_build_query(['nip' => $nip, 'password' => $password]),
+            CURLOPT_TIMEOUT        => 20,
+            CURLOPT_CONNECTTIMEOUT => 8,
+        ]);
+        $raw = curl_exec($ch);
+        curl_close($ch);
+
+        if ($raw === false) {
+            return '';
+        }
+
+        $data  = json_decode($raw, true);
+        $token = is_array($data) && isset($data['access_token']) ? (string) $data['access_token'] : '';
+
+        if ($token !== '') {
+            @file_put_contents($cacheFile, $token, LOCK_EX);
+        }
+
+        return $token;
+    }
+
+    /**
+     * Baca NIK dari body JSON ({"nik":"..."}) atau form POST, bersihkan non-digit.
+     */
+    private function _read_nik()
+    {
+        $nik = (string) $this->input->post('nik');
+        if ($nik === '') {
+            $raw = json_decode((string) $this->input->raw_input_stream, true);
+            if (is_array($raw) && isset($raw['nik'])) {
+                $nik = (string) $raw['nik'];
+            }
+        }
+        return preg_replace('/\D+/', '', $nik);
+    }
+
+    /**
+     * Output JSON dengan status header tertentu.
+     */
+    private function _json_out($code, array $payload)
+    {
+        $this->output
+            ->set_status_header($code)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($payload));
+    }
+
     private function _init_minify()
     {
         $this->load->library('minify');

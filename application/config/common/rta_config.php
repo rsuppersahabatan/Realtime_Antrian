@@ -54,3 +54,16 @@ $config['tts_api_base']   = getenv('TTS_API_BASE') ?: 'http://localhost:8085';
 | JS menggabungkan path '/self-checkin' & '/self-register' secara eksplisit.
 */
 $config['api_utdrs_base'] = getenv('API_UTDRS_BASE') ?: 'http://localhost:8081/server/darah';
+
+/*
+|--------------------------------------------------------------------------
+| UTDRS Platform credentials (server-side JWT)
+|--------------------------------------------------------------------------
+| Dipakai Welcome::self_checkin / self_register untuk login ke endpoint
+| {host}/login/platform dan memperoleh JWT, lalu memanggil self-checkin /
+| self-register dengan header Authorization: Bearer. Kredensial & token
+| TIDAK pernah dikirim ke browser. Isi via env UTDRS_PLATFORM_NIP /
+| UTDRS_PLATFORM_PASSWORD. Gunakan akun layanan khusus.
+*/
+$config['utdrs_platform_nip']      = getenv('UTDRS_PLATFORM_NIP') ?: '';
+$config['utdrs_platform_password'] = getenv('UTDRS_PLATFORM_PASSWORD') ?: '';
