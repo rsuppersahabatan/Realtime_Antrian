@@ -28,7 +28,7 @@ $lang['menu_search'] = 'Cari';
 /* *********** */$lang['menu_loket_edit']       = 'Ubah';
 /* *********** */$lang['menu_loket_delete']     = 'Hapus';
 
-/* ****** */$lang['menu_client']                = 'Display Client';
+/* ****** */$lang['menu_client']                = 'Display Antrian';
 /* *********** */$lang['menu_client_create']    = 'Tambah';
 /* *********** */$lang['menu_client_edit']      = 'Ubah';
 /* *********** */$lang['menu_client_delete']    = 'Hapus';

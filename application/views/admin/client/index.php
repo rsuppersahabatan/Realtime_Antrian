@@ -58,6 +58,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 												<td><?php echo $row['created_at']; ?></td>
 												<td>
 													<?php echo anchor('client/'.$row['id'], '<i class="fa fa-tv"></i> '.lang('actions_display'), array('class' => 'btn btn-xs btn-warning btn-flat')); ?>
+													<?php echo anchor('welcome/'.$row['id'], '<i class="fa fa-tv"></i> '.lang('actions_display_welcome'), array('class' => 'btn btn-xs btn-warning btn-flat')); ?>
+
 													<?php echo anchor('admin/client/toggle_status/'.$row['id'],
 														($row['is_active'] == 'ya' ? '<i class="fa fa-toggle-on"></i> Matikan Status' : '<i class="fa fa-toggle-off"></i> Jadikan Aktif'),
 														array('class' => 'btn btn-xs btn-'.($row['is_active'] == 'ya' ? 'success' : 'default').' btn-flat')
