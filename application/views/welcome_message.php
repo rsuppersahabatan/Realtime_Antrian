@@ -193,7 +193,7 @@
                     </div>
 
                     <div class="nik-panel">
-                        <h3 class="section-title" style="margin-top:0">DATA PENGUNJUNG</h3>
+                        <h3 class="section-title" style="margin-top:0">INPUT DATA PENGUNJUNG</h3>
                         <label for="nik" style="font-weight:bold;">NIK (16 digit KTP)</label>
                         <input
                             type="text"
@@ -205,105 +205,12 @@
                             name="nik"
                             class="form-control nik-input"
                             placeholder="Masukkan 16 digit NIK KTP"
-                            value="<?= htmlspecialchars($nik_old ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                            value="<?= htmlspecialchars($nik_old ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                            autocomplete="off">
                         <small class="text-muted">NIK digunakan untuk mengidentifikasi antrian Anda. Data tidak dibagikan ke publik.</small>
                     </div>
 
-                    <h3 class="section-title">PILIH LAYANAN
-                    <p class="text-muted" style="margin-top: 14px; font-size: 12px;">
-                        Setelah mengambil nomor, perhatikan panggilan di layar antrian.
-                    </p>
-                    </h3>
-
-                    <input type="hidden" name="id_layanan" id="idLayanan" value="">
-
-                <?php if ( ! empty($layanan)): ?>
-                    <?php $vh = 320; ?>
-                    <div
-                        id="layananRunning"
-                        class="layanan-running"
-                        style="height:<?= $vh ?>px;overflow-y:auto;position:relative;scroll-behavior:auto;mask-image:linear-gradient(180deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);-webkit-mask-image:linear-gradient(180deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);">
-                        <div class="layanan-running-track">
-                            <?php for ($pass = 0; $pass < 1; $pass++): ?>
-                                <?php foreach ($layanan as $ly): ?>
-                                    <div class="layanan-card clearfix"<?= $pass === 1 ? ' aria-hidden="true"' : '' ?>>
-                                        <span class="layanan-kode"><?= htmlspecialchars($ly['kode_huruf'], ENT_QUOTES, 'UTF-8') ?></span>
-                                        <span class="layanan-nama"><?= htmlspecialchars($ly['nama_layanan'], ENT_QUOTES, 'UTF-8') ?></span>
-                                        <button type="button" data-id="<?= (int) $ly['id'] ?>" class="btn-ambil btn-pilih-layanan"<?= $pass === 1 ? ' tabindex="-1"' : '' ?>>AMBIL NOMOR</button>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endfor; ?>
-                        </div>
-                    </div>
-                    <small class="text-muted" style="display:block;margin-top:6px;">
-                        Arahkan kursor (atau scroll) ke daftar layanan untuk menjeda gerakan, lalu klik <strong>AMBIL NOMOR</strong>.
-                    </small>
-                    <style>
-                        /* Sembunyikan scrollbar default tapi tetap bisa di-scroll dengan mouse wheel/touch. */
-                        .layanan-running { scrollbar-width: thin; scrollbar-color: rgba(0,186,174,0.5) transparent; }
-                        .layanan-running::-webkit-scrollbar { width: 8px; }
-                        .layanan-running::-webkit-scrollbar-track { background: transparent; }
-                        .layanan-running::-webkit-scrollbar-thumb { background: rgba(0,186,174,0.45); border-radius: 4px; }
-                        .layanan-running::-webkit-scrollbar-thumb:hover { background: rgba(0,186,174,0.75); }
-                    </style>
-                    <script>
-                    (function () {
-                        var box = document.getElementById('layananRunning');
-                        if ( ! box) return;
-
-                        var track = box.querySelector('.layanan-running-track');
-                        if ( ! track) return;
-
-                        var paused      = false;
-                        var pausedManual = false;
-                        var pixelsPerSec = 30;     // kecepatan auto-scroll (px / detik)
-                        var lastTs       = null;
-                        var manualTimer  = null;
-
-                        function step(ts) {
-                            if (lastTs === null) lastTs = ts;
-                            var dt = ts - lastTs;
-                            lastTs = ts;
-
-                            if ( ! paused && ! pausedManual) {
-                                var half = track.scrollHeight / 2;
-                                box.scrollTop += (pixelsPerSec * dt) / 1000;
-                                // Loop seamless: saat lewat setengah track (akhir set pertama),
-                                // mundur tepat sebanyak half — visual tetap kontinyu.
-                                if (box.scrollTop >= half) {
-                                    box.scrollTop -= half;
-                                }
-                            }
-                            requestAnimationFrame(step);
-                        }
-                        requestAnimationFrame(step);
-
-                        // Hover & focus = pause supaya user bisa klik tombol.
-                        box.addEventListener('mouseenter', function () { paused = true; });
-                        box.addEventListener('mouseleave', function () { paused = false; });
-                        box.addEventListener('focusin',    function () { paused = true; });
-                        box.addEventListener('focusout',   function () { paused = false; });
-
-                        // Scroll manual (wheel / drag scrollbar / touch) = pause sementara,
-                        // resume otomatis 1.5 detik setelah aktivitas terakhir berhenti.
-                        function bumpManual() {
-                            pausedManual = true;
-                            if (manualTimer) clearTimeout(manualTimer);
-                            manualTimer = setTimeout(function () { pausedManual = false; }, 1500);
-                        }
-                        box.addEventListener('wheel',     bumpManual, { passive: true });
-                        box.addEventListener('touchmove', bumpManual, { passive: true });
-                        box.addEventListener('scroll', function () {
-                            // scroll juga di-trigger oleh auto-scroll; bumpManual hanya kalau
-                            // sedang pause (misal hover) — artinya user yang scroll.
-                            if (paused) bumpManual();
-                        });
-                    })();
-                    </script>
-                <?php else: ?>
-                    <div class="alert alert-warning">Belum ada layanan yang tersedia. Silakan hubungi petugas.</div>
-                <?php endif; ?>
-
+                    <div id="apiState" style="display:none;margin-top:18px;"></div>
                 </div><!-- /#formStep -->
 
                 <script>
@@ -315,6 +222,30 @@
                     var pilihanBdg  = document.getElementById('pilihanBadge');
                     var btnGanti    = document.getElementById('btnGantiPilihan');
                     var form        = document.getElementById('formAmbil');
+                    var apiState    = document.getElementById('apiState');
+
+                    // Base URL dikonfigurasi via .env (API_UTDRS_BASE). Default fallback
+                    // di rta_config.php = http://localhost:8081/server/darah
+                    var API_BASE = <?= json_encode(isset($api_utdrs_base) ? $api_utdrs_base : 'http://localhost:8081/server/darah') ?>;
+                    var API_ENDPOINTS = {
+                        checkin: API_BASE + '/self-checkin',
+                        daftar:  API_BASE + '/self-register'
+                    };
+
+                    var apiInflight  = false;
+                    var apiSucceeded = false;
+
+                    function escapeHtml(s) {
+                        return String(s).replace(/[&<>"']/g, function (c) {
+                            return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+                        });
+                    }
+
+                    function setApiState(html) {
+                        if ( ! apiState) return;
+                        apiState.innerHTML  = html;
+                        apiState.style.display = html === '' ? 'none' : 'block';
+                    }
 
                     function showForm(tipe) {
                         tipeInput.value = tipe;
@@ -337,13 +268,93 @@
                         tipeInput.value = '';
                         if (visitStep) visitStep.style.display = 'block';
                         if (formStep)  formStep.style.display  = 'none';
-                        if (nikInput)  nikInput.removeAttribute('required');
+                        if (nikInput) {
+                            nikInput.removeAttribute('required');
+                            nikInput.removeAttribute('readonly');
+                            nikInput.value = '';
+                        }
+                        apiInflight  = false;
+                        apiSucceeded = false;
+                        setApiState('');
+                    }
+
+                    function callApi(tipe, nik) {
+                        var endpoint = API_ENDPOINTS[tipe];
+                        if ( ! endpoint) return;
+
+                        apiInflight = true;
+                        var label = tipe === 'checkin' ? 'check-in' : 'pendaftaran';
+                        setApiState('<div class="alert alert-info" style="margin:0;">Memproses ' + label + '… mohon tunggu.</div>');
+
+                        fetch(endpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ nik: nik })
+                        })
+                        .then(function (res) {
+                            return res.json()
+                                .catch(function () { return null; })
+                                .then(function (body) { return { ok: res.ok, status: res.status, body: body }; });
+                        })
+                        .then(function (result) {
+                            apiInflight = false;
+                            var body = result.body || {};
+                            if (result.ok) {
+                                apiSucceeded = true;
+                                var msg = body.message || body.msg
+                                       || (tipe === 'checkin' ? 'Check-in berhasil.' : 'Pendaftaran berhasil.');
+                                var extra = '';
+                                if (body.nomor_antrian) {
+                                    extra += '<div style="font-size:36px;font-weight:900;color:#0a7a6b;margin-top:8px;">'
+                                          +  escapeHtml(body.nomor_antrian) + '</div>';
+                                }
+                                if (body.nama) {
+                                    extra += '<div style="margin-top:4px;">' + escapeHtml(body.nama) + '</div>';
+                                }
+                                setApiState(
+                                    '<div class="alert alert-success" style="margin:0;text-align:center;">'
+                                  + '<strong>' + escapeHtml(msg) + '</strong>'
+                                  + extra
+                                  + '</div>'
+                                );
+                                if (nikInput) nikInput.setAttribute('readonly', 'readonly');
+                            } else {
+                                var emsg = body.message || body.msg || body.error
+                                        || ('Permintaan gagal (HTTP ' + result.status + ').');
+                                setApiState('<div class="alert alert-danger" style="margin:0;">' + escapeHtml(emsg) + '</div>');
+                            }
+                        })
+                        .catch(function (err) {
+                            apiInflight = false;
+                            setApiState(
+                                '<div class="alert alert-danger" style="margin:0;">'
+                              + 'Tidak dapat terhubung ke server: ' + escapeHtml(err && err.message ? err.message : 'unknown')
+                              + '</div>'
+                            );
+                        });
                     }
 
                     document.querySelectorAll('.btn-visit-type').forEach(function (btn) {
                         btn.addEventListener('click', function () { showForm(this.dataset.tipe); });
                     });
                     if (btnGanti) btnGanti.addEventListener('click', showVisit);
+
+                    if (nikInput) {
+                        // Trigger auto-call begitu NIK valid 16 digit. setTimeout(0) supaya kita
+                        // melihat nilai SETELAH welcome.js menyaring karakter non-digit.
+                        nikInput.addEventListener('input', function () {
+                            var el = this;
+                            setTimeout(function () {
+                                if (apiInflight || apiSucceeded) return;
+                                if ( ! tipeInput.value) return;
+                                if ( ! /^\d{16}$/.test(el.value)) return;
+                                callApi(tipeInput.value, el.value);
+                            }, 0);
+                        });
+                    }
 
                     // Saat reload akibat error (NIK salah / layanan belum dipilih),
                     // server kirim flashdata "nik" / "error" — buka langsung form supaya
@@ -356,9 +367,15 @@
 
                     if (form) {
                         form.addEventListener('submit', function (e) {
+                            // Form sekarang murni interaksi sisi-klien (fetch ke API eksternal).
+                            // Cegah submit konvensional supaya halaman tidak reload.
+                            e.preventDefault();
                             if ( ! tipeInput.value) {
-                                e.preventDefault();
                                 showVisit();
+                                return;
+                            }
+                            if (nikInput && /^\d{16}$/.test(nikInput.value) && ! apiInflight && ! apiSucceeded) {
+                                callApi(tipeInput.value, nikInput.value);
                             }
                         });
                     }

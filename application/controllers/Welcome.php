@@ -20,11 +20,14 @@ class Welcome extends Public_Controller {
     public function index()
     {
         $this->_init_minify();
-        $this->data['mode']    = 'pilih';
-        $this->data['layanan'] = $this->Layanan_model->get_all_show_welcome();
-        $this->data['loket']   = $this->Loket_model->get_loket_buka();
-        $this->data['error']   = $this->session->flashdata('error');
-        $this->data['nik_old'] = (string) $this->session->flashdata('nik');
+        $this->data['mode']           = 'pilih';
+        $this->data['layanan']        = $this->Layanan_model->get_all_show_welcome();
+        $this->data['loket']          = $this->Loket_model->get_loket_buka();
+        $this->data['error']          = $this->session->flashdata('error');
+        $this->data['nik_old']        = (string) $this->session->flashdata('nik');
+        // Base URL UTDRS dipakai view untuk membentuk endpoint self-checkin /
+        // self-register di JS (lihat .env -> API_UTDRS_BASE).
+        $this->data['api_utdrs_base'] = rtrim((string) $this->config->item('api_utdrs_base'), '/');
         $this->load->view('welcome_message', $this->data);
     }
 

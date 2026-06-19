@@ -42,3 +42,15 @@ $config['socket_url']     = getenv('SOCKET_URL') ?: '';
 | Jangan diberi trailing slash — kode JS menggabungkan dengan '/tts'.
 */
 $config['tts_api_base']   = getenv('TTS_API_BASE') ?: 'http://localhost:8085';
+
+/*
+|--------------------------------------------------------------------------
+| UTDRS Self-service API
+|--------------------------------------------------------------------------
+| Base URL endpoint UTDRS yang dipanggil halaman welcome lewat fetch():
+|   - {base}/self-checkin   (tombol "Check in")
+|   - {base}/self-register  (tombol "Daftar")
+| Override per-deployment via env API_UTDRS_BASE. Jangan beri trailing slash —
+| JS menggabungkan path '/self-checkin' & '/self-register' secara eksplisit.
+*/
+$config['api_utdrs_base'] = getenv('API_UTDRS_BASE') ?: 'http://localhost:8081/server/darah';
