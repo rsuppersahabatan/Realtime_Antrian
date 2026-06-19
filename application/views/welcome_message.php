@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Antrian Online - RS Persahabatan</title>
+    <title>Antrian RS Persahabatan</title>
     <script defer src="https://umami.persahabatan.co.id/script.js" data-website-id="084ea29a-39c4-44d7-ba5a-534fb2daacb6"></script>
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
@@ -83,35 +83,139 @@
         <div class="alert alert-danger alert-inline"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
     <?php endif; ?>
 
+    <style>
+        .visit-type-wrap {
+            display:flex;
+            justify-content:center;
+            align-items:flex-start;
+            gap:32px;
+            flex-wrap:wrap;
+            padding:48px 16px 32px;
+        }
+        .visit-type-option {
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            max-width:260px;
+            flex:1 1 220px;
+        }
+        .btn-visit-type {
+            border:none;
+            border-radius:9999px;
+            padding:22px 56px;
+            font-size:22px;
+            font-weight:600;
+            color:#0f172a;
+            cursor:pointer;
+            box-shadow:0 4px 14px rgba(0,0,0,.12);
+            transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+            width:100%;
+            min-width:200px;
+        }
+        .btn-visit-type:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.16); filter:brightness(1.03); }
+        .btn-visit-type:active { transform:translateY(0); }
+        .btn-visit-type.btn-checkin { background:#5ed16a; }
+        .btn-visit-type.btn-daftar  { background:#8ccdd6; }
+        .visit-type-desc {
+            margin-top:14px;
+            font-size:13px;
+            line-height:1.5;
+            color:#475569;
+            text-align:center;
+            padding:0 6px;
+        }
+        .visit-type-title {
+            text-align:center;
+            margin:24px 0 0;
+            font-weight:700;
+            color:#0a7a6b;
+            letter-spacing:.5px;
+        }
+        .visit-type-sub {
+            text-align:center;
+            color:#64748b;
+            margin-top:6px;
+            font-size:13px;
+        }
+        .pilihan-badge {
+            display:inline-block;
+            padding:4px 12px;
+            border-radius:9999px;
+            font-size:12px;
+            font-weight:700;
+            letter-spacing:.5px;
+            color:#0f172a;
+        }
+        .pilihan-badge.checkin { background:#5ed16a; }
+        .pilihan-badge.daftar  { background:#8ccdd6; }
+        .btn-ganti-pilihan {
+            background:transparent;
+            border:none;
+            color:#0a7a6b;
+            font-size:12px;
+            text-decoration:underline;
+            cursor:pointer;
+            padding:0;
+            margin-left:8px;
+        }
+    </style>
+
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-md-8 col-md-offset-2">
             <?= form_open('welcome/ambil', ['id' => 'formAmbil', 'autocomplete' => 'off']); ?>
 
-                <div class="nik-panel">
-                    <h3 class="section-title" style="margin-top:0">DATA PENGUNJUNG</h3>
-                    <label for="nik" style="font-weight:bold;">NIK (16 digit KTP)</label>
-                    <input
-                        type="text"
-                        inputmode="numeric"
-                        pattern="[0-9]{16}"
-                        maxlength="16"
-                        minlength="16"
-                        id="nik"
-                        name="nik"
-                        class="form-control nik-input"
-                        placeholder="Masukkan 16 digit NIK KTP"
-                        value="<?= htmlspecialchars($nik_old ?? '', ENT_QUOTES, 'UTF-8') ?>"
-                        required>
-                    <small class="text-muted">NIK digunakan untuk mengidentifikasi antrian Anda. Data tidak dibagikan ke publik.</small>
+                <input type="hidden" name="tipe_kunjungan" id="tipeKunjungan" value="">
+
+                <div id="visitTypeStep">
+                    <h3 class="visit-type-title">SILAKAN PILIH KEPERLUAN ANDA</h3>
+                    <p class="visit-type-sub">Pilih <strong>Check in</strong> jika sudah memiliki janji, atau <strong>Daftar</strong> untuk pendaftaran baru.</p>
+                    <div class="visit-type-wrap">
+                        <div class="visit-type-option">
+                            <button type="button" class="btn-visit-type btn-checkin" data-tipe="checkin">Check in</button>
+                            <p class="visit-type-desc">
+                                Untuk pendonor yang sudah melakukan pendaftaran melalui link
+                                dan datang sesuai tanggal rencana donor.
+                            </p>
+                        </div>
+                        <div class="visit-type-option">
+                            <button type="button" class="btn-visit-type btn-daftar" data-tipe="daftar">Daftar</button>
+                            <p class="visit-type-desc">
+                                Untuk pendaftaran <strong>offline</strong> di UTD RS Persahabatan.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                <h3 class="section-title">PILIH LAYANAN
-                <p class="text-muted" style="margin-top: 14px; font-size: 12px;">
-                    Setelah mengambil nomor, perhatikan panggilan di layar antrian.
-                </p>
-                </h3>
+                <div id="formStep" style="display:none;">
+                    <div style="margin-bottom:10px;">
+                        <span class="pilihan-badge" id="pilihanBadge">CHECK IN</span>
+                        <button type="button" class="btn-ganti-pilihan" id="btnGantiPilihan">ganti pilihan</button>
+                    </div>
 
-                <input type="hidden" name="id_layanan" id="idLayanan" value="">
+                    <div class="nik-panel">
+                        <h3 class="section-title" style="margin-top:0">DATA PENGUNJUNG</h3>
+                        <label for="nik" style="font-weight:bold;">NIK (16 digit KTP)</label>
+                        <input
+                            type="text"
+                            inputmode="numeric"
+                            pattern="[0-9]{16}"
+                            maxlength="16"
+                            minlength="16"
+                            id="nik"
+                            name="nik"
+                            class="form-control nik-input"
+                            placeholder="Masukkan 16 digit NIK KTP"
+                            value="<?= htmlspecialchars($nik_old ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                        <small class="text-muted">NIK digunakan untuk mengidentifikasi antrian Anda. Data tidak dibagikan ke publik.</small>
+                    </div>
+
+                    <h3 class="section-title">PILIH LAYANAN
+                    <p class="text-muted" style="margin-top: 14px; font-size: 12px;">
+                        Setelah mengambil nomor, perhatikan panggilan di layar antrian.
+                    </p>
+                    </h3>
+
+                    <input type="hidden" name="id_layanan" id="idLayanan" value="">
 
                 <?php if ( ! empty($layanan)): ?>
                     <?php $vh = 320; ?>
@@ -200,66 +304,112 @@
                     <div class="alert alert-warning">Belum ada layanan yang tersedia. Silakan hubungi petugas.</div>
                 <?php endif; ?>
 
+                </div><!-- /#formStep -->
+
+                <script>
+                (function () {
+                    var visitStep   = document.getElementById('visitTypeStep');
+                    var formStep    = document.getElementById('formStep');
+                    var tipeInput   = document.getElementById('tipeKunjungan');
+                    var nikInput    = document.getElementById('nik');
+                    var pilihanBdg  = document.getElementById('pilihanBadge');
+                    var btnGanti    = document.getElementById('btnGantiPilihan');
+                    var form        = document.getElementById('formAmbil');
+
+                    function showForm(tipe) {
+                        tipeInput.value = tipe;
+                        if (tipe === 'checkin') {
+                            pilihanBdg.textContent = 'CHECK IN';
+                            pilihanBdg.className   = 'pilihan-badge checkin';
+                        } else {
+                            pilihanBdg.textContent = 'DAFTAR';
+                            pilihanBdg.className   = 'pilihan-badge daftar';
+                        }
+                        if (visitStep) visitStep.style.display = 'none';
+                        if (formStep)  formStep.style.display  = 'block';
+                        if (nikInput) {
+                            nikInput.setAttribute('required', 'required');
+                            try { nikInput.focus(); } catch (e) {}
+                        }
+                    }
+
+                    function showVisit() {
+                        tipeInput.value = '';
+                        if (visitStep) visitStep.style.display = 'block';
+                        if (formStep)  formStep.style.display  = 'none';
+                        if (nikInput)  nikInput.removeAttribute('required');
+                    }
+
+                    document.querySelectorAll('.btn-visit-type').forEach(function (btn) {
+                        btn.addEventListener('click', function () { showForm(this.dataset.tipe); });
+                    });
+                    if (btnGanti) btnGanti.addEventListener('click', showVisit);
+
+                    // Saat reload akibat error (NIK salah / layanan belum dipilih),
+                    // server kirim flashdata "nik" / "error" — buka langsung form supaya
+                    // user tidak perlu klik ulang Check in / Daftar.
+                    var hasOldNik = <?= ! empty($nik_old) ? 'true' : 'false' ?>;
+                    var hasError  = <?= ! empty($error)   ? 'true' : 'false' ?>;
+                    if (hasOldNik || hasError) {
+                        showForm('checkin');
+                    }
+
+                    if (form) {
+                        form.addEventListener('submit', function (e) {
+                            if ( ! tipeInput.value) {
+                                e.preventDefault();
+                                showVisit();
+                            }
+                        });
+                    }
+                })();
+                </script>
+
             <?= form_close() ?>
         </div>
-
-        <div class="col-md-4">
-
-            <div class="video-wrap" style="position:relative;width:100%;padding-top:56.25%;overflow:hidden;border-radius:12px;">
-                <iframe
-                    src="https://www.youtube-nocookie.com/embed/ebZwRzwEpT8?autoplay=1&mute=1&loop=1&playlist=ebZwRzwEpT8&controls=0&showinfo=0&rel=0"
-                    frameborder="0"
-                    allow="autoplay; encrypted-media"
-                    allowfullscreen
-                    style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
-                ></iframe>
-            </div>
-
-            <div class="running-text-wrap" style="margin-top:14px;background:#0a7a6b;color:#fff;border-radius:10px;overflow:hidden;padding:10px 0;">
-                <div class="running-text" style="white-space:nowrap;display:inline-block;padding-left:100%;animation:marquee 22s linear infinite;font-weight:600;font-size:14px;">
-                    <strong>PENGUMUMAN:</strong>
-                    Jam operasional : 12:00 - 19:00 WIB. &nbsp;|&nbsp;
-                    Gunakan selalu masker di lingkungan rumah sakit. &nbsp;|&nbsp;
-                    Selamat datang di UPDRS RS Persahabatan. &nbsp;|&nbsp;
-                    Mohon menunggu nomor antrian Anda dipanggil.
-                </div>
-            </div>
-            <style>
-                @keyframes marquee {
-                    0%   { transform: translateX(0); }
-                    100% { transform: translateX(-100%); }
-                }
-            </style>
-
-            <div class="clock-wrap" style="margin-top:55px;">
-                <div class="clock" aria-label="Jam saat ini">
-                    <div class="hour"   id="hour"></div>
-                    <div class="minute" id="minute"></div>
-                    <div class="second" id="second"></div>
-                    <div class="numbers">
-                        <div class="number number1"><span>1</span></div>
-                        <div class="number number2"><span>2</span></div>
-                        <div class="number number3"><span>3</span></div>
-                        <div class="number number4"><span>4</span></div>
-                        <div class="number number5"><span>5</span></div>
-                        <div class="number number6"><span>6</span></div>
-                        <div class="number number7"><span>7</span></div>
-                        <div class="number number8"><span>8</span></div>
-                        <div class="number number9"><span>9</span></div>
-                        <div class="number number10"><span>10</span></div>
-                        <div class="number number11"><span>11</span></div>
-                        <div class="number number12"><span>12</span></div>
-                    </div>
-                </div>
-            </div>
-            <div class="clock-digital" id="clockDigital">--:--:--</div>
-        </div>
-
-
     </div>
 
 <?php endif; ?>
 
+</div>
+
+<!-- ====== FOOTER RUNNING TEXT (fixed di paling bawah halaman) ====== -->
+<style>
+    body { padding-bottom: 56px; }
+    .welcome-footer-news {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #1f2d00;
+        color: #ccdb2a;
+        padding: 12px 0;
+        font-size: 16px;
+        font-weight: 600;
+        border-top: 2px solid #ccdb2a;
+        overflow: hidden;
+        z-index: 1000;
+    }
+    .welcome-footer-news .running-text {
+        display: inline-block;
+        white-space: nowrap;
+        padding-left: 100%;
+        animation: welcome-marquee 28s linear infinite;
+    }
+    @keyframes welcome-marquee {
+        0%   { transform: translateX(0); }
+        100% { transform: translateX(-100%); }
+    }
+</style>
+
+<div class="welcome-footer-news no-print">
+    <div class="running-text">
+        <strong>PENGUMUMAN:</strong>
+        Jam operasional : 12:00 - 19:00 WIB. &nbsp;|&nbsp;
+        Gunakan selalu masker di lingkungan rumah sakit. &nbsp;|&nbsp;
+        Selamat datang di UPDRS RS Persahabatan. &nbsp;|&nbsp;
+        Mohon menunggu nomor antrian Anda dipanggil.
+    </div>
 </div>
 
 <?= isset($minified_js) ? $minified_js : '<script src="' . base_url('assets/frameworks/domprojects/js/welcome.js') . '"></script>' ?>
