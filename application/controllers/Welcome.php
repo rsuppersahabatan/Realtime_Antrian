@@ -259,20 +259,24 @@ class Welcome extends Public_Controller {
             return '';
         }
 
-        // login/platform berada di root host, bukan di bawah /server/darah
+        // Endpoint login platform: berada di bawah grup "prima" di API
+        // (Routes.php -> $routes->group("prima", ...){ post("login/platform") }),
+        // BUKAN di root host maupun di bawah /server/darah.
         $base      = rtrim((string) $this->config->item('api_utdrs_base'), '/');
         $rootHost  = preg_replace('#/server/darah/?$#', '', $base);
-        $loginUrl  = $rootHost . '/login/platform';
+        $loginUrl  = $rootHost . '/prima/login/platform';
 
         $ch = curl_init($loginUrl);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => http_build_query(['nip' => $nip, 'password' => $password]),
+            CURLOPT_HTTPHEADER     => ['Accept: application/json'],
             CURLOPT_TIMEOUT        => 10,
             CURLOPT_CONNECTTIMEOUT => 5,
         ]);
         $raw  = curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $err  = curl_error($ch);
         curl_close($ch);
 
@@ -285,7 +289,8 @@ class Welcome extends Public_Controller {
         $token = is_array($data) && isset($data['access_token']) ? (string) $data['access_token'] : '';
 
         if ($token === '') {
-            log_message('error', 'UTDRS login/platform gagal memperoleh access_token. Respons: ' . substr($raw, 0, 500));
+            log_message('error', 'UTDRS login/platform (' . $loginUrl . ') HTTP ' . $code
+                . ' gagal memperoleh access_token. Respons: ' . substr($raw, 0, 500));
             return '';
         }
 
