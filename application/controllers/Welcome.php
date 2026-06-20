@@ -187,6 +187,15 @@ class Welcome extends Public_Controller {
                 . ' :: ' . (is_array($resp['body']) ? json_encode($resp['body']) : 'non-JSON'));
         }
 
+        // Upstream balas body non-JSON (mis. halaman 404/500 framework) -> beri pesan jelas
+        if (! is_array($resp['body'])) {
+            return $this->_json_out(200, [
+                'status'     => 'Error',
+                'httpStatus' => $resp['status'],
+                'message'    => 'Layanan UTDRS sedang bermasalah (HTTP ' . $resp['status'] . '). Silakan coba lagi atau hubungi petugas.',
+            ]);
+        }
+
         // Normalisasi respons. SIMRS balas:
         //  - check-in : results:{nomor_antrian, nama_pendonor, ...}
         //  - register : results:{kode_pendonor, uniq_code, nama_pendonor, ...}
