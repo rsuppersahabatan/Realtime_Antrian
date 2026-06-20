@@ -138,12 +138,27 @@ class Welcome extends Public_Controller {
      */
     private function _proxy_utdrs($path)
     {
+        // CATATAN: controller ini SELALU membalas HTTP 200 ke web server. Status
+        // sebenarnya ada di body JSON (field "status" = Success/Error, "httpStatus"
+        // = kode upstream). Ini menghindari nginx menukar respon 5xx kita dengan
+        // halaman "502 Bad Gateway" (fastcgi_intercept_errors) sehingga pesan
+        // error tetap sampai ke kiosk.
         $nik = $this->_read_nik();
 
         if ($nik === '' || ! preg_match('/^\d{16}$/', $nik)) {
-            return $this->_json_out(400, [
+            return $this->_json_out(200, [
                 'status'  => 'Error',
                 'message' => 'NIK harus 16 digit angka.',
+            ]);
+        }
+
+        // Kredensial platform wajib ada untuk memperoleh JWT
+        $nip = (string) $this->config->item('utdrs_platform_nip');
+        $pwd = (string) $this->config->item('utdrs_platform_password');
+        if ($nip === '' || $pwd === '') {
+            return $this->_json_out(200, [
+                'status'  => 'Error',
+                'message' => 'Konfigurasi UTDRS belum lengkap (kredensial platform kosong). Hubungi petugas IT.',
             ]);
         }
 
@@ -157,10 +172,18 @@ class Welcome extends Public_Controller {
         }
 
         if ($resp['status'] === 0) {
-            return $this->_json_out(502, [
-                'status'  => 'Error',
-                'message' => 'Tidak dapat terhubung ke server UTDRS: ' . $resp['error'],
+            log_message('error', 'UTDRS proxy gagal koneksi ke ' . $url . ' :: ' . $resp['error']);
+            return $this->_json_out(200, [
+                'status'     => 'Error',
+                'httpStatus' => 0,
+                'message'    => 'Tidak dapat terhubung ke server UTDRS. Coba lagi atau hubungi petugas.',
+                'detail'     => $resp['error'],
             ]);
+        }
+
+        if ($resp['status'] < 200 || $resp['status'] >= 300) {
+            log_message('error', 'UTDRS proxy upstream HTTP ' . $resp['status'] . ' dari ' . $url
+                . ' :: ' . (is_array($resp['body']) ? json_encode($resp['body']) : 'non-JSON'));
         }
 
         // Normalisasi: SIMRS/proxy balas {status, pesan, results:{nomor_antrian, nama_pendonor}}
@@ -168,12 +191,14 @@ class Welcome extends Public_Controller {
         $results = isset($body['results']) && is_array($body['results']) ? $body['results'] : [];
 
         $out = array_merge($body, [
+            'status'        => isset($body['status']) ? $body['status'] : ($resp['status'] >= 200 && $resp['status'] < 300 ? 'Success' : 'Error'),
+            'httpStatus'    => $resp['status'],
             'message'       => isset($body['pesan']) ? $body['pesan'] : (isset($body['message']) ? $body['message'] : ''),
             'nomor_antrian' => isset($results['nomor_antrian']) ? $results['nomor_antrian'] : (isset($body['nomor_antrian']) ? $body['nomor_antrian'] : null),
             'nama'          => isset($results['nama_pendonor']) ? $results['nama_pendonor'] : (isset($body['nama']) ? $body['nama'] : null),
         ]);
 
-        return $this->_json_out($resp['status'], $out);
+        return $this->_json_out(200, $out);
     }
 
     /**
@@ -198,8 +223,8 @@ class Welcome extends Public_Controller {
                 'Content-Type: application/json',
                 'Accept: application/json',
             ],
-            CURLOPT_TIMEOUT        => 20,
-            CURLOPT_CONNECTTIMEOUT => 8,
+            CURLOPT_TIMEOUT        => 12,
+            CURLOPT_CONNECTTIMEOUT => 5,
         ]);
         $raw  = curl_exec($ch);
         $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -207,6 +232,7 @@ class Welcome extends Public_Controller {
         curl_close($ch);
 
         if ($raw === false) {
+            log_message('error', 'UTDRS call cURL error (' . $url . '): ' . $err);
             return ['status' => 0, 'body' => null, 'error' => $err ?: 'koneksi gagal'];
         }
 
@@ -243,22 +269,27 @@ class Welcome extends Public_Controller {
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => http_build_query(['nip' => $nip, 'password' => $password]),
-            CURLOPT_TIMEOUT        => 20,
-            CURLOPT_CONNECTTIMEOUT => 8,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_CONNECTTIMEOUT => 5,
         ]);
-        $raw = curl_exec($ch);
+        $raw  = curl_exec($ch);
+        $err  = curl_error($ch);
         curl_close($ch);
 
         if ($raw === false) {
+            log_message('error', 'UTDRS login/platform cURL error (' . $loginUrl . '): ' . $err);
             return '';
         }
 
         $data  = json_decode($raw, true);
         $token = is_array($data) && isset($data['access_token']) ? (string) $data['access_token'] : '';
 
-        if ($token !== '') {
-            @file_put_contents($cacheFile, $token, LOCK_EX);
+        if ($token === '') {
+            log_message('error', 'UTDRS login/platform gagal memperoleh access_token. Respons: ' . substr($raw, 0, 500));
+            return '';
         }
+
+        @file_put_contents($cacheFile, $token, LOCK_EX);
 
         return $token;
     }

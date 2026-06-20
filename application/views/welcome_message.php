@@ -302,7 +302,12 @@
                         .then(function (result) {
                             apiInflight = false;
                             var body = result.body || {};
-                            if (result.ok) {
+                            // Proxy server-side selalu balas HTTP 200; status nyata ada
+                            // di body.status (Success/Error).
+                            var isOk = body.status
+                                ? (String(body.status).toLowerCase() === 'success')
+                                : result.ok;
+                            if (isOk) {
                                 apiSucceeded = true;
                                 var msg = body.message || body.msg
                                        || (tipe === 'checkin' ? 'Check-in berhasil.' : 'Pendaftaran berhasil.');
