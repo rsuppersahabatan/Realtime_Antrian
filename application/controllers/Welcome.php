@@ -187,15 +187,25 @@ class Welcome extends Public_Controller {
                 . ' :: ' . (is_array($resp['body']) ? json_encode($resp['body']) : 'non-JSON'));
         }
 
-        // Normalisasi: SIMRS/proxy balas {status, pesan, results:{nomor_antrian, nama_pendonor}}
+        // Normalisasi respons. SIMRS balas:
+        //  - check-in : results:{nomor_antrian, nama_pendonor, ...}
+        //  - register : results:{kode_pendonor, uniq_code, nama_pendonor, ...}
         $body    = is_array($resp['body']) ? $resp['body'] : [];
         $results = isset($body['results']) && is_array($body['results']) ? $body['results'] : [];
+
+        $pick = function ($key) use ($results, $body) {
+            if (isset($results[$key])) return $results[$key];
+            if (isset($body[$key]))    return $body[$key];
+            return null;
+        };
 
         $out = array_merge($body, [
             'status'        => isset($body['status']) ? $body['status'] : ($resp['status'] >= 200 && $resp['status'] < 300 ? 'Success' : 'Error'),
             'httpStatus'    => $resp['status'],
             'message'       => isset($body['pesan']) ? $body['pesan'] : (isset($body['message']) ? $body['message'] : ''),
-            'nomor_antrian' => isset($results['nomor_antrian']) ? $results['nomor_antrian'] : (isset($body['nomor_antrian']) ? $body['nomor_antrian'] : null),
+            'nomor_antrian' => $pick('nomor_antrian'),
+            'kode_pendonor' => $pick('kode_pendonor'),
+            'uniq_code'     => $pick('uniq_code'),
             'nama'          => isset($results['nama_pendonor']) ? $results['nama_pendonor'] : (isset($body['nama']) ? $body['nama'] : null),
         ]);
 

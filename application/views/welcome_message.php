@@ -312,9 +312,14 @@
                                 var msg = body.message || body.msg
                                        || (tipe === 'checkin' ? 'Check-in berhasil.' : 'Pendaftaran berhasil.');
                                 var extra = '';
-                                if (body.nomor_antrian) {
+                                // Check-in: tampilkan nomor antrian. Register: tampilkan kode registrasi.
+                                var bigCode = body.nomor_antrian || body.uniq_code || body.kode_pendonor;
+                                if (bigCode) {
                                     extra += '<div style="font-size:36px;font-weight:900;color:#0a7a6b;margin-top:8px;">'
-                                          +  escapeHtml(body.nomor_antrian) + '</div>';
+                                          +  escapeHtml(bigCode) + '</div>';
+                                }
+                                if (tipe !== 'checkin' && (body.uniq_code || body.kode_pendonor)) {
+                                    extra += '<div style="margin-top:4px;font-size:13px;color:#555;">Kode Registrasi — simpan untuk Form Consent</div>';
                                 }
                                 if (body.nama) {
                                     extra += '<div style="margin-top:4px;">' + escapeHtml(body.nama) + '</div>';
