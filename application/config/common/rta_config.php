@@ -67,3 +67,14 @@ $config['api_utdrs_base'] = getenv('API_UTDRS_BASE') ?: 'http://localhost:8081/s
 */
 $config['utdrs_platform_nip']      = getenv('UTDRS_PLATFORM_NIP') ?: '';
 $config['utdrs_platform_password'] = getenv('UTDRS_PLATFORM_PASSWORD') ?: '';
+
+/*
+| Token JWT statis (Bearer) untuk endpoint /server/darah/*.
+| CATATAN PENTING: endpoint /server memvalidasi NIP di DB group "default",
+| sedangkan login/platform (grup "prima") berjalan di DB "prodDB" — token
+| hasil login di prima TIDAK valid untuk /server. Maka cara paling andal:
+| tempel token yang sudah terbukti bekerja (mis. dari Insomnia) ke
+| UTDRS_BEARER_TOKEN. Token platform berumur ~5 tahun. Jika diisi, proxy
+| memakai token ini langsung tanpa login.
+*/
+$config['utdrs_bearer_token']      = getenv('UTDRS_BEARER_TOKEN') ?: '';

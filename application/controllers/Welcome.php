@@ -152,13 +152,14 @@ class Welcome extends Public_Controller {
             ]);
         }
 
-        // Kredensial platform wajib ada untuk memperoleh JWT
-        $nip = (string) $this->config->item('utdrs_platform_nip');
-        $pwd = (string) $this->config->item('utdrs_platform_password');
-        if ($nip === '' || $pwd === '') {
+        // Butuh token statis (UTDRS_BEARER_TOKEN) ATAU kredensial platform (nip+password)
+        $staticToken = (string) $this->config->item('utdrs_bearer_token');
+        $nip         = (string) $this->config->item('utdrs_platform_nip');
+        $pwd         = (string) $this->config->item('utdrs_platform_password');
+        if ($staticToken === '' && ($nip === '' || $pwd === '')) {
             return $this->_json_out(200, [
                 'status'  => 'Error',
-                'message' => 'Konfigurasi UTDRS belum lengkap (kredensial platform kosong). Hubungi petugas IT.',
+                'message' => 'Konfigurasi UTDRS belum lengkap (isi UTDRS_BEARER_TOKEN atau kredensial platform). Hubungi petugas IT.',
             ]);
         }
 
@@ -219,7 +220,7 @@ class Welcome extends Public_Controller {
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => json_encode($payload),
             CURLOPT_HTTPHEADER     => [
-                'Authorization: Bearer ' . $token,
+                'Authorization: Persahabatan ' . $token,
                 'Content-Type: application/json',
                 'Accept: application/json',
             ],
@@ -244,6 +245,13 @@ class Welcome extends Public_Controller {
      */
     private function _utdrs_token($forceFresh = false)
     {
+        // Token statis dari .env diutamakan (lihat catatan DB group di rta_config).
+        // Tidak ada login & tidak ada cache — relogin tak relevan untuk token statis.
+        $staticToken = trim((string) $this->config->item('utdrs_bearer_token'));
+        if ($staticToken !== '') {
+            return $staticToken;
+        }
+
         $cacheFile = APPPATH . 'cache/utdrs_token.txt';
 
         if (! $forceFresh && is_file($cacheFile)) {
