@@ -78,3 +78,15 @@ $config['utdrs_platform_password'] = getenv('UTDRS_PLATFORM_PASSWORD') ?: '';
 | memakai token ini langsung tanpa login.
 */
 $config['utdrs_bearer_token']      = getenv('UTDRS_BEARER_TOKEN') ?: '';
+
+
+/*
+|--------------------------------------------------------------------------
+| QR Code Pendaftaran
+|--------------------------------------------------------------------------
+| URL gambar QR code yang ditampilkan di halaman welcome agar pendonor bisa
+| memindai dan membuka link pendaftaran online UTDRS (utdrs.rspersahabatan.co.id).
+| Aset dihosting di jsDelivr (repo website-assets). Saat memperbarui gambar,
+| naikkan tag versi (mis. @0.0.4 -> @0.0.5) supaya cache CDN ikut ter-refresh.
+*/
+$config['qr_code_pendaftaran']      = 'https://cdn.jsdelivr.net/gh/rsuppersahabatan/website-assets@0.0.4/img/utdrs.rspersahabatan.co.id.png';

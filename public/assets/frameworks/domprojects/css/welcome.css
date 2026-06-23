@@ -13,7 +13,8 @@ body {
     background-color: #f4f6f0;
     font: 14px/20px "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: #4F5155;
-    padding-bottom: 40px;
+    /* 56px memberi ruang untuk footer running-text yang fixed di bawah. */
+    padding-bottom: 56px;
 }
 
 .header-blue {
@@ -273,4 +274,106 @@ body {
 @media (max-width: 480px) {
     .clock { width: 180px; height: 180px; }
     .clock .number { font-size: 0.85rem; }
+}
+
+/* --- Pilih keperluan (Check in / Daftar) --- */
+.visit-type-wrap {
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    gap:32px;
+    flex-wrap:wrap;
+    padding:48px 16px 32px;
+}
+.visit-type-option {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    max-width:260px;
+    flex:1 1 220px;
+}
+.btn-visit-type {
+    border:none;
+    border-radius:9999px;
+    padding:22px 56px;
+    font-size:22px;
+    font-weight:600;
+    color:#0f172a;
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.12);
+    transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+    width:100%;
+    min-width:200px;
+}
+.btn-visit-type:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.16); filter:brightness(1.03); }
+.btn-visit-type:active { transform:translateY(0); }
+.btn-visit-type.btn-checkin { background:#5ed16a; }
+.btn-visit-type.btn-daftar  { background:#8ccdd6; }
+.visit-type-desc {
+    margin-top:14px;
+    font-size:13px;
+    line-height:1.5;
+    color:#475569;
+    text-align:center;
+    padding:0 6px;
+}
+.visit-type-title {
+    text-align:center;
+    margin:24px 0 0;
+    font-weight:700;
+    color:#0a7a6b;
+    letter-spacing:.5px;
+}
+.visit-type-sub {
+    text-align:center;
+    color:#64748b;
+    margin-top:6px;
+    font-size:13px;
+}
+.pilihan-badge {
+    display:inline-block;
+    padding:4px 12px;
+    border-radius:9999px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.5px;
+    color:#0f172a;
+}
+.pilihan-badge.checkin { background:#5ed16a; }
+.pilihan-badge.daftar  { background:#8ccdd6; }
+.btn-ganti-pilihan {
+    background:transparent;
+    border:none;
+    color:#0a7a6b;
+    font-size:12px;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+    margin-left:8px;
+}
+
+/* --- Footer running text (fixed di paling bawah halaman) --- */
+.welcome-footer-news {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #1f2d00;
+    color: #ccdb2a;
+    padding: 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    border-top: 2px solid #ccdb2a;
+    overflow: hidden;
+    z-index: 1000;
+}
+.welcome-footer-news .running-text {
+    display: inline-block;
+    white-space: nowrap;
+    padding-left: 100%;
+    animation: welcome-marquee 28s linear infinite;
+}
+@keyframes welcome-marquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
 }

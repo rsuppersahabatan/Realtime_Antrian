@@ -83,83 +83,6 @@
         <div class="alert alert-danger alert-inline"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
     <?php endif; ?>
 
-    <style>
-        .visit-type-wrap {
-            display:flex;
-            justify-content:center;
-            align-items:flex-start;
-            gap:32px;
-            flex-wrap:wrap;
-            padding:48px 16px 32px;
-        }
-        .visit-type-option {
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            max-width:260px;
-            flex:1 1 220px;
-        }
-        .btn-visit-type {
-            border:none;
-            border-radius:9999px;
-            padding:22px 56px;
-            font-size:22px;
-            font-weight:600;
-            color:#0f172a;
-            cursor:pointer;
-            box-shadow:0 4px 14px rgba(0,0,0,.12);
-            transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
-            width:100%;
-            min-width:200px;
-        }
-        .btn-visit-type:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.16); filter:brightness(1.03); }
-        .btn-visit-type:active { transform:translateY(0); }
-        .btn-visit-type.btn-checkin { background:#5ed16a; }
-        .btn-visit-type.btn-daftar  { background:#8ccdd6; }
-        .visit-type-desc {
-            margin-top:14px;
-            font-size:13px;
-            line-height:1.5;
-            color:#475569;
-            text-align:center;
-            padding:0 6px;
-        }
-        .visit-type-title {
-            text-align:center;
-            margin:24px 0 0;
-            font-weight:700;
-            color:#0a7a6b;
-            letter-spacing:.5px;
-        }
-        .visit-type-sub {
-            text-align:center;
-            color:#64748b;
-            margin-top:6px;
-            font-size:13px;
-        }
-        .pilihan-badge {
-            display:inline-block;
-            padding:4px 12px;
-            border-radius:9999px;
-            font-size:12px;
-            font-weight:700;
-            letter-spacing:.5px;
-            color:#0f172a;
-        }
-        .pilihan-badge.checkin { background:#5ed16a; }
-        .pilihan-badge.daftar  { background:#8ccdd6; }
-        .btn-ganti-pilihan {
-            background:transparent;
-            border:none;
-            color:#0a7a6b;
-            font-size:12px;
-            text-decoration:underline;
-            cursor:pointer;
-            padding:0;
-            margin-left:8px;
-        }
-    </style>
-
     <div class="row">
         <div class="col-md-8 col-md-offset-2">
             <?= form_open('welcome/ambil', ['id' => 'formAmbil', 'autocomplete' => 'off']); ?>
@@ -214,182 +137,20 @@
                 </div><!-- /#formStep -->
 
                 <script>
-                (function () {
-                    var visitStep   = document.getElementById('visitTypeStep');
-                    var formStep    = document.getElementById('formStep');
-                    var tipeInput   = document.getElementById('tipeKunjungan');
-                    var nikInput    = document.getElementById('nik');
-                    var pilihanBdg  = document.getElementById('pilihanBadge');
-                    var btnGanti    = document.getElementById('btnGantiPilihan');
-                    var form        = document.getElementById('formAmbil');
-                    var apiState    = document.getElementById('apiState');
-
-                    // Panggil proxy server-side (Welcome::self_checkin / self_register)
-                    // agar JWT/kredensial UTDRS tidak terekspos di browser. Backend CI
-                    // yang menambahkan Authorization: Bearer ke API UTDRS.
-                    var API_ENDPOINTS = {
+                // Nilai dinamis dari server diteruskan ke welcome.js lewat objek
+                // konfigurasi ini. Logika alur pilih keperluan + auto-call API
+                // berada di assets/frameworks/domprojects/js/welcome.js.
+                window.WELCOME_CFG = {
+                    // Proxy server-side (Welcome::self_checkin / self_register)
+                    // agar JWT/kredensial UTDRS tidak terekspos di browser.
+                    endpoints: {
                         checkin: <?= json_encode(site_url('welcome/self_checkin')) ?>,
                         daftar:  <?= json_encode(site_url('welcome/self_register')) ?>
-                    };
-
-                    var apiInflight  = false;
-                    var apiSucceeded = false;
-
-                    function escapeHtml(s) {
-                        return String(s).replace(/[&<>"']/g, function (c) {
-                            return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
-                        });
-                    }
-
-                    function setApiState(html) {
-                        if ( ! apiState) return;
-                        apiState.innerHTML  = html;
-                        apiState.style.display = html === '' ? 'none' : 'block';
-                    }
-
-                    function showForm(tipe) {
-                        tipeInput.value = tipe;
-                        if (tipe === 'checkin') {
-                            pilihanBdg.textContent = 'CHECK IN';
-                            pilihanBdg.className   = 'pilihan-badge checkin';
-                        } else {
-                            pilihanBdg.textContent = 'DAFTAR';
-                            pilihanBdg.className   = 'pilihan-badge daftar';
-                        }
-                        if (visitStep) visitStep.style.display = 'none';
-                        if (formStep)  formStep.style.display  = 'block';
-                        if (nikInput) {
-                            nikInput.setAttribute('required', 'required');
-                            try { nikInput.focus(); } catch (e) {}
-                        }
-                    }
-
-                    function showVisit() {
-                        tipeInput.value = '';
-                        if (visitStep) visitStep.style.display = 'block';
-                        if (formStep)  formStep.style.display  = 'none';
-                        if (nikInput) {
-                            nikInput.removeAttribute('required');
-                            nikInput.removeAttribute('readonly');
-                            nikInput.value = '';
-                        }
-                        apiInflight  = false;
-                        apiSucceeded = false;
-                        setApiState('');
-                    }
-
-                    function callApi(tipe, nik) {
-                        var endpoint = API_ENDPOINTS[tipe];
-                        if ( ! endpoint) return;
-
-                        apiInflight = true;
-                        var label = tipe === 'checkin' ? 'check-in' : 'pendaftaran';
-                        setApiState('<div class="alert alert-info" style="margin:0;">Memproses ' + label + '… mohon tunggu.</div>');
-
-                        fetch(endpoint, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify({ nik: nik })
-                        })
-                        .then(function (res) {
-                            return res.json()
-                                .catch(function () { return null; })
-                                .then(function (body) { return { ok: res.ok, status: res.status, body: body }; });
-                        })
-                        .then(function (result) {
-                            apiInflight = false;
-                            var body = result.body || {};
-                            // Proxy server-side selalu balas HTTP 200; status nyata ada
-                            // di body.status (Success/Error).
-                            var isOk = body.status
-                                ? (String(body.status).toLowerCase() === 'success')
-                                : result.ok;
-                            if (isOk) {
-                                apiSucceeded = true;
-                                var msg = body.message || body.msg
-                                       || (tipe === 'checkin' ? 'Check-in berhasil.' : 'Pendaftaran berhasil.');
-                                var extra = '';
-                                // Check-in: tampilkan nomor antrian. Register: tampilkan kode registrasi.
-                                var bigCode = body.nomor_antrian || body.uniq_code || body.kode_pendonor;
-                                if (bigCode) {
-                                    extra += '<div style="font-size:36px;font-weight:900;color:#0a7a6b;margin-top:8px;">'
-                                          +  escapeHtml(bigCode) + '</div>';
-                                }
-                                if (tipe !== 'checkin' && (body.uniq_code || body.kode_pendonor)) {
-                                    extra += '<div style="margin-top:4px;font-size:13px;color:#555;">Kode Registrasi — simpan untuk Form Consent</div>';
-                                }
-                                if (body.nama) {
-                                    extra += '<div style="margin-top:4px;">' + escapeHtml(body.nama) + '</div>';
-                                }
-                                setApiState(
-                                    '<div class="alert alert-success" style="margin:0;text-align:center;">'
-                                  + '<strong>' + escapeHtml(msg) + '</strong>'
-                                  + extra
-                                  + '</div>'
-                                );
-                                if (nikInput) nikInput.setAttribute('readonly', 'readonly');
-                            } else {
-                                var emsg = body.message || body.msg || body.error
-                                        || ('Permintaan gagal (HTTP ' + result.status + ').');
-                                setApiState('<div class="alert alert-danger" style="margin:0;">' + escapeHtml(emsg) + '</div>');
-                            }
-                        })
-                        .catch(function (err) {
-                            apiInflight = false;
-                            setApiState(
-                                '<div class="alert alert-danger" style="margin:0;">'
-                              + 'Tidak dapat terhubung ke server: ' + escapeHtml(err && err.message ? err.message : 'unknown')
-                              + '</div>'
-                            );
-                        });
-                    }
-
-                    document.querySelectorAll('.btn-visit-type').forEach(function (btn) {
-                        btn.addEventListener('click', function () { showForm(this.dataset.tipe); });
-                    });
-                    if (btnGanti) btnGanti.addEventListener('click', showVisit);
-
-                    if (nikInput) {
-                        // Trigger auto-call begitu NIK valid 16 digit. setTimeout(0) supaya kita
-                        // melihat nilai SETELAH welcome.js menyaring karakter non-digit.
-                        nikInput.addEventListener('input', function () {
-                            var el = this;
-                            setTimeout(function () {
-                                if (apiInflight || apiSucceeded) return;
-                                if ( ! tipeInput.value) return;
-                                if ( ! /^\d{16}$/.test(el.value)) return;
-                                callApi(tipeInput.value, el.value);
-                            }, 0);
-                        });
-                    }
-
-                    // Saat reload akibat error (NIK salah / layanan belum dipilih),
-                    // server kirim flashdata "nik" / "error" — buka langsung form supaya
-                    // user tidak perlu klik ulang Check in / Daftar.
-                    var hasOldNik = <?= ! empty($nik_old) ? 'true' : 'false' ?>;
-                    var hasError  = <?= ! empty($error)   ? 'true' : 'false' ?>;
-                    if (hasOldNik || hasError) {
-                        showForm('checkin');
-                    }
-
-                    if (form) {
-                        form.addEventListener('submit', function (e) {
-                            // Form sekarang murni interaksi sisi-klien (fetch ke API eksternal).
-                            // Cegah submit konvensional supaya halaman tidak reload.
-                            e.preventDefault();
-                            if ( ! tipeInput.value) {
-                                showVisit();
-                                return;
-                            }
-                            if (nikInput && /^\d{16}$/.test(nikInput.value) && ! apiInflight && ! apiSucceeded) {
-                                callApi(tipeInput.value, nikInput.value);
-                            }
-                        });
-                    }
-                })();
+                    },
+                    // Flashdata reload akibat error (NIK salah / layanan belum dipilih).
+                    hasOldNik: <?= ! empty($nik_old) ? 'true' : 'false' ?>,
+                    hasError:  <?= ! empty($error)   ? 'true' : 'false' ?>
+                };
                 </script>
 
             <?= form_close() ?>
@@ -401,34 +162,6 @@
 </div>
 
 <!-- ====== FOOTER RUNNING TEXT (fixed di paling bawah halaman) ====== -->
-<style>
-    body { padding-bottom: 56px; }
-    .welcome-footer-news {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: #1f2d00;
-        color: #ccdb2a;
-        padding: 12px 0;
-        font-size: 16px;
-        font-weight: 600;
-        border-top: 2px solid #ccdb2a;
-        overflow: hidden;
-        z-index: 1000;
-    }
-    .welcome-footer-news .running-text {
-        display: inline-block;
-        white-space: nowrap;
-        padding-left: 100%;
-        animation: welcome-marquee 28s linear infinite;
-    }
-    @keyframes welcome-marquee {
-        0%   { transform: translateX(0); }
-        100% { transform: translateX(-100%); }
-    }
-</style>
-
 <div class="welcome-footer-news no-print">
     <div class="running-text">
         <strong>PENGUMUMAN:</strong>
