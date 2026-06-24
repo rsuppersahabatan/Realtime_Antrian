@@ -304,7 +304,7 @@
     
     <?php 
         foreach($loket as $key => $value){
-            echo '<button  type="submit" id="tes'.$value['id'].'">'.$value['nama_loket'].'</button>';
+            echo '<button  type="submit" id="tes'.(int) $value['id'].'">'.htmlspecialchars($value['nama_loket'], ENT_QUOTES, 'UTF-8').'</button>';
         }
     ?>
 	<p class="footer">Page rendered in <strong>{elapsed_time}</strong> seconds</p>

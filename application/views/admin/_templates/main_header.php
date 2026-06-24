@@ -129,12 +129,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                             <li class="dropdown user user-menu">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                     <img src="<?php echo base_url($avatar_dir . '/user.png'); ?>" class="user-image" alt="User Image">
-                                    <span class="hidden-xs"><?php echo $user_login['username']; ?></span>
+                                    <span class="hidden-xs"><?php echo htmlspecialchars($user_login['username'], ENT_QUOTES, 'UTF-8'); ?></span>
                                 </a>
                                 <ul class="dropdown-menu">
                                     <li class="user-header">
                                         <img src="<?php echo base_url($avatar_dir . '/user.png'); ?>" class="img-circle" alt="User Image">
-                                        <p><?php echo $user_login['firstname'].$user_login['lastname']; ?><small><?php echo lang('header_member_since'); ?> <?php echo date('d-m-Y', $user_login['created_on']); ?></small></p>
+                                        <p><?php echo htmlspecialchars($user_login['firstname'] . $user_login['lastname'], ENT_QUOTES, 'UTF-8'); ?><small><?php echo lang('header_member_since'); ?> <?php echo date('d-m-Y', $user_login['created_on']); ?></small></p>
                                     </li>
                                     <li class="user-body">
                                         <div class="row">

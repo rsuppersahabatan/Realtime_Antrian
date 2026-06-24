@@ -6,7 +6,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 <html lang="<?php echo $lang; ?>">
     <head>
         <meta charset="<?php echo $charset; ?>">
-        <title><?php echo $title; ?></title>
+        <title><?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?></title>
 <?php if ($mobile === FALSE): ?>
         <!--[if IE 8]>
             <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">

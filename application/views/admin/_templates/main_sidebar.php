@@ -12,7 +12,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                             <img src="<?php echo base_url($avatar_dir . '/user.png'); ?>" class="img-circle" alt="User Image">
                         </div>
                         <div class="pull-left info">
-                            <p><?php echo $user_login['firstname'].$user_login['lastname']; ?></p>
+                            <p><?php echo htmlspecialchars($user_login['firstname'] . $user_login['lastname'], ENT_QUOTES, 'UTF-8'); ?></p>
                             <a href="#"><i class="fa fa-circle text-success"></i> <?php echo lang('menu_online'); ?></a>
                         </div>
                     </div>
