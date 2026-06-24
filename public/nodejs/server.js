@@ -126,7 +126,9 @@ if (!module.parent) {
 
   const socket = new Server(server, {
     cors: {
-      origin: process.env.CORS_ORIGIN || "*",
+      origin: process.env.CORS_ORIGIN
+        ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim())
+        : ["https://antrian.rspersahabatan.co.id", "http://10.0.20.244:8084"],
       methods: ["GET", "POST"],
     },
     transports: ["websocket", "polling"],
