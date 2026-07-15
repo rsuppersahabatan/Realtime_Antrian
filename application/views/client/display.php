@@ -3,6 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="<?= htmlspecialchars($accent, ENT_QUOTES, 'UTF-8') ?>" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Antrian" />
+    <link rel="manifest" href="<?= base_url('manifest.json') ?>" />
+    <link rel="apple-touch-icon" href="<?= base_url('assets/icons/icon-192.png') ?>" />
 
     <script defer src="https://umami.persahabatan.co.id/script.js" data-website-id="084ea29a-39c4-44d7-ba5a-534fb2daacb6"></script>
 
@@ -368,6 +376,31 @@
         );
     </script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('<?= base_url('sw.js') ?>')
+            .then(function(registration) {
+              console.log('Service Worker registered:', registration.scope);
+              
+              // Check for updates
+              registration.addEventListener('updatefound', function() {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', function() {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('New Service Worker available, update pending');
+                  }
+                });
+              });
+            })
+            .catch(function(error) {
+              console.warn('Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
   </body>
 
 </html>

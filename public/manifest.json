@@ -1,0 +1,25 @@
+{
+  "name": "Antrian Online RS Persahabatan",
+  "short_name": "Antrian",
+  "description": "Sistem Antrian Realtime RS Persahabatan",
+  "start_url": "/client/display",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0073b7",
+  "orientation": "landscape",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
