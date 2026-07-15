@@ -31,9 +31,17 @@ Dibangun di atas **CodeIgniter 3** (backend & admin panel), **Node.js + Socket.I
 
 ### Halaman Publik
 
-**Landing page — pengambilan nomor antrian oleh pengunjung**
+**Landing page — pilihan pendonor**
 
 ![Landing Page](ss/client-welcome.png)
+
+**Daftar Mandiri**
+
+![Daftar Mandiri](ss/client-welcome-1.png)
+
+**Check-in Mandiri**
+
+![Check-in Mandiri](ss/client-welcome-2.png)
 
 **Display antrian — layar publik yang menampilkan nomor yang sedang dipanggil**
 
