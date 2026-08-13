@@ -25,7 +25,12 @@ if ( ! function_exists('is_url_exist'))
                     $status = FALSE;
                 }
 
-                curl_close($ch);
+                // FIX: Only close if it's a resource (PHP 7.x and older). 
+                // In PHP 8+, it's a CurlHandle object and will self-destruct automatically.
+                if (is_resource($ch))
+                {
+                    curl_close($ch);
+                }
 
                 return $status;
             }
@@ -42,4 +47,3 @@ if ( ! function_exists('is_url_exist'))
         }
     }
 }
-
